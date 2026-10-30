@@ -40,7 +40,12 @@ BANNED_PROMO_WORDS = [
 ]
 BANNED_OVERCLAIM_WORDS = [
     "ขาวทันที", "หายขาด", "100%", "ดีที่สุดในโลก",
-    "ดีที่สุด", "ไม่มีใครเทียบ",
+    "ดีที่สุด", "ไม่มีใครเทียบ", "รักษาหาย", "โรคหาย",
+    "ลด 10 โล", "ขาวถาวร", "หน้าเด็กตลอดกาล",
+]
+BANNED_AUTHORITY_WORDS = [
+    "หมอแนะนำ", "แพทย์รับรอง", "คุณหมอการันตี",
+    "เภสัชกรแนะนำ", "ดาราแนะนำ", "คนดังใช้",
 ]
 
 
@@ -255,6 +260,10 @@ class GeminiContentGenerator:
         for word in BANNED_OVERCLAIM_WORDS:
             if word.lower() in all_text:
                 violations.append(f"overclaim: '{word}'")
+
+        for word in BANNED_AUTHORITY_WORDS:
+            if word.lower() in all_text:
+                violations.append(f"แอบอ้าง: '{word}'")
 
         if violations:
             logger.warning(

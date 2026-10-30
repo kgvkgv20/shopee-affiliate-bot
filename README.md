@@ -1,181 +1,119 @@
 # 🛒 Shopee Affiliate Bot — Free Automation
 
-> สร้างวิดีโอ Shopee Affiliate อัตโนมัติ **ฟรี 100%** ด้วย Gemini API + FFmpeg + GitHub Actions + Telegram
+> ระบบผลิตวิดีโอ Shopee Affiliate อัตโนมัติ **ฟรี 100%** ด้วย Gemini AI + FFmpeg + GitHub Actions + LINE / Telegram
+> รองรับการทำคลิปแนวตั้ง 9:16 (10 วินาที) สไตล์เพื่อนบอกต่อ และปลอดภัยตามกฎ Shopee Video 100%
 
 ```
-Pipeline: Shopee Products → Gemini Script → FFmpeg Video → Telegram → โพสต์เอง 30 วิ
+Pipeline: Shopee Products → Gemini Script → FFmpeg Video → LINE / Telegram → โพสต์ใน 30 วิ
 ```
+
+---
+
+## 🚫 8 ข้อห้ามสำคัญสำหรับการทำคลิปวิดีโอด้วย AI บน Shopee Video
+
+เพื่อป้องกันไม่ให้ถูกแบนบัญชี Affiliate และรักษาการมองเห็นคลิปให้อยู่ในเกณฑ์ดีเสมอ:
+
+1. **ต้องระบุว่าเป็นเนื้อหา AI:** ก่อนกดโพสต์คลิปในแอป Shopee Video ให้แตะเปิดตัวเลือก **"ระบุว่าเป็นเนื้อหาที่สร้างโดย AI"** ทุกครั้ง
+2. **ห้ามละเมิดทรัพย์สินทางปัญญา:** ห้ามนำรูปภาพหรือวิดีโอรีวิวของลูกค้าจริงมาดูดใช้ ห้ามโคลนเสียงเจ้าของร้าน และห้ามใช้โลโก้เพื่อสร้างความน่าเชื่อถือปลอม
+3. **ห้ามใช้ AI สร้างภาพเด็ก:** ห้ามเจนภาพเด็กหรือผู้เยาว์เพื่อเรียกความสงสารหรือเชิญชวนซื้อสินค้าเด็ดขาด
+4. **ห้ามแอบอ้างบุคคลสาธารณะ:** ห้ามนำภาพหรือเสียงของคนดัง ดารา หรือบุคคลที่มีชื่อเสียงมาอ้างว่าใช้สินค้า
+5. **ห้ามบิดเบือนเนื้อหาหรือรีวิวปลอม (ห้าม Overclaim):** ห้ามอวดอ้างสรรพคุณเกินจริง (เช่น "ขาวทันที", "หายขาด 100%", "ลด 10 กิโลใน 3 วัน") โดยเฉพาะสินค้าสกินแคร์และอาหารเสริม และห้ามแต่งตัวเลียนแบบบุคลากรทางการแพทย์ (หมอ/พยาบาล)
+6. **ห้ามทำคอนเทนต์ด้อยคุณภาพ:** หลีกเลี่ยงการสแปมคลิปจำนวนมากแต่ภาพเบลอ เสียงพูดผิดเพี้ยน หรือสินค้าไม่ตรงปก
+7. **ห้ามใช้ตัวละครเดิมซ้ำในหลายบัญชี:** หากใช้ Influencer AI ควรมีเอกลักษณ์ประจำช่อง 1 ตัวละครต่อ 1 ช่องเท่านั้น เพื่อป้องกันปัญหาคอนเทนต์ซ้ำ
+8. **ควรลงคลิปที่ Shopee Video เป็นที่แรก:** เพื่อป้องกันระบบเข้าใจผิดว่าไปดูดคลิปมาจากแพลตฟอร์มอื่น และแนะนำให้เลือกใส่เพลงหรือเสียงจากคลังของ Shopee โดยตรง
 
 ---
 
 ## 📋 สิ่งที่ต้องใช้ (ฟรีทั้งหมด)
 
-| เครื่องมือ | สมัครที่ไหน | ใช้ทำอะไร |
+| เครื่องมือ | สมัครที่ไหน | หน้าที่ |
 |---|---|---|
-| **Gemini API Key** | [ai.google.dev](https://ai.google.dev) | สร้าง script + hashtag |
-| **Telegram Bot** | [@BotFather](https://t.me/BotFather) | รับวิดีโอบนมือถือ |
-| **GitHub Account** | [github.com](https://github.com) | รัน bot ฟรีทุกวัน |
-| **Shopee Affiliate** | [affiliate.shopee.co.th](https://affiliate.shopee.co.th) | ดึงสินค้า + affiliate link |
-| **FFmpeg** | [ffmpeg.org](https://ffmpeg.org) | สร้างวิดีโอ |
+| **Gemini API Key** | [ai.google.dev](https://aistudio.google.com/app/apikey) | สร้างสคริปต์ 10 วิ + แคปชัน + แฮชแท็ก |
+| **GitHub Actions** | [github.com](https://github.com) | รันทำคลิปอัตโนมัติบน Cloud ฟรี 24 ชม. |
+| **LINE Messaging API** | [developers.line.biz](https://developers.line.biz) | ส่งแจ้งเตือน + แคปชัน + ปุ่มเปิด Shopee เข้าแชท LINE |
+| **Telegram Bot** | [@BotFather](https://t.me/BotFather) | ส่งไฟล์วิดีโอ .mp4 เข้ามือถือโดยตรง |
+| **FFmpeg** | ติดตั้งผ่าน WinGet ในเครื่อง | เรนเดอร์วิดีโอ 1080×1920 (9:16) |
 
 ---
 
-## ⚡ Quick Start (5 ขั้นตอน)
+## ⚡ Quick Start
 
-### 1. Clone และ Install
+### 1. ติดตั้ง Dependencies ในเครื่อง
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/shopee-affiliate-bot.git
 cd shopee-affiliate-bot
-
 pip install -r requirements.txt
-
-# Windows — ติดตั้ง FFmpeg
-winget install ffmpeg
-
-# หรือดาวน์โหลดที่ https://ffmpeg.org/download.html
 ```
 
-### 2. สร้าง Telegram Bot
+### 2. ตั้งค่าไฟล์ `.env`
 
-1. เปิด Telegram → ค้นหา **@BotFather**
-2. ส่ง `/newbot`
-3. ตั้งชื่อ bot เช่น `ShopeeBot`
-4. รับ **Token** เช่น `7123456789:AAH...`
-5. ส่งข้อความใดก็ได้ให้ bot ของตัวเอง
-6. เปิด `https://api.telegram.org/bot{TOKEN}/getUpdates`
-7. หา `"chat": {"id": XXXXXXX}` ← นี่คือ **Chat ID**
-
-### 3. สร้าง .env
-
-```bash
-cp .env.example .env
-# แก้ไขด้วย editor
-```
-
-เติมค่าใน `.env`:
+คัดลอกจาก `.env.example`:
 ```env
+# Gemini API Key (ฟรี)
 GEMINI_API_KEY=AIzaSy...
-TELEGRAM_BOT_TOKEN=7123456789:AAH...
-TELEGRAM_CHAT_ID=1234567890
-SHOPEE_APP_ID=...
-SHOPEE_SECRET=...
+
+# การแจ้งเตือนผ่าน LINE (ทางเลือก)
+LINE_CHANNEL_ACCESS_TOKEN=...
+LINE_USER_ID=...
+
+# การส่งไฟล์ผ่าน Telegram (ทางเลือก)
+TELEGRAM_BOT_TOKEN=...
+TELEGRAM_CHAT_ID=...
 ```
 
-### 4. ทดสอบรัน
+### 3. ทดสอบรันผลิตคลิป
 
-```bash
-# ทดสอบด้วย mock data ก่อน (ไม่ต้องใช้ Shopee API)
-python main.py --test --no-telegram
+```powershell
+# รันโหมด Routine (หมุนเวียนหมวดหมู่ Beauty -> Home -> Electronics -> Fashion)
+python main.py --routine --products 1 --no-telegram
 
-# ดูวิดีโอที่ output/
-```
-
-```bash
-# รันจริงกับ Telegram
-python main.py --category beauty --products 3
-```
-
-### 5. Setup GitHub Actions (Auto ทุกวัน)
-
-1. Push code ขึ้น GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "🚀 initial setup"
-   git remote add origin https://github.com/YOUR_USERNAME/shopee-affiliate-bot.git
-   git push -u origin main
-   ```
-
-2. ไปที่ **Settings → Secrets and variables → Actions**
-
-3. เพิ่ม Secrets:
-   | Secret Name | ค่า |
-   |---|---|
-   | `GEMINI_API_KEY` | API key จาก ai.google.dev |
-   | `TELEGRAM_BOT_TOKEN` | Token จาก BotFather |
-   | `TELEGRAM_CHAT_ID` | Chat ID ของคุณ |
-   | `SHOPEE_APP_ID` | จาก Shopee Affiliate Portal |
-   | `SHOPEE_SECRET` | จาก Shopee Affiliate Portal |
-
-4. ไปที่ **Actions** tab → เปิด workflows → รัน manual ครั้งแรก
-
-**✅ หลังจากนี้ bot จะรันทุกวันตีสาม อัตโนมัติ!**
-
----
-
-## 🔑 Shopee Affiliate API Setup
-
-1. ไปที่ [affiliate.shopee.co.th](https://affiliate.shopee.co.th)
-2. สมัคร / Login
-3. ไปที่ **เครื่องมือ → API**
-4. สร้าง App ใหม่
-5. คัดลอก `App ID` และ `Secret`
-
-> **ถ้ายังไม่มี Shopee Affiliate account:** bot จะใช้ mock data แทน
-> (สร้างวิดีโอจากสินค้าตัวอย่างก่อน แล้วค่อยเปลี่ยน)
-
----
-
-## 📱 ผลลัพธ์ที่ได้รับใน Telegram
-
-```
-┌─────────────────────────────────────┐
-│  🔥 ลด 50%! ครีม Hyaluronic 100ml  │
-│                                     │
-│  [VIDEO 30 วิ พร้อม text overlay]  │
-│                                     │
-│  ✨ ลดความหยาบกร้าน                 │
-│  ✨ ชุ่มชื้น 24 ชั่วโมง             │
-│  ✨ 4.8⭐ ซื้อแล้ว 15,234 คน        │
-│                                     │
-│  💰 ก่อนหมด! กดลิงก์ด้านล่าง       │
-│  🛒 https://shope.ee/xxxxx          │
-│                                     │
-│  #shopee #shopeeth #beauty...       │
-└─────────────────────────────────────┘
-
-📋 วิธีโพสต์ใน Shopee:
-1️⃣ บันทึกวิดีโอด้านบน
-2️⃣ เปิด Shopee → Live/Video
-3️⃣ วาง caption → โพสต์เลย!
+# หรือรันเฉพาะหมวดหมู่ที่ต้องการ
+python main.py --trend --category beauty --products 2 --no-telegram
 ```
 
 ---
 
-## ⚙️ ปรับแต่ง
+## 💬 การตั้งค่าส่งเข้า LINE (LINE Messaging API)
 
-### เพิ่มหมวดหมู่
+ระบบรองรับการส่งการแจ้งเตือนคลิปใหม่ แคปชันสำหรับคัดลอก และ **ปุ่มกด "เปิดดูสินค้าใน Shopee 🛒"** ที่เมื่อแตะใน LINE แล้วจะเด้งเปิดแอป Shopee ไปที่ตัวสินค้าทันที:
 
-แก้ใน `.env`:
-```env
-TARGET_CATEGORIES=beauty,fashion,electronics
-```
-
-### เปลี่ยนเวลารัน
-
-แก้ใน `.github/workflows/daily_run.yml`:
-```yaml
-- cron: "0 20 * * *"  # 20:00 UTC = ตี 3 ไทย
-- cron: "0 13 * * *"  # 13:00 UTC = 20:00 ไทย
-```
-
-### เพิ่มรูปสินค้า
-
-ใส่รูปใน `src/shopee_scraper.py` → `_get_mock_products()` สำหรับสินค้าที่ต้องการ promote เอง
+1. เข้าไปที่ [LINE Developers Console](https://developers.line.biz) แล้วสร้าง **Provider** และ **Create a Messaging API channel**
+2. ไปที่แท็บ **Messaging API** ➔ เลื่อนลงล่างสุดแล้วกด Issue **Channel access token (long-lived)** ➔ นำมาใส่ใน `LINE_CHANNEL_ACCESS_TOKEN`
+3. ในแท็บ **Basic settings** เลื่อนลงไปดู **Your user ID** (ขึ้นต้นด้วย `U...`) ➔ นำมาใส่ใน `LINE_USER_ID`
+4. แอด LINE Official Account ของบอทเป็นเพื่อนในมือถือของคุณ
+5. เมื่อบอททำคลิปเสร็จ ข้อมูลทั้งหมดจะถูกส่งเข้าแชท LINE ส่วนตัวของคุณทันที!
 
 ---
 
-## 🆓 Free Tier Limits
+## 📱 ผลลัพธ์ที่ได้รับใน LINE / Telegram
 
-| บริการ | Free Limit |
-|---|---|
-| Gemini API (gemini-3.8-flash) | 500 req/วัน, 10 req/นาที |
-| GitHub Actions | 2,000 นาที/เดือน |
-| Telegram Bot API | ไม่จำกัด |
-| Shopee Affiliate API | ไม่จำกัด |
+```
+┌───────────────────────────────────────────────┐
+│ 🎬 คลิป Shopee Video พร้อมโพสต์!              │
+│ 📦 สินค้า: แก้วเก็บความเย็น Tyeso 900ml       │
+│                                               │
+│ 📝 แคปชันสำหรับโพสต์ (กดค้างเพื่อคัดลอก):       │
+│ แก้วเก็บความเย็น Tyeso ของแท้ ใส่น้ำแข็งข้ามวัน  │
+│ ยังไม่ละลาย! พกพาง่าย มีหูหิ้ว ไปตำกันเลย      │
+│ #shopee #shopeeth #ของดีบอกต่อ #แก้วเก็บความเย็น│
+│                                               │
+│ ⚠️ อย่าลืมติ๊ก "ระบุว่าเป็นเนื้อหา AI" ก่อนโพสต์  │
+│                                               │
+│ [ 🛒 เปิดดูสินค้าใน Shopee ]  ← แตะแล้วเด้งเข้าแอป │
+└───────────────────────────────────────────────┘
+```
 
-> 3 สินค้า/วัน ใช้ ~6 API calls/วัน → **ต่ำกว่า limit มาก** ✅
+---
+
+## ☁️ ระบบอัตโนมัติบน Cloud (GitHub Actions 24 ชม.)
+
+Repository: **[kgvkgv20/shopee-affiliate-bot](https://github.com/kgvkgv20/shopee-affiliate-bot)**
+
+ระบบจะตื่นมาผลิตคลิปอัตโนมัติ **ทุกวันเวลา 10:00 น. และ 18:00 น. (เวลาไทย)**:
+1. หมุนเวียนหมวดหมู่สินค้าอัตโนมัติ (ไม่ทำสินค้าซ้ำ)
+2. เรนเดอร์วิดีโอ 10 วินาที พร้อมภาพ Packshot ทางการตรงรุ่น 100%
+3. แพ็กไฟล์วิดีโอ `.mp4`, แคปชัน `.txt`, และภาพปก `.jpg` ไว้ในแท็บ **Actions ➔ Artifacts** ให้ดาวน์โหลดได้ฟรีทุกวัน
+4. ส่งการแจ้งเตือนเข้า LINE หรือ Telegram ทันทีเมื่อคลิปพร้อมโพสต์
 
 ---
 
@@ -183,21 +121,19 @@ TARGET_CATEGORIES=beauty,fashion,electronics
 
 ```
 shopee-affiliate-bot/
-├── main.py                    # Entrypoint หลัก
+├── main.py                     # Entrypoint หลัก
 ├── src/
-│   ├── shopee_scraper.py      # ดึงสินค้าจาก Shopee API
-│   ├── gemini_generator.py    # สร้าง script + hashtag
-│   ├── video_creator.py       # FFmpeg สร้างวิดีโอ
-│   ├── telegram_sender.py     # ส่งวิดีโอไปยัง Telegram
-│   └── main.py               # Pipeline orchestrator
-├── .github/
-│   └── workflows/
-│       └── daily_run.yml      # GitHub Actions schedule
+│   ├── trend_researcher.py     # คลังสินค้าขายดีทางการ + วิเคราะห์เทรนด์
+│   ├── gemini_generator.py     # Gemini สร้างสคริปต์ 10 วิ + ตรวจกฎ Shopee
+│   ├── video_creator.py        # FFmpeg เรนเดอร์คลิปแนวตั้ง 9:16
+│   ├── routine_manager.py      # ควบคุมรอบการสลับหมวดและกันสินค้าซ้ำ
+│   ├── line_sender.py          # ส่งการแจ้งเตือน + ปุ่มเด้งเข้า Shopee ทาง LINE
+│   ├── telegram_sender.py      # ส่งไฟล์วิดีโอตรงเข้ามือถือทาง Telegram
+│   └── google_drive_uploader.py# อัปโหลดแพ็กเกจขึ้น Google Drive
 ├── assets/
-│   ├── fonts/                 # Thai fonts
-│   └── music/                 # Background music
-├── output/                    # วิดีโอที่สร้างแล้ว
-├── .env.example               # Template config
-├── requirements.txt
-└── README.md
+│   └── products/               # ภาพ Packshot ทางการความละเอียดสูง
+├── output/                     # โฟลเดอร์เก็บวิดีโอและแคปชันที่สร้างแล้ว
+├── .github/workflows/          # ระบบรันอัตโนมัติบน Cloud 24 ชม.
+├── run_routine.bat             # รัน Routine ในเครื่องแบบดับเบิ้ลคลิก
+└── setup_windows_scheduler.ps1 # ตั้งเวลาให้คอมตื่นมารันเองใน Windows
 ```

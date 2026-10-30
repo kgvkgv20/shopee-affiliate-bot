@@ -50,6 +50,7 @@ from src.shopee_scraper import ShopeeAffiliateAPI, Product
 from src.gemini_generator import GeminiContentGenerator
 from src.video_creator import FFmpegVideoCreator
 from src.telegram_sender import TelegramSender
+from src.line_sender import LineSender
 from src.trend_researcher import TrendResearcher
 from src.google_drive_uploader import GoogleDriveUploader
 from src.routine_manager import RoutineManager
@@ -127,6 +128,7 @@ async def process_product(
     sender: TelegramSender | None,
     drive_uploader: GoogleDriveUploader | None = None,
     language: str = "th",
+    line_sender: LineSender | None = None,
 ) -> tuple[bool, str | None]:
     """
     ประมวลผลสินค้า 1 ตัวผ่าน pipeline ทั้งหมด
@@ -179,6 +181,11 @@ async def process_product(
     else:
         logger.info(f"  💾 วิดีโออยู่ที่: {video_result.video_path}")
 
+    # ===== Step 6: ส่งไปยัง LINE =====
+    if line_sender:
+        logger.info("  💬 ส่งข้อมูลคลิปและลิงก์ไปยัง LINE...")
+        line_sender.send_video_package(video_result, content, product.affiliate_link)
+
     return True, video_result.video_path
 
 
@@ -206,6 +213,14 @@ async def run_pipeline(args, routine_mgr: RoutineManager | None = None) -> int:
                 sender = TelegramSender()
             except Exception as e:
                 logger.info(f"ℹ️ ไม่ได้เชื่อมต่อ Telegram ({e}) — บันทึกคลิปไว้ที่ output/")
+        # LINE เป็นทางเลือก (ถ้ามี token และ user_id)
+        line_sender = None
+        if os.getenv("LINE_CHANNEL_ACCESS_TOKEN") and os.getenv("LINE_USER_ID"):
+            try:
+                line_sender = LineSender()
+                logger.info("LINE Messaging API ✓")
+            except Exception as e:
+                logger.info(f"ℹ️ ไม่ได้เชื่อมต่อ LINE ({e})")
         trend_researcher = TrendResearcher()
         drive_uploader = GoogleDriveUploader()
     except Exception as e:
@@ -262,7 +277,9 @@ async def run_pipeline(args, routine_mgr: RoutineManager | None = None) -> int:
         logger.info(f"   ราคา: {product.price_thb} (ลด {product.discount_percent}%)")
         logger.info(f"   Rating: {product.rating}⭐ | ขายแล้ว: {product.sold_count:,}")
 
-        ok, vpath = await process_product(product, gemini, creator, sender, drive_uploader, language)
+        ok, vpath = await process_product(
+            product, gemini, creator, sender, drive_uploader, language, line_sender
+        )
         if ok:
             success_count += 1
             if args.routine and routine_mgr and vpath:
