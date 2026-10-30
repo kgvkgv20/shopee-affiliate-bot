@@ -1,0 +1,100 @@
+name: 🛒 Shopee Affiliate Bot — Automated Routine
+
+on:
+  # รันอัตโนมัติ 2 เวลาต่อวัน: 10:00 น. และ 18:00 น. เวลาไทย (03:00 และ 11:00 UTC)
+  schedule:
+    - cron: "0 3,11 * * *"
+
+  # รัน manual ได้ตลอดเวลาจาก GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "โหมดการทำงาน"
+        required: true
+        default: "routine"
+        type: choice
+        options:
+          - routine
+          - trend
+          - test
+      category:
+        description: "หมวดหมู่สินค้า (เฉพาะเมื่อเลือกโหมด trend)"
+        required: true
+        default: "beauty"
+        type: choice
+        options:
+          - beauty
+          - home
+          - electronics
+          - fashion
+          - all
+      products:
+        description: "จำนวนสินค้าต่อรอบ (1-5)"
+        required: true
+        default: "2"
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      # ===== Setup =====
+      - name: 📥 Checkout repo
+        uses: actions/checkout@v4
+
+      - name: 🐍 Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 📦 Install Python dependencies
+        run: pip install -r requirements.txt
+
+      # ===== Install FFmpeg & Thai Fonts =====
+      - name: 🎬 Install FFmpeg & Fonts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-thai-tlwg
+
+      # ===== Run Bot =====
+      - name: 🤖 Run Shopee Routine
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
+          SHOPEE_SECRET: ${{ secrets.SHOPEE_SECRET }}
+          CONTENT_LANGUAGE: th
+        run: |
+          mkdir -p output
+          if [ "${{ github.event.inputs.mode }}" = "test" ]; then
+            python -m src.main --test --products ${{ github.event.inputs.products || '2' }}
+          elif [ "${{ github.event.inputs.mode }}" = "trend" ]; then
+            python -m src.main --trend --category ${{ github.event.inputs.category || 'beauty' }} --products ${{ github.event.inputs.products || '2' }}
+          else
+            python -m src.main --routine --products ${{ github.event.inputs.products || '2' }}
+          fi
+
+      # ===== Upload วิดีโอ แคปชัน และ Thumbnail เป็น Artifact (เก็บไว้ 7 วัน) =====
+      - name: 📤 Upload generated video packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shopee-videos-bundle-${{ github.run_number }}
+          path: |
+            output/*.mp4
+            output/*.txt
+            output/*_thumb.jpg
+            output/routine_history.json
+          retention-days: 7
+
+      # ===== Upload log =====
+      - name: 📋 Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: run-log-${{ github.run_number }}
+          path: output/run.log
+          retention-days: 7

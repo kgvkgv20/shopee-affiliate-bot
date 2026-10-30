@@ -1,0 +1,325 @@
+"""
+gemini_generator.py
+-------------------
+ใช้ Gemini API (Free Tier) สร้าง:
+  - วิดีโอ script สไตล์ "เพื่อนแนะนำเพื่อน" 10 วินาที
+  - Hashtags สำหรับ Shopee (ไม่มีราคา/โปร)
+  - Caption สำหรับโพสต์
+
+Model: gemini-3.8-flash (ฟรี tier)
+SDK: google-genai >= 2.30.1
+
+Shopee Compliance Rules (Phase 1):
+  ✅ ไม่พูดราคา (บาท / หลักร้อย / กี่สิบ)
+  ✅ ไม่พูดโปร (แฟลชเซล / ส่งฟรี / ลด X%)
+  ✅ ไม่ overclaim (ขาวทันที / หายขาด 100%)
+  ✅ CTA ชี้ตะกร้าส้มแบบเป็นมิตร
+"""
+import os
+import json
+import logging
+import re
+import requests
+from dataclasses import dataclass
+from google import genai
+from src.shopee_scraper import Product
+
+logger = logging.getLogger(__name__)
+
+# ============================================================
+# คำต้องห้าม Shopee Compliance — ตรวจก่อนส่ง
+# ============================================================
+BANNED_PRICE_WORDS = [
+    "บาท", "หลักร้อย", "หลักพัน", "ไม่ถึงร้อย", "กี่สิบ",
+    "ราคา", "ถูกมาก", "แพง", "คุ้ม",
+]
+BANNED_PROMO_WORDS = [
+    "ส่งฟรี", "แฟลชเซล", "flash sale", "ลด 5", "ลด 6", "ลด 7",
+    "ลด 8", "ลด 9", "โปรวันนี้", "เฉพาะวันนี้", "ก่อนโปรหมด",
+    "ราคาพิเศษ", "โปรโมชัน", "promotion",
+]
+BANNED_OVERCLAIM_WORDS = [
+    "ขาวทันที", "หายขาด", "100%", "ดีที่สุดในโลก",
+    "ดีที่สุด", "ไม่มีใครเทียบ",
+]
+
+
+# ============================================================
+# Prompt Template — Phase 1 "เพื่อนแนะนำเพื่อน" 10 วินาที
+# ============================================================
+PROMPT_TEMPLATE = """\
+คุณคือเพื่อนสนิทที่ชอบป้ายยาของใช้ดีๆ ให้เพื่อนฟัง
+จงสร้างสคริปต์วิดีโอสั้นและแคปชันสำหรับ Shopee Video จากข้อมูลสินค้า:
+
+ชื่อสินค้า: {product_name}
+จุดเด่น: {product_desc}
+
+[ข้อกำหนดเด็ดขาด — ห้ามฝ่าฝืน]
+1. ความยาวสคริปต์: ไม่เกิน 40 คำ (อ่านจบภายใน 10 วินาทีพอดี)
+2. โทนเสียง: พูดคุยเป็นกันเอง ภาษาพูดสไตล์เพื่อนแนะนำเพื่อน (เช่น แก, คือดีย์, เพิ่งลอง, ป้ายยา)
+3. ห้ามระบุราคาเด็ดขาด (ห้ามพูดคำว่า บาท, หลักร้อย, ราคาถูก, กี่สิบบาท, คุ้ม)
+4. ห้ามระบุโปรโมชันเด็ดขาด (ห้ามพูดคำว่า แฟลชเซล, ส่งฟรี, ลด 50%, โปรวันนี้, ราคาพิเศษ)
+5. ห้าม overclaim (ห้ามพูดว่า ขาวทันที, หายขาด 100%, ดีที่สุด)
+6. ปิดท้ายด้วยการบอกพิกัดตะกร้าส้มแบบน่ารัก ไม่ hard sell
+
+[โครงสร้างคลิป 10 วินาที]
+- hook (0–3 วิ): สะกิดปัญหาใกล้ตัว สั้นและสะดุดหู
+- body (3–7 วิ): จุดเด่น 1–2 ข้อ สไตล์คนใช้จริง
+- cta (7–10 วิ): ชี้ตะกร้าส้มซ้ายล่าง แบบเป็นมิตร
+
+[รูปแบบ JSON ที่ต้องการส่งกลับ — ตอบ JSON เท่านั้น]
+{{
+  "hook": "ข้อความเปิดคลิป 0–3 วิ (สั้นและสะดุดหู)",
+  "body": "บอกจุดเด่นการใช้งาน 3–7 วิ (1–2 จุดเด่น)",
+  "cta": "ชี้พิกัดตะกร้าส้ม 7–10 วิ แบบเป็นมิตร",
+  "full_script": "ข้อความรวมทั้งหมด ไม่เกิน 40 คำ",
+  "video_title": "ชื่อวิดีโอ ไม่เกิน 40 ตัวอักษร ห้ามมีราคา",
+  "caption": "แคปชันโพสต์ 1–2 บรรทัด + hashtag ไม่พูดเรื่องราคา/โปร",
+  "hashtags": ["shopee", "shopeeth", "ของดีบอกต่อ", "แนะนำสินค้า"]
+}}
+"""
+
+
+@dataclass
+class VideoContent:
+    """ผลลัพธ์จาก Gemini — Phase 1 (10 วินาที, Shopee Compliant)"""
+    product_name: str
+    hook: str             # 0–3 วิ: สะกิดปัญหา
+    body: str             # 3–7 วิ: จุดเด่น
+    cta: str              # 7–10 วิ: ชี้ตะกร้าส้ม
+    full_script: str      # script รวมทั้งหมด
+    video_title: str      # ชื่อวิดีโอ
+    caption: str          # caption สำหรับโพสต์
+    hashtags: list[str]   # hashtags
+    compliance_ok: bool = True  # ผ่าน compliance check หรือไม่
+
+    # --- legacy compat (ใช้ใน telegram_sender) ---
+    @property
+    def script(self) -> str:
+        return self.full_script
+
+    @property
+    def key_points(self) -> list[str]:
+        return [self.hook, self.body, self.cta]
+
+    @property
+    def call_to_action(self) -> str:
+        return self.cta
+
+    @property
+    def hashtag_string(self) -> str:
+        return " ".join(f"#{tag}" for tag in self.hashtags)
+
+    @property
+    def full_caption(self) -> str:
+        return f"{self.caption}\n\n{self.hashtag_string}"
+
+
+class GeminiContentGenerator:
+    """
+    สร้าง script + hashtag ด้วย Gemini API
+    Phase 1: 10 วินาที / Shopee Compliant / สไตล์เพื่อนแนะนำเพื่อน
+
+    Free tier limits (gemini-3.8-flash):
+    - 500 requests/day
+    - 10 requests/minute
+    """
+
+    MODEL = "gemini-3.5-flash-lite"
+
+    def __init__(self):
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            raise ValueError("ต้องกำหนด GEMINI_API_KEY ใน .env")
+        self.client = genai.Client(api_key=api_key)
+
+    # ------------------------------------------------------------------ #
+    #  Public API                                                          #
+    # ------------------------------------------------------------------ #
+
+    def generate_video_content(
+        self,
+        product: Product,
+        language: str = "th",
+        video_duration: int = 10,
+    ) -> VideoContent:
+        """
+        สร้าง script + hashtag (Phase 1: 10 วินาที, Shopee compliant)
+
+        Args:
+            product: ข้อมูลสินค้าจาก Shopee
+            language: ภาษา (th / en) — Phase 1 ใช้ th เท่านั้น
+            video_duration: ความยาววิดีโอ (Phase 1 = 10 วินาที)
+
+        Returns:
+            VideoContent ที่ผ่าน compliance check
+        """
+        product_desc = self._build_product_desc(product)
+        prompt = PROMPT_TEMPLATE.format(
+            product_name=product.name,
+            product_desc=product_desc,
+        )
+
+        try:
+            interaction = self.client.interactions.create(
+                model=self.MODEL,
+                input=prompt,
+                store=False,
+            )
+
+            raw = interaction.output_text or ""
+            raw = self._extract_json(raw)
+            data = json.loads(raw)
+
+            content = VideoContent(
+                product_name=product.name,
+                hook=data.get("hook", ""),
+                body=data.get("body", ""),
+                cta=data.get("cta", "ดูพิกัดในตะกร้าส้มซ้ายล่างได้เลยนะ"),
+                full_script=data.get("full_script", ""),
+                video_title=data.get("video_title", product.short_name),
+                caption=data.get("caption", ""),
+                hashtags=data.get("hashtags", self._default_hashtags(product)),
+            )
+
+            # ===== Compliance Check =====
+            content = self._run_compliance_check(content)
+            return content
+
+        except json.JSONDecodeError as e:
+            logger.error(f"JSON parse error: {e}")
+            return self._fallback_content(product)
+        except Exception as e:
+            logger.error(f"Gemini API error: {e}")
+            return self._fallback_content(product)
+
+    def analyze_product_image(self, product: Product) -> str:
+        """
+        วิเคราะห์รูปสินค้าด้วย Gemini multimodal
+        เพื่อดึงจุดเด่นสำหรับใส่ใน prompt
+
+        Returns:
+            คำอธิบายสินค้าจากรูปภาพ (สำหรับ product_desc)
+        """
+        if not product.image_urls:
+            return ""
+
+        try:
+            img_url = product.image_urls[0]
+            resp = requests.get(img_url, timeout=15)
+            resp.raise_for_status()
+            img_bytes = resp.content
+            mime_type = resp.headers.get("content-type", "image/jpeg")
+
+            interaction = self.client.interactions.create(
+                model=self.MODEL,
+                input=[
+                    {"type": "image", "data": img_bytes, "mime_type": mime_type},
+                    {
+                        "type": "text",
+                        "text": (
+                            "วิเคราะห์สินค้าในรูปนี้ สั้นๆ 2–3 ประโยค "
+                            "บอกว่าสินค้าคืออะไร ดูดีอย่างไร เหมาะกับใคร "
+                            "ห้ามพูดถึงราคาหรือโปรโมชัน"
+                        ),
+                    },
+                ],
+                store=False,
+            )
+            return interaction.output_text or ""
+
+        except Exception as e:
+            logger.warning(f"Image analysis skipped: {e}")
+            return ""
+
+    # ------------------------------------------------------------------ #
+    #  Compliance Check                                                    #
+    # ------------------------------------------------------------------ #
+
+    def _run_compliance_check(self, content: VideoContent) -> VideoContent:
+        """
+        ตรวจ script ว่ามีคำต้องห้าม Shopee หรือไม่
+        ถ้าพบ → log warning + ตั้ง compliance_ok = False
+        """
+        all_text = f"{content.full_script} {content.caption} {content.video_title}".lower()
+        violations = []
+
+        for word in BANNED_PRICE_WORDS:
+            if word.lower() in all_text:
+                violations.append(f"ราคา: '{word}'")
+
+        for word in BANNED_PROMO_WORDS:
+            if word.lower() in all_text:
+                violations.append(f"โปร: '{word}'")
+
+        for word in BANNED_OVERCLAIM_WORDS:
+            if word.lower() in all_text:
+                violations.append(f"overclaim: '{word}'")
+
+        if violations:
+            logger.warning(
+                f"⚠️  Compliance violations พบ {len(violations)} รายการ:\n"
+                + "\n".join(f"   • {v}" for v in violations)
+            )
+            content.compliance_ok = False
+        else:
+            logger.info("✅ Compliance check ผ่าน — ไม่มีคำต้องห้าม")
+
+        return content
+
+    # ------------------------------------------------------------------ #
+    #  Helpers                                                             #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _build_product_desc(product: Product) -> str:
+        """สร้าง product description สำหรับใส่ใน prompt (ไม่มีราคา)"""
+        parts = []
+        if product.category:
+            parts.append(f"หมวด: {product.category}")
+        if product.rating:
+            parts.append(f"Rating {product.rating}⭐")
+        if product.sold_count:
+            parts.append(f"ขายแล้ว {product.sold_count:,} ชิ้น")
+        return " | ".join(parts) if parts else product.name
+
+    @staticmethod
+    def _extract_json(raw: str) -> str:
+        """ดึง JSON ออกจาก markdown code block"""
+        if "```json" in raw:
+            return raw.split("```json")[1].split("```")[0].strip()
+        if "```" in raw:
+            return raw.split("```")[1].split("```")[0].strip()
+        # fallback: หา { ... } block แรก
+        match = re.search(r"\{.*\}", raw, re.DOTALL)
+        return match.group(0) if match else raw
+
+    @staticmethod
+    def _default_hashtags(product: Product) -> list[str]:
+        base = ["shopee", "shopeeth", "ของดีบอกต่อ", "แนะนำสินค้า", "ป้ายยา"]
+        cat_tags = {
+            "beauty": ["skincare", "beautyreview", "สกินแคร์"],
+            "fashion": ["แฟชั่น", "ootd", "เสื้อผ้า"],
+            "electronics": ["แกดเจ็ต", "ไอที", "tech"],
+            "home": ["ของแต่งบ้าน", "homedecor", "บ้าน"],
+        }
+        extra = cat_tags.get(product.category.lower(), [])
+        return base + extra
+
+    def _fallback_content(self, product: Product) -> VideoContent:
+        """Fallback content (Shopee compliant) เมื่อ API มีปัญหา"""
+        return VideoContent(
+            product_name=product.name,
+            hook=f"แก คือเพิ่งรู้จักอันนี้มาไม่นาน...",
+            body=f"{product.short_name} ใช้งานง่ายมาก เอาไปเลย",
+            cta="ดูพิกัดในตะกร้าส้มซ้ายล่างได้เลยนะ 🧡",
+            full_script=(
+                f"แก คือเพิ่งรู้จักอันนี้มาไม่นาน "
+                f"{product.short_name} ใช้งานง่ายมาก "
+                f"ดูพิกัดในตะกร้าส้มซ้ายล่างได้เลยนะ"
+            ),
+            video_title=f"แนะนำ! {product.short_name[:35]}",
+            caption=f"แนะนำเลย! {product.short_name[:50]}\nดูในตะกร้าส้มซ้ายล่างได้เลย 🛒",
+            hashtags=self._default_hashtags(product),
+            compliance_ok=True,
+        )
