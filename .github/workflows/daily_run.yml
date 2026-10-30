@@ -37,6 +37,8 @@ jobs:
   run-bot:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      contents: write
 
     steps:
       # ===== Setup =====
@@ -66,6 +68,7 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LINE_CHANNEL_ACCESS_TOKEN: ${{ secrets.LINE_CHANNEL_ACCESS_TOKEN }}
           LINE_USER_ID: ${{ secrets.LINE_USER_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           SHOPEE_APP_ID: ${{ secrets.SHOPEE_APP_ID }}
           SHOPEE_SECRET: ${{ secrets.SHOPEE_SECRET }}
           CONTENT_LANGUAGE: th
@@ -77,6 +80,22 @@ jobs:
             python -m src.main --trend --category ${{ github.event.inputs.category || 'beauty' }} --products ${{ github.event.inputs.products || '2' }}
           else
             python -m src.main --routine --products ${{ github.event.inputs.products || '2' }}
+          fi
+
+      # ===== Publish ลง GitHub Releases (โหลดไฟล์ .mp4 ตรงๆ บนมือถือ ไม่ต้องแตกไฟล์ zip) =====
+      - name: 🚀 Publish direct video to GitHub Releases
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="clip-$(date +'%Y%m%d-%H%M%S')"
+          TITLE="🎬 Shopee Video พร้อมโพสต์ ($(date +'%d/%m/%Y %H:%M'))"
+          CAPTION_FILE=$(ls output/*.txt 2>/dev/null | head -n 1)
+          if [ -n "$CAPTION_FILE" ]; then
+            gh release create "$TAG" output/*.mp4 output/*_thumb.jpg \
+              --title "$TITLE" \
+              --notes-file "$CAPTION_FILE" \
+              --latest
           fi
 
       # ===== Upload วิดีโอ แคปชัน และ Thumbnail เป็น Artifact (เก็บไว้ 7 วัน) =====

@@ -51,6 +51,7 @@ from src.gemini_generator import GeminiContentGenerator
 from src.video_creator import FFmpegVideoCreator
 from src.telegram_sender import TelegramSender
 from src.line_sender import LineSender
+from src.discord_sender import DiscordSender
 from src.trend_researcher import TrendResearcher
 from src.google_drive_uploader import GoogleDriveUploader
 from src.routine_manager import RoutineManager
@@ -129,6 +130,7 @@ async def process_product(
     drive_uploader: GoogleDriveUploader | None = None,
     language: str = "th",
     line_sender: LineSender | None = None,
+    discord_sender: DiscordSender | None = None,
 ) -> tuple[bool, str | None]:
     """
     ประมวลผลสินค้า 1 ตัวผ่าน pipeline ทั้งหมด
@@ -186,6 +188,11 @@ async def process_product(
         logger.info("  💬 ส่งข้อมูลคลิปและลิงก์ไปยัง LINE...")
         line_sender.send_video_package(video_result, content, product.affiliate_link)
 
+    # ===== Step 7: ส่งไปยัง Discord =====
+    if discord_sender:
+        logger.info("  🎮 ส่งวิดีโอและแคปชันไปยัง Discord...")
+        discord_sender.send_video(video_result, content, product.affiliate_link)
+
     return True, video_result.video_path
 
 
@@ -221,6 +228,14 @@ async def run_pipeline(args, routine_mgr: RoutineManager | None = None) -> int:
                 logger.info("LINE Messaging API ✓")
             except Exception as e:
                 logger.info(f"ℹ️ ไม่ได้เชื่อมต่อ LINE ({e})")
+        # Discord เป็นทางเลือก (ถ้ามี Webhook URL)
+        discord_sender = None
+        if os.getenv("DISCORD_WEBHOOK_URL"):
+            try:
+                discord_sender = DiscordSender()
+                logger.info("Discord Webhook ✓")
+            except Exception as e:
+                logger.info(f"ℹ️ ไม่ได้เชื่อมต่อ Discord ({e})")
         trend_researcher = TrendResearcher()
         drive_uploader = GoogleDriveUploader()
     except Exception as e:
@@ -278,7 +293,7 @@ async def run_pipeline(args, routine_mgr: RoutineManager | None = None) -> int:
         logger.info(f"   Rating: {product.rating}⭐ | ขายแล้ว: {product.sold_count:,}")
 
         ok, vpath = await process_product(
-            product, gemini, creator, sender, drive_uploader, language, line_sender
+            product, gemini, creator, sender, drive_uploader, language, line_sender, discord_sender
         )
         if ok:
             success_count += 1
