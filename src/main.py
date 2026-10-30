@@ -199,7 +199,13 @@ async def run_pipeline(args, routine_mgr: RoutineManager | None = None) -> int:
         shopee = ShopeeAffiliateAPI()
         gemini = GeminiContentGenerator()
         creator = FFmpegVideoCreator(output_dir="output")
-        sender = None if args.no_telegram else TelegramSender()
+        # Telegram เป็นทางเลือก (ถ้าไม่มี token ให้ข้ามอัตโนมัติ)
+        sender = None
+        if not args.no_telegram and os.getenv("TELEGRAM_BOT_TOKEN"):
+            try:
+                sender = TelegramSender()
+            except Exception as e:
+                logger.info(f"ℹ️ ไม่ได้เชื่อมต่อ Telegram ({e}) — บันทึกคลิปไว้ที่ output/")
         trend_researcher = TrendResearcher()
         drive_uploader = GoogleDriveUploader()
     except Exception as e:
