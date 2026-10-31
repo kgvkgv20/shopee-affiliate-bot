@@ -303,6 +303,75 @@ async def delete_my_product(product_id: str):
     return {"success": True, "message": "ลบสินค้าเรียบร้อยแล้ว"}
 
 
+@app.get("/api/template/download")
+async def download_excel_template(format: str = "xlsx"):
+    """
+    ดาวน์โหลดไฟล์ตัวอย่าง Excel (.xlsx) หรือ CSV สำหรับใช้กรอกข้อมูลสินค้าเพื่อนำเข้า
+    """
+    from src.excel_importer import create_excel_template
+    template_dir = BASE_DIR / "data" / "templates"
+    xlsx_file = template_dir / "shopee_products_template.xlsx"
+    csv_file = template_dir / "shopee_products_template.csv"
+
+    # ถ้ายังไม่มีไฟล์ ให้สร้างใหม่
+    if not xlsx_file.exists() or not csv_file.exists():
+        create_excel_template()
+
+    fmt = format.lower().strip()
+    if fmt == "csv":
+        return FileResponse(
+            path=str(csv_file),
+            filename="shopee_products_template.csv",
+            media_type="text/csv; charset=utf-8",
+        )
+    else:
+        return FileResponse(
+            path=str(xlsx_file),
+            filename="shopee_products_template.xlsx",
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+
+
+@app.post("/api/import/excel")
+async def import_excel_api(
+    file: UploadFile = File(...),
+    auto_fetch_images: bool = Form(True)
+):
+    """
+    นำเข้าสินค้าจากไฟล์ Excel (.xlsx) หรือ CSV เข้าสู่ 'สินค้าของฉัน' พร้อมติดสถานะ 'รอทำคลิป'
+    """
+    from src.excel_importer import parse_and_import_excel
+    filename = file.filename or "import.xlsx"
+    ext = Path(filename).suffix.lower()
+
+    if ext not in [".xlsx", ".csv", ".txt"]:
+        raise HTTPException(status_code=400, detail="รองรับเฉพาะไฟล์นามสกุล .xlsx หรือ .csv เท่านั้น")
+
+    temp_id = uuid.uuid4().hex[:8]
+    temp_path = UPLOAD_DIR / f"temp_import_{temp_id}{ext}"
+    try:
+        content = await file.read()
+        with open(temp_path, "wb") as f:
+            f.write(content)
+
+        # รันการนำเข้าใน worker thread เพื่อไม่ให้บล็อก
+        result = await asyncio.to_thread(
+            parse_and_import_excel,
+            str(temp_path),
+            auto_fetch_images=auto_fetch_images
+        )
+        return result
+    except Exception as e:
+        logger.error(f"Excel import error: {e}")
+        raise HTTPException(status_code=500, detail=f"นำเข้าไฟล์ไม่สำเร็จ: {str(e)}")
+    finally:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except Exception:
+                pass
+
+
 @app.post("/api/catalog/import")
 async def import_csv(
     file: Optional[UploadFile] = File(None),

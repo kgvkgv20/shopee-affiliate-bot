@@ -194,8 +194,12 @@
                             </button>
                         </div>
 
-                        <!-- Action Buttons: Batch Render & Quick Sync -->
+                        <!-- Action Buttons: Batch Render & Quick Sync & Excel Template -->
                         <div class="flex items-center gap-2 shrink-0">
+                            <a href="/api/template/download?format=xlsx" download="shopee_products_template.xlsx" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs font-bold rounded-lg shadow-2xs flex items-center justify-center gap-1 transition" title="ดาวน์โหลดไฟล์ตัวอย่าง Excel สำหรับกรอกสินค้า">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                <span>📥 โหลดตัวอย่าง Excel</span>
+                            </a>
                             <button onclick="openBatchRenderModal()" id="btn-batch-render-pending" class="px-3 py-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-shopee-600 hover:from-red-600 hover:to-shopee-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition">
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-200"></i>
                                 <span>⚡ สร้างคลิปที่ค้างอยู่ (<strong id="btn-batch-pending-count">0</strong>)</span>
@@ -948,6 +952,10 @@
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                     <span>จัดการไฟล์</span>
                 </button>
+                <button id="sync-tab-excel-btn" onclick="switchSyncTab('excel')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+                    <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    <span>📊 นำเข้าไฟล์ Excel</span>
+                </button>
             </div>
 
             <!-- Subtab 0: Search Engine Auto-Crawler -->
@@ -1049,6 +1057,83 @@
                 <div class="flex gap-2 pt-2">
                     <button onclick="closeSyncModal()" class="flex-1 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold">ปิด</button>
                     <button onclick="saveSyncLinksFile()" id="sync-save-file-btn" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold">บันทึกไฟล์</button>
+                </div>
+            </div>
+
+            <!-- Subtab 4: Excel / CSV Import -->
+            <div id="sync-subtab-excel" class="hidden space-y-4 text-xs">
+                <!-- Template Info & Download Banner -->
+                <div class="p-3 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 font-bold text-emerald-950">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                            <span>นำเข้ารายการสินค้าทีละเยอะๆ ผ่านไฟล์ Excel (.xlsx) หรือ CSV</span>
+                        </div>
+                    </div>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        ดาวน์โหลดแม่แบบสำเร็จรูปที่มีตัวอย่างสินค้า กรอกชื่อสินค้า หมวดหมู่ ราคา และลิงก์ Shopee / Affiliate ของคุณ แล้วอัปโหลดกลับเข้ามา ระบบจะดึงภาพสินค้าจริงความละเอียดสูง 1024x1024 ครบทุกมุม พร้อมใส่สถานะ <strong>🟡 รอทำคลิป</strong> ให้อัตโนมัติ!
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <span class="text-[11px] font-semibold text-slate-700">โหลดไฟล์ตัวอย่าง:</span>
+                        <a href="/api/template/download?format=xlsx" download class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-[11px] shadow-xs transition">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>แม่แบบ Excel (.xlsx) [แนะนำ]</span>
+                        </a>
+                        <a href="/api/template/download?format=csv" download class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg font-semibold text-[11px] transition">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span>แม่แบบ CSV (.csv)</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dropzone / File Picker -->
+                <div class="space-y-1.5">
+                    <label class="block font-semibold text-slate-700">เลือกไฟล์ Excel หรือ CSV ที่ต้องการนำเข้า:</label>
+                    <div id="excel-dropzone" onclick="document.getElementById('excel-file-input').click()" class="border-2 border-dashed border-emerald-300 hover:border-emerald-500 bg-emerald-50/40 hover:bg-emerald-50/70 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2">
+                        <input type="file" id="excel-file-input" accept=".xlsx,.xls,.csv" onchange="handleExcelFileSelected(this)" class="hidden">
+                        <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-slate-800 text-xs">คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">รองรับไฟล์ .xlsx, .xls, .csv ขนาดไม่เกิน 10MB</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Selected File Preview -->
+                    <div id="excel-selected-file-box" class="hidden p-3 bg-white border border-emerald-300 rounded-xl flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p id="excel-file-name" class="font-bold text-slate-800 text-xs truncate max-w-[280px]"></p>
+                                <p id="excel-file-size" class="text-[10px] text-slate-400"></p>
+                            </div>
+                        </div>
+                        <button type="button" onclick="clearSelectedExcelFile()" class="text-slate-400 hover:text-red-500 p-1">
+                            <i data-lucide="x" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Option: Auto fetch real images from Shopee link -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <label class="flex items-center gap-2 cursor-pointer select-none">
+                        <input type="checkbox" id="excel-auto-fetch-images" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                        <div class="text-[11px]">
+                            <span class="font-semibold text-slate-800">ดึงรูปสินค้าจริงจาก Shopee อัตโนมัติ (1024x1024 Packshot)</span>
+                            <p class="text-slate-400 text-[10px]">หากกรอกลิงก์ Shopee หรือ Affiliate ระบบจะส่งบอทไปดึงรูปคมชัดครบทุกมุมให้ทันที</p>
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-1">
+                    <button onclick="submitExcelImport()" id="excel-import-btn" class="w-full py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="upload" class="w-4 h-4"></i>
+                        <span id="excel-import-btn-text">เริ่มนำเข้ารายการสินค้าเข้าคลังทันที</span>
+                    </button>
                 </div>
             </div>
 
@@ -2739,7 +2824,7 @@
         }
 
         function switchSyncTab(tab) {
-            const tabs = ['crawler', 'file', 'paste', 'edit'];
+            const tabs = ['crawler', 'file', 'paste', 'edit', 'excel'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`sync-tab-${t}-btn`);
                 const subtab = document.getElementById(`sync-subtab-${t}`);
@@ -2937,6 +3022,85 @@
             } finally {
                 btn.disabled = false;
                 btn.textContent = "บันทึกไฟล์";
+            }
+        }
+
+        // --- Excel / CSV Import Modal Helpers ---
+        let selectedExcelFile = null;
+
+        function handleExcelFileSelected(input) {
+            if (!input.files || input.files.length === 0) return;
+            selectedExcelFile = input.files[0];
+            
+            const dropzone = document.getElementById('excel-dropzone');
+            const fileBox = document.getElementById('excel-selected-file-box');
+            const fileNameEl = document.getElementById('excel-file-name');
+            const fileSizeEl = document.getElementById('excel-file-size');
+
+            if (fileNameEl) fileNameEl.textContent = selectedExcelFile.name;
+            if (fileSizeEl) {
+                const sizeKb = (selectedExcelFile.size / 1024).toFixed(1);
+                fileSizeEl.textContent = `${sizeKb} KB - พร้อมนำเข้า`;
+            }
+
+            if (dropzone) dropzone.classList.add('hidden');
+            if (fileBox) fileBox.classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function clearSelectedExcelFile() {
+            selectedExcelFile = null;
+            const input = document.getElementById('excel-file-input');
+            if (input) input.value = '';
+
+            const dropzone = document.getElementById('excel-dropzone');
+            const fileBox = document.getElementById('excel-selected-file-box');
+            if (dropzone) dropzone.classList.remove('hidden');
+            if (fileBox) fileBox.classList.add('hidden');
+        }
+
+        async function submitExcelImport() {
+            if (!selectedExcelFile) {
+                alert('กรุณาเลือกไฟล์ Excel (.xlsx) หรือ CSV ก่อนกดนำเข้า');
+                return;
+            }
+
+            const btn = document.getElementById('excel-import-btn');
+            const btnText = document.getElementById('excel-import-btn-text');
+            const pbox = document.getElementById('sync-progress-box');
+            const ptext = document.getElementById('sync-progress-text');
+            const autoFetch = document.getElementById('excel-auto-fetch-images') ? document.getElementById('excel-auto-fetch-images').checked : true;
+
+            btn.disabled = true;
+            btnText.textContent = "กำลังประมวลผลไฟล์และดึงภาพจาก Shopee...";
+            pbox.classList.remove('hidden');
+            ptext.textContent = `กำลังอ่านข้อมูลจาก ${selectedExcelFile.name} และดึงภาพ Shopee 1024x1024...`;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedExcelFile);
+                formData.append('auto_fetch_images', autoFetch ? 'true' : 'false');
+
+                const res = await fetch('/api/import/excel', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    showToast(`🎉 ${data.message}`);
+                    clearSelectedExcelFile();
+                    closeSyncModal();
+                    setSource('my_products');
+                } else {
+                    alert('นำเข้าไม่สำเร็จ: ' + (data.detail || data.message || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการนำเข้า: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "เริ่มนำเข้ารายการสินค้าเข้าคลังทันที";
+                pbox.classList.add('hidden');
             }
         }
 
