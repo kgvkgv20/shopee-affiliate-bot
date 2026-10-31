@@ -926,7 +926,11 @@
 
             <!-- Sync Tabs -->
             <div class="flex border-b border-slate-200 text-xs gap-1">
-                <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition">
+                <button id="sync-tab-crawler-btn" onclick="switchSyncTab('crawler')" class="pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition">
+                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                    <span>🤖 บอทค้นหา Shopee อัตโนมัติ (Crawler)</span>
+                </button>
+                <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                     <span>ดึงจาก my_links.txt (<strong id="sync-file-count">0</strong>)</span>
                 </button>
@@ -936,12 +940,62 @@
                 </button>
                 <button id="sync-tab-edit-btn" onclick="switchSyncTab('edit')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                    <span>จัดการไฟล์ my_links.txt</span>
+                    <span>จัดการไฟล์</span>
                 </button>
             </div>
 
+            <!-- Subtab 0: Search Engine Auto-Crawler -->
+            <div id="sync-subtab-crawler" class="space-y-4 text-xs">
+                <div class="p-3 bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl space-y-1.5">
+                    <div class="flex items-center gap-1.5 font-bold text-orange-950">
+                        <i data-lucide="bot" class="w-4 h-4 text-shopee-600"></i>
+                        <span>บอทค้นหาและดูดสินค้าจาก Shopee อัตโนมัติ (Search Engine Index Crawler)</span>
+                    </div>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        บอทจะค้นหาผ่าน Google Search Index เจาะจงเฉพาะสินค้าขายดีบน Shopee Thailand 
+                        แล้วตามไปสกัดภาพถ่ายจริงความละเอียดสูง 1024x1024 ครบ 3 มุม พร้อมชื่อสินค้า บันทึกลงคลัง <strong>🟡 รอทำคลิป</strong> ให้ทันที โดยที่คุณไม่ต้องเปิดแอป Shopee ไปก๊อปลิงก์เองเลย!
+                    </p>
+                </div>
+
+                <!-- Input Keyword -->
+                <div class="space-y-1.5">
+                    <label class="block font-semibold text-slate-700">พิมพ์ชื่อสินค้า / แบรนด์ หรือสิ่งที่ต้องการทำคลิป:</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            <input type="text" id="crawler-keyword-input" placeholder="เช่น ครีมกันแดด MizuMi, เซรั่ม Dr.PONG, แก้ว Tyeso, หูฟัง Baseus..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                        </div>
+                        <select id="crawler-count-select" class="text-xs border border-slate-300 rounded-xl px-2.5 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-shopee-500 shrink-0">
+                            <option value="1">ดึง 1 สินค้า</option>
+                            <option value="2" selected>ดึง 2 สินค้า</option>
+                            <option value="3">ดึง 3 สินค้า</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Quick Preset Tags -->
+                <div class="space-y-1.5">
+                    <span class="text-slate-400 font-medium text-[11px]">หรือคลิกเลือกคีย์เวิร์ดยอดฮิต:</span>
+                    <div class="flex flex-wrap gap-1.5">
+                        <button type="button" onclick="setCrawlerKeyword('MizuMi ครีมกันแดด', 'beauty')" class="px-2.5 py-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-[11px] font-medium transition">💄 กันแดด MizuMi</button>
+                        <button type="button" onclick="setCrawlerKeyword('เซรั่ม Dr.PONG 28D', 'beauty')" class="px-2.5 py-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-[11px] font-medium transition">✨ เซรั่ม Dr.PONG</button>
+                        <button type="button" onclick="setCrawlerKeyword('แก้วเก็บความเย็น Tyeso 900ml', 'home')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-medium transition">🏠 แก้วเก็บความเย็น Tyeso</button>
+                        <button type="button" onclick="setCrawlerKeyword('พัดลมพกพา Jisulife', 'home')" class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[11px] font-medium transition">🌀 พัดลม Jisulife</button>
+                        <button type="button" onclick="setCrawlerKeyword('หูฟังบลูทูธไร้สาย Baseus', 'electronics')" class="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-[11px] font-medium transition">🎧 หูฟัง Baseus</button>
+                        <button type="button" onclick="setCrawlerKeyword('กระเป๋าสะพายข้างกันน้ำ', 'fashion')" class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-[11px] font-medium transition">👜 กระเป๋าสะพายข้าง</button>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="startCrawlerSearch()" id="crawler-search-btn" class="w-full py-2.5 bg-gradient-to-r from-shopee-600 via-orange-500 to-amber-500 hover:from-shopee-700 hover:to-orange-600 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                        <span id="crawler-search-btn-text">🚀 สั่งบอทออกไปล่าสินค้า Shopee เข้าคลังทันที</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Subtab 1: File Sync -->
-            <div id="sync-subtab-file" class="space-y-3 text-xs">
+            <div id="sync-subtab-file" class="hidden space-y-3 text-xs">
                 <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1">
                     <p class="font-bold text-amber-900 flex items-center gap-1.5">
                         <i data-lucide="zap" class="w-4 h-4 text-amber-600"></i>
@@ -2527,6 +2581,7 @@
         // --- Sync Modal & Functions ---
         function openSyncModal() {
             document.getElementById('sync-modal').classList.remove('hidden');
+            switchSyncTab('crawler');
             loadSyncLinksStatus();
             lucide.createIcons();
         }
@@ -2536,7 +2591,7 @@
         }
 
         function switchSyncTab(tab) {
-            const tabs = ['file', 'paste', 'edit'];
+            const tabs = ['crawler', 'file', 'paste', 'edit'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`sync-tab-${t}-btn`);
                 const subtab = document.getElementById(`sync-subtab-${t}`);
@@ -2549,6 +2604,57 @@
                 }
             });
             lucide.createIcons();
+        }
+
+        function setCrawlerKeyword(kw, category) {
+            const input = document.getElementById('crawler-keyword-input');
+            if (input) input.value = kw;
+            window._crawlerCategory = category;
+        }
+
+        async function startCrawlerSearch() {
+            const input = document.getElementById('crawler-keyword-input');
+            const kw = input ? input.value.trim() : '';
+            const countSelect = document.getElementById('crawler-count-select');
+            const limit = countSelect ? (parseInt(countSelect.value) || 2) : 2;
+            const category = window._crawlerCategory || 'general';
+
+            if (!kw) {
+                alert('กรุณากรอกชื่อสินค้าหรือแบรนด์ที่ต้องการค้นหา');
+                return;
+            }
+
+            const btn = document.getElementById('crawler-search-btn');
+            const btnText = document.getElementById('crawler-search-btn-text');
+            const pbox = document.getElementById('sync-progress-box');
+            const ptext = document.getElementById('sync-progress-text');
+
+            btn.disabled = true;
+            btnText.textContent = "บอทกำลังค้นหาและดึงรูปสินค้าจาก Shopee...";
+            pbox.classList.remove('hidden');
+            ptext.textContent = `กำลังค้นหา "${kw}" ผ่าน Google Search Index และสกัดรูป 1024x1024 จาก Shopee CDN...`;
+
+            try {
+                const res = await fetch('/api/crawler/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ keyword: kw, limit: limit, category: category })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 บอทกวาดสินค้า Shopee สำเร็จ ${data.count} รายการ พร้อมรูปตรงปก!`);
+                    closeSyncModal();
+                    setSource('my_products');
+                } else {
+                    alert('ดึงข้อมูลไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "🚀 สั่งบอทออกไปล่าสินค้า Shopee เข้าคลังทันที";
+                pbox.classList.add('hidden');
+            }
         }
 
         async function loadSyncLinksStatus() {

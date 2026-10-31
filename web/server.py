@@ -244,6 +244,46 @@ async def run_sync_links(data: dict):
     }
 
 
+@app.post("/api/crawler/search")
+async def crawler_search_api(data: dict):
+    """
+    บอทค้นหาสินค้า Shopee อัตโนมัติผ่าน Search Engine Index
+    ค้นหาลิงก์ตรงปก ดึงภาพแท้ 1024x1024 และเพิ่มเข้าคลัง 'สินค้าของฉัน' ให้อัตโนมัติ
+    Payload: { "keyword": "กันแดด MizuMi", "limit": 2, "category": "beauty" }
+    """
+    from src.search_crawler import crawl_and_import_products
+
+    keyword = data.get("keyword", "").strip()
+    limit = int(data.get("limit", 2))
+    category = data.get("category", "general")
+
+    if not keyword:
+        raise HTTPException(status_code=400, detail="กรุณาระบุคำค้นหา เช่น ชื่อสินค้า หรือแบรนด์")
+
+    res = await crawl_and_import_products(keyword=keyword, max_products=limit, category=category)
+    if not res.get("success"):
+        raise HTTPException(status_code=404, detail=res.get("message", "ไม่พบสินค้าสำหรับคำค้นหานี้"))
+
+    stats = catalog_mgr.get_video_stats()
+    return {
+        "success": True,
+        "count": res.get("count", 0),
+        "message": res.get("message"),
+        "products": res.get("products", []),
+        "stats": stats,
+    }
+
+
+@app.get("/api/crawler/presets")
+async def crawler_presets_api():
+    """ดึงรายการ Preset คำค้นหาสินค้าขายดีตามหมวดหมู่"""
+    from src.search_crawler import CATEGORY_PRESET_KEYWORDS
+    return {
+        "success": True,
+        "presets": CATEGORY_PRESET_KEYWORDS
+    }
+
+
 @app.post("/api/my-products")
 async def add_my_product(data: dict):
     """บันทึกสินค้าเข้าหมวด 'สินค้าของฉัน'"""

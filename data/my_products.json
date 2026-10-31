@@ -1,5 +1,25 @@
 [
   {
+    "name": "Hashi plus",
+    "brand": "ร้านแนะนำ",
+    "category": "home",
+    "commission_rate": "25%",
+    "commission_badge": "Auto Crawled 25%",
+    "price_thb": 0.0,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "สินค้าขายดีตรงปก สั่งซื้อผ่านตะกร้าส้ม Shopee (ค้นหาจาก: Hashi Plus)",
+    "images": [
+      "assets/products/custom_downloads/shopee_live_60f4c0097e.jpg",
+      "assets/products/custom_downloads/shopee_live_8cd7cba5e2.jpg",
+      "assets/products/custom_downloads/shopee_live_8bbc7cf551.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/Hashi-plus-i.53897882.1242514824",
+    "rating": 4.9,
+    "sold_count": 15000,
+    "id": "my_1793483631",
+    "is_custom": true
+  },
+  {
     "id": "my_1793464706",
     "name": "ฮาชชิ พลัส Hashi Plus Ergo Series ใช้ล้างทำความสะอาดโพรงจมูก อุปกรณ์ล้างจมูก",
     "brand": "Hashi Plus",
