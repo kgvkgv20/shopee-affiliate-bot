@@ -14,14 +14,16 @@ FastAPI Web Application สำหรับ Shopee Affiliate Video Maker (Pro Fea
 import os
 import sys
 import json
+import asyncio
 import uuid
 import time
 import shutil
 import logging
 import re
 from pathlib import Path
-from typing import Optional, List
-from urllib.parse import unquote, urlparse
+from datetime import datetime
+from typing import Optional, List, Dict, Any
+from urllib.parse import unquote, urlparse, quote_plus
 from dotenv import load_dotenv
 
 # โหลด .env
@@ -44,6 +46,14 @@ from src.tts_generator import generate_voiceover
 from src.discord_sender import DiscordSender
 from src.catalog_manager import CatalogManager
 from src.image_handler import extract_shopee_product_data, download_image_to_file
+from src.telegram_sender import TelegramSender
+from src.scheduler_service import (
+    get_local_ip,
+    load_scheduler_config,
+    save_scheduler_config,
+    record_scheduler_run,
+    AutoSchedulerWorker,
+)
 
 OUTPUT_DIR = BASE_DIR / "output"
 ASSETS_DIR = BASE_DIR / "assets"
@@ -70,6 +80,24 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 script_generator = GeminiContentGenerator()
 video_creator = FFmpegVideoCreator()
 catalog_mgr = CatalogManager()
+
+scheduler_worker: Optional[AutoSchedulerWorker] = None
+
+
+@app.on_event("startup")
+async def startup_event():
+    """เริ่มต้น Background Scheduler เมื่อเปิดเว็บ"""
+    global scheduler_worker
+    scheduler_worker = AutoSchedulerWorker(runner_callback=execute_scheduled_routine)
+    asyncio.create_task(scheduler_worker.start())
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """หยุด Background Scheduler เมื่อปิดเซิร์ฟเวอร์"""
+    global scheduler_worker
+    if scheduler_worker:
+        scheduler_worker.stop()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -614,17 +642,297 @@ async def get_history():
     return {"success": True, "count": len(history), "history": history[:20]}
 
 
-@app.get("/download/{filename}")
-async def download_file(filename: str):
-    """ดาวน์โหลดไฟล์วิดีโอโดยตรง"""
+@app.get("/api/system-info")
+async def get_system_info():
+    """ดึงข้อมูลเครือข่าย Local IP และสถานะการเชื่อมต่อบอท"""
+    local_ip = get_local_ip()
+    tg_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+    tg_chat = os.getenv("TELEGRAM_CHAT_ID", "")
+    discord_wh = os.getenv("DISCORD_WEBHOOK_URL", "")
+
+    return {
+        "success": True,
+        "local_ip": local_ip,
+        "port": 8000,
+        "mobile_base_url": f"http://{local_ip}:8000",
+        "telegram_configured": bool(tg_token and tg_chat),
+        "telegram_chat_id": tg_chat,
+        "discord_configured": bool(discord_wh),
+    }
+
+
+@app.get("/api/qr-url")
+async def get_qr_url(filename: str):
+    """สร้างลิงก์สำหรับสแกน QR Code ดาวน์โหลดวิดีโอบนมือถือในวง Wi-Fi เดียวกัน"""
+    local_ip = get_local_ip()
     file_path = OUTPUT_DIR / filename
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="ไม่พบไฟล์")
-    return FileResponse(
-        path=str(file_path),
-        filename=filename,
-        media_type="video/mp4"
-    )
+        raise HTTPException(status_code=404, detail="ไม่พบไฟล์วิดีโอ")
+
+    direct_download_url = f"http://{local_ip}:8000/output/{filename}"
+    encoded_url = quote_plus(direct_download_url)
+    qr_image_url = f"https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data={encoded_url}"
+
+    return {
+        "success": True,
+        "filename": filename,
+        "direct_url": direct_download_url,
+        "qr_image_url": qr_image_url,
+        "local_ip": local_ip,
+    }
+
+
+@app.post("/api/send-telegram")
+async def send_telegram(data: dict):
+    """ส่งวิดีโอและแคปชันเข้า Telegram Bot"""
+    filename = data.get("filename", "").strip()
+    caption = data.get("caption", "").strip()
+    title = data.get("title", "")
+    hashtags = data.get("hashtags", "")
+    affiliate_url = data.get("affiliate_url", "")
+    bot_token = data.get("bot_token", "").strip()
+    chat_id = data.get("chat_id", "").strip()
+
+    video_path = OUTPUT_DIR / filename
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail="ไม่พบไฟล์วิดีโอ")
+
+    meta_path = OUTPUT_DIR / (video_path.stem + "_meta.json")
+    thumb_path = None
+    if meta_path.exists():
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+                if not caption:
+                    caption = meta.get("caption", "")
+                if not title:
+                    title = meta.get("product_name", "")
+                if not hashtags and meta.get("hashtags"):
+                    hashtags = " ".join(f"#{t}" for t in meta["hashtags"])
+                if not affiliate_url:
+                    affiliate_url = meta.get("affiliate_url", "")
+                t_name = meta.get("thumbnail_filename")
+                if t_name and (OUTPUT_DIR / t_name).exists():
+                    thumb_path = str(OUTPUT_DIR / t_name)
+        except Exception:
+            pass
+
+    sender = TelegramSender(token=bot_token or None, chat_id=chat_id or None)
+    if not sender.is_configured():
+        raise HTTPException(
+            status_code=400,
+            detail="กรุณาระบุ Telegram Bot Token และ Chat ID หรือบันทึกใน .env"
+        )
+
+    try:
+        await sender.send_direct_video(
+            video_path=str(video_path),
+            caption=caption,
+            thumbnail_path=thumb_path,
+            title=title,
+            hashtags=hashtags,
+            affiliate_url=affiliate_url,
+        )
+        return {"success": True, "message": "ส่งวิดีโอเข้า Telegram เรียบร้อยแล้ว!"}
+    except Exception as e:
+        logger.error(f"Send telegram failed: {e}")
+        raise HTTPException(status_code=500, detail=f"ส่งเข้า Telegram ไม่สำเร็จ: {str(e)}")
+
+
+@app.post("/api/test-telegram")
+async def test_telegram(data: dict):
+    """ทดสอบเชื่อมต่อ Telegram Bot"""
+    bot_token = data.get("bot_token", "").strip()
+    chat_id = data.get("chat_id", "").strip()
+
+    sender = TelegramSender(token=bot_token or None, chat_id=chat_id or None)
+    if not sender.is_configured():
+        raise HTTPException(status_code=400, detail="กรุณาระบุ Bot Token และ Chat ID")
+
+    try:
+        ok = await sender.send_test_message("🎉 ยินดีด้วยครับ! บอท Shopee Affiliate เชื่อมต่อกับ Telegram ของคุณสำเร็จแล้ว!")
+        if ok:
+            return {"success": True, "message": "เชื่อมต่อ Telegram สำเร็จ! ส่งข้อความทดสอบแล้ว"}
+        raise Exception("ไม่สามารถส่งข้อความได้")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"เชื่อมต่อไม่สำเร็จ: {str(e)}")
+
+
+@app.post("/api/save-telegram-config")
+async def save_telegram_config(data: dict):
+    """บันทึก Telegram Bot Token และ Chat ID ลงไฟล์ .env"""
+    bot_token = data.get("bot_token", "").strip()
+    chat_id = data.get("chat_id", "").strip()
+
+    env_path = BASE_DIR / ".env"
+    env_content = ""
+    if env_path.exists():
+        with open(env_path, "r", encoding="utf-8") as f:
+            env_content = f.read()
+
+    # อัปเดตหรือเพิ่ม TELEGRAM_BOT_TOKEN
+    if "TELEGRAM_BOT_TOKEN=" in env_content:
+        env_content = re.sub(r"TELEGRAM_BOT_TOKEN=.*", f"TELEGRAM_BOT_TOKEN={bot_token}", env_content)
+    else:
+        env_content += f"\nTELEGRAM_BOT_TOKEN={bot_token}"
+
+    # อัปเดตหรือเพิ่ม TELEGRAM_CHAT_ID
+    if "TELEGRAM_CHAT_ID=" in env_content:
+        env_content = re.sub(r"TELEGRAM_CHAT_ID=.*", f"TELEGRAM_CHAT_ID={chat_id}", env_content)
+    else:
+        env_content += f"\nTELEGRAM_CHAT_ID={chat_id}"
+
+    with open(env_path, "w", encoding="utf-8") as f:
+        f.write(env_content.strip() + "\n")
+
+    os.environ["TELEGRAM_BOT_TOKEN"] = bot_token
+    os.environ["TELEGRAM_CHAT_ID"] = chat_id
+
+    return {"success": True, "message": "บันทึกการตั้งค่า Telegram เรียบร้อยแล้ว"}
+
+
+@app.get("/api/scheduler/config")
+async def get_scheduler_config_api():
+    """ดึงการตั้งค่าตารางรันอัตโนมัติ"""
+    cfg = load_scheduler_config()
+    return {"success": True, "config": cfg}
+
+
+@app.post("/api/scheduler/config")
+async def save_scheduler_config_api(data: dict):
+    """บันทึกการตั้งค่าตารางรันอัตโนมัติ"""
+    saved = save_scheduler_config(data)
+    return {"success": True, "message": "บันทึกการตั้งค่าตารางเวลาสำเร็จ", "config": saved}
+
+
+@app.get("/api/scheduler/history")
+async def get_scheduler_history_api():
+    """ดึงประวัติการรันอัตโนมัติ"""
+    hist_file = BASE_DIR / "data" / "scheduler_history.json"
+    history = []
+    if hist_file.exists():
+        try:
+            with open(hist_file, "r", encoding="utf-8") as f:
+                history = json.load(f)
+        except Exception:
+            pass
+    return {"success": True, "history": history}
+
+
+@app.post("/api/scheduler/run-now")
+async def run_scheduler_now():
+    """กดสั่งรัน Routine การผลิตคลิปอัตโนมัติตอนนี้ทันที (Test Run)"""
+    res = await execute_scheduled_routine(is_manual=True)
+    return res
+
+
+async def execute_scheduled_routine(is_manual: bool = False) -> Dict:
+    """ประมวลผลการผลิตคลิปอัตโนมัติตามตารางเวลา"""
+    import random
+    config = load_scheduler_config()
+    count = int(config.get("count_per_run", 3))
+    source = config.get("source", "both")
+    template = config.get("template", "clean")
+    enable_voice = config.get("enable_voice", True)
+    voice_type = config.get("voice_type", "female")
+    bgm_track = config.get("bgm_track", "cheerful")
+    notify_telegram = config.get("notify_telegram", True)
+    notify_discord = config.get("notify_discord", False)
+
+    candidates = []
+    if source in ["my_products", "both"]:
+        my_items = catalog_mgr.get_all_products(source="my_products")
+        candidates.extend(my_items)
+
+    if source in ["catalog", "both"] or len(candidates) < count:
+        catalog_items = catalog_mgr.get_all_products(source="catalog", min_commission=20)
+        candidates.extend(catalog_items)
+
+    if not candidates:
+        logger.warning("Scheduler: ไม่พบสินค้าสำหรับสร้างคลิป")
+        return {"success": False, "message": "ไม่พบสินค้าสำหรับสร้างคลิป"}
+
+    # สุ่มเลือกตามจำนวนที่ตั้งไว้
+    selected = candidates[:count] if len(candidates) <= count else random.sample(candidates, count)
+
+    logger.info(f"⏰ [Scheduler] เริ่มต้นสร้างคลิปอัตโนมัติ {len(selected)} รายการ...")
+    results = []
+
+    for item in selected:
+        try:
+            custom_link = item.get("affiliate_link", "") or f"https://shopee.co.th/search?keyword={item['name']}"
+            product = Product(
+                item_id=f"auto_{item['category']}_{item['id']}_{int(time.time())}",
+                shop_id="official_mall",
+                name=item["name"],
+                price=0.0,
+                original_price=0.0,
+                discount_percent=0,
+                image_urls=item["images"],
+                affiliate_link=custom_link,
+                category=item["category"],
+                rating=float(item.get("rating", 4.9)),
+                sold_count=int(item.get("sold_count", 50000)),
+                description=item["highlight"],
+            )
+
+            res = _process_video_generation(
+                product=product,
+                image_paths=item["images"],
+                tone="friend",
+                template=template,
+                enable_voice=enable_voice,
+                voice_type=voice_type,
+                bgm_track=bgm_track,
+            )
+
+            results.append(res)
+
+            # ส่งเข้า Telegram ทันทีถ้าเปิดไว้
+            if notify_telegram:
+                try:
+                    tg = TelegramSender()
+                    if tg.is_configured():
+                        v_path = str(OUTPUT_DIR / res["video_filename"])
+                        t_path = str(OUTPUT_DIR / res["thumbnail_filename"])
+                        tags_str = " ".join(f"#{t}" for t in res.get("hashtags", []))
+                        await tg.send_direct_video(
+                            video_path=v_path,
+                            caption=res["caption"],
+                            thumbnail_path=t_path,
+                            title=res["product_name"],
+                            hashtags=tags_str,
+                            affiliate_url=res.get("affiliate_url"),
+                        )
+                except Exception as tg_e:
+                    logger.warning(f"Telegram auto-send error: {tg_e}")
+
+        except Exception as e:
+            logger.error(f"Scheduler generate failed for {item.get('id')}: {e}")
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    config["last_run_timestamp"] = time.time()
+    config["last_run_time_str"] = now_str
+    config["total_automated_runs"] = config.get("total_automated_runs", 0) + 1
+    config["total_videos_created"] = config.get("total_videos_created", 0) + len(results)
+    save_scheduler_config(config)
+
+    run_log = {
+        "timestamp": now_str,
+        "is_manual": is_manual,
+        "count": len(results),
+        "products": [r.get("product_name") for r in results],
+        "videos": [r.get("video_filename") for r in results],
+    }
+    record_scheduler_run(run_log)
+
+    return {
+        "success": True,
+        "count": len(results),
+        "results": results,
+        "timestamp": now_str,
+        "message": f"รันอัตโนมัติสำเร็จ สร้างคลิป {len(results)} รายการเรียบร้อยแล้ว!"
+    }
 
 
 if __name__ == "__main__":

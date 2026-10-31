@@ -2,18 +2,15 @@
 telegram_sender.py
 ------------------
 ส่งวิดีโอ + caption + hashtag ผ่าน Telegram Bot
-
-ผู้ใช้รับวิดีโอใน Telegram → forward ไปโพสต์ Shopee เองได้เลย
-(ประหยัดเวลา 80% เหลือแค่ 30 วิ/คลิป)
+ผู้ใช้รับวิดีโอใน Telegram → บันทึกลงมือถือ แล้วโพสต์ Shopee Video ได้ทันทีใน 30 วินาที
 """
 import os
 import asyncio
 import logging
 from pathlib import Path
-from telegram import Bot, InputMediaVideo
+from typing import Optional
+from telegram import Bot
 from telegram.constants import ParseMode
-from src.video_creator import VideoResult
-from src.gemini_generator import VideoContent
 
 logger = logging.getLogger(__name__)
 
@@ -21,128 +18,101 @@ logger = logging.getLogger(__name__)
 class TelegramSender:
     """
     ส่งวิดีโอไปยัง Telegram
-
     Setup:
     1. เปิด Telegram → ค้นหา @BotFather
     2. /newbot → ตั้งชื่อ → รับ Token
-    3. ส่งข้อความใดก็ได้ให้ bot
+    3. ส่งข้อความใดก็ได้ให้ bot หรือกด Start
     4. เปิด https://api.telegram.org/bot{TOKEN}/getUpdates
        → หา "chat": {"id": XXXX}  ← นี่คือ CHAT_ID
     """
 
-    def __init__(self):
-        self.token = os.getenv("TELEGRAM_BOT_TOKEN", "")
-        self.chat_id = os.getenv("TELEGRAM_CHAT_ID", "")
+    def __init__(self, token: Optional[str] = None, chat_id: Optional[str] = None):
+        self.token = token or os.getenv("TELEGRAM_BOT_TOKEN", "")
+        self.chat_id = str(chat_id or os.getenv("TELEGRAM_CHAT_ID", ""))
+        self.bot = Bot(token=self.token) if self.token else None
 
-        if not self.token or not self.chat_id:
-            raise ValueError(
-                "ต้องกำหนด TELEGRAM_BOT_TOKEN และ TELEGRAM_CHAT_ID ใน .env\n"
-                "ดู README.md สำหรับวิธีสร้าง Bot"
+    def is_configured(self) -> bool:
+        return bool(self.token and self.chat_id and self.bot)
+
+    async def send_test_message(self, message: str = "🎉 บอท Shopee Affiliate เชื่อมต่อ Telegram สำเร็จแล้ว!") -> bool:
+        """ส่งข้อความทดสอบการเชื่อมต่อ"""
+        if not self.is_configured():
+            logger.warning("Telegram Bot is not configured")
+            return False
+        try:
+            await self.bot.send_message(
+                chat_id=self.chat_id,
+                text=message,
             )
-        self.bot = Bot(token=self.token)
+            return True
+        except Exception as e:
+            logger.error(f"Telegram test message error: {e}")
+            raise e
 
-    async def send_video_async(
+    async def send_direct_video(
         self,
-        video_result: VideoResult,
-        content: VideoContent,
-        affiliate_link: str,
+        video_path: str,
+        caption: str,
+        thumbnail_path: Optional[str] = None,
+        title: Optional[str] = None,
+        hashtags: Optional[str] = None,
+        affiliate_url: Optional[str] = None,
     ) -> bool:
         """
-        ส่งวิดีโอพร้อม caption ไปยัง Telegram
-
-        Returns:
-            True ถ้าส่งสำเร็จ
+        ส่งวิดีโอจากไฟล์ตรง พร้อมแคปชันและไกด์โพสต์ Shopee
         """
+        if not self.is_configured():
+            raise ValueError("กรุณาระบุ Telegram Bot Token และ Chat ID")
+
+        v_file = Path(video_path)
+        if not v_file.exists():
+            raise FileNotFoundError(f"ไม่พบไฟล์วิดีโอ: {video_path}")
+
         try:
-            # ===== สร้าง Caption (Markdown) =====
-            caption = self._build_caption(content, affiliate_link)
+            # 1. ข้อความใน Caption ใต้วิดีโอ
+            clean_caption = caption[:1000] if caption else (title or "คลิปแนะนำสินค้า Shopee")
+            if affiliate_url and affiliate_url not in clean_caption:
+                clean_caption += f"\n\n🛒 พิกัด: {affiliate_url}"
 
-            # ===== ส่งวิดีโอ =====
-            video_path = Path(video_result.video_path)
-            thumb_path = Path(video_result.thumbnail_path)
+            with open(v_file, "rb") as video_file:
+                thumb_data = None
+                if thumbnail_path and Path(thumbnail_path).exists():
+                    thumb_data = open(thumbnail_path, "rb")
 
-            with open(video_path, "rb") as video_file:
-                thumb_data = open(thumb_path, "rb") if thumb_path.exists() else None
                 await self.bot.send_video(
                     chat_id=self.chat_id,
                     video=video_file,
                     thumbnail=thumb_data,
-                    caption=caption,
-                    parse_mode=ParseMode.MARKDOWN_V2,
+                    caption=clean_caption,
                     supports_streaming=True,
                     width=720,
                     height=1280,
                 )
+
                 if thumb_data:
                     thumb_data.close()
 
-            logger.info(f"✅ ส่งวิดีโอไปยัง Telegram สำเร็จ: {video_result.product_name[:40]}")
+            # 2. ส่งข้อความแยกเพื่อให้ก๊อปปี้แคปชันและแฮชแท็กได้ง่ายๆ
+            guide_text = (
+                "📱 *Shopee Video Guide*\n\n"
+                "1️⃣ กดบันทึกวิดีโอด้านบนลงมือถือ\n"
+                "2️⃣ เปิดแอป Shopee → โพสต์คลิปใน Shopee Video\n"
+                "3️⃣ ก๊อปปี้ข้อความด้านล่างไปวางในช่องแคปชัน\n"
+                "4️⃣ แนบสินค้าในตะกร้าส้ม แล้วกดโพสต์ได้เลย! 🛒\n\n"
+                "━━━━━━━━━━━━━━━\n"
+                f"📌 *ข้อความแคปชันสำหรับโพสต์:*\n`{clean_caption}`\n\n"
+            )
+            if hashtags:
+                guide_text += f"🏷️ *Hashtags:*\n`{hashtags}`"
 
-            # ===== ส่ง instruction แยก =====
-            await self.send_posting_guide(content)
+            await self.bot.send_message(
+                chat_id=self.chat_id,
+                text=guide_text,
+                parse_mode=ParseMode.MARKDOWN,
+            )
+            logger.info(f"✅ ส่งวิดีโอ {v_file.name} เข้า Telegram เรียบร้อยแล้ว")
             return True
 
         except Exception as e:
-            logger.error(f"Telegram send error: {e}")
-            return False
-
-    async def send_posting_guide(self, content: VideoContent):
-        """ส่งคำแนะนำการโพสต์แยกต่างหาก"""
-        guide = (
-            "📋 *วิธีโพสต์ใน Shopee*\n\n"
-            "1️⃣ บันทึกวิดีโอด้านบน\n"
-            "2️⃣ เปิด Shopee → Live/Video\n"
-            "3️⃣ เลือกวิดีโอ → วาง caption ด้านล่าง\n"
-            "4️⃣ ✅ โพสต์เลย\\!\n\n"
-            f"📌 *ชื่อวิดีโอ:*\n`{self._escape_md(content.video_title)}`\n\n"
-            f"🏷️ *Hashtags:*\n`{self._escape_md(content.hashtag_string)}`"
-        )
-        await self.bot.send_message(
-            chat_id=self.chat_id,
-            text=guide,
-            parse_mode=ParseMode.MARKDOWN_V2,
-        )
-
-    async def send_daily_summary(self, total: int, success: int):
-        """ส่งสรุปผลประจำวัน"""
-        msg = (
-            "🤖 *Shopee Bot — สรุปประจำวัน*\n\n"
-            f"📦 สินค้าทั้งหมด: {total}\n"
-            f"✅ สร้างสำเร็จ: {success}\n"
-            f"❌ ล้มเหลว: {total - success}\n\n"
-            "โพสต์วิดีโอด้านบนใน Shopee ได้เลย\\!"
-        )
-        await self.bot.send_message(
-            chat_id=self.chat_id,
-            text=msg,
-            parse_mode=ParseMode.MARKDOWN_V2,
-        )
-
-    def _build_caption(self, content: VideoContent, affiliate_link: str) -> str:
-        """สร้าง caption สำหรับ Telegram (Markdown V2)"""
-        # Key points
-        points_text = "\n".join(
-            f"✨ {self._escape_md(p)}" for p in content.key_points[:3]
-        )
-
-        caption = (
-            f"🔥 *{self._escape_md(content.video_title)}*\n\n"
-            f"{points_text}\n\n"
-            f"💰 {self._escape_md(content.call_to_action)}\n\n"
-            f"🛒 [ซื้อเลย]({affiliate_link})\n\n"
-            f"━━━━━━━━━━━━━━\n"
-            f"{self._escape_md(content.hashtag_string[:300])}"
-        )
-        return caption[:1024]  # Telegram caption limit
-
-    @staticmethod
-    def _escape_md(text: str) -> str:
-        """Escape Markdown V2 special characters"""
-        special = r"_*[]()~`>#+-=|{}.!"
-        for ch in special:
-            text = text.replace(ch, f"\\{ch}")
-        return text
-
-    def send_video(self, video_result: VideoResult, content: VideoContent, affiliate_link: str) -> bool:
-        """Sync wrapper สำหรับ send_video_async"""
-        return asyncio.run(self.send_video_async(video_result, content, affiliate_link))
+            logger.error(f"Error sending video to Telegram: {e}")
+            raise e

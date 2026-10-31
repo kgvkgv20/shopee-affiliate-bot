@@ -64,6 +64,10 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2 text-xs">
+                <button onclick="openTelegramModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>ตั้งค่า Telegram Bot</span>
+                </button>
                 <button onclick="openImportModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
                     <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                     <span>นำเข้า CSV / Excel</span>
@@ -105,6 +109,10 @@
                 <button id="tab-custom-btn" onclick="switchTab('custom')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i>
                     2. วางลิงก์ Shopee / เพิ่มเข้า "สินค้าของฉัน"
+                </button>
+                <button id="tab-scheduler-btn" onclick="switchTab('scheduler')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    3. ⏰ ตารางสร้างคลิปอัตโนมัติ (Scheduler)
                 </button>
             </div>
 
@@ -269,6 +277,184 @@
                                 <span>บันทึกสินค้า</span>
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: AUTOMATED SCHEDULER -->
+            <div id="tab-scheduler" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                <!-- Top Status Banner -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                    <div class="flex items-center gap-3">
+                        <div id="scheduler-status-icon" class="w-10 h-10 rounded-xl bg-slate-200 text-slate-500 flex items-center justify-center font-bold">
+                            <i data-lucide="clock" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="text-sm font-bold text-slate-900">ระบบสร้างคลิปอัตโนมัติประจำวัน (Daily Auto Scheduler)</h4>
+                                <span id="scheduler-status-badge" class="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-200 text-slate-600">ปิดใช้งานอยู่</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-0.5">ทำงานเบื้องหลังอัตโนมัติ ผลิตคลิปป้ายยาตามเวลาที่ตั้งไว้ พร้อมส่งตรงเข้า Telegram ทันที</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="scheduler-enabled-toggle" onchange="toggleSchedulerEnabled()" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                            <span class="ml-2 text-xs font-semibold text-slate-700">เปิดระบบอัตโนมัติ</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Mobile LAN Connection Info Banner -->
+                <div class="p-3.5 rounded-xl bg-sky-50 border border-sky-200 flex items-center justify-between gap-3 text-xs text-sky-900">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-sky-600 shrink-0"></i>
+                        <span><strong>เปิดเว็บนี้จากมือถือของคุณ:</strong> เข้าผ่าน Wi-Fi เดียวกันที่ <code id="lan-url-display" class="bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded font-mono font-semibold">กำลังตรวจสอบ...</code></span>
+                    </div>
+                    <button onclick="copyLanUrl()" class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-semibold transition shrink-0">
+                        คัดลอกลิงก์
+                    </button>
+                </div>
+
+                <!-- Configuration Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Time Picker & Slots -->
+                    <div class="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                <i data-lucide="alarm-clock" class="w-4 h-4 text-shopee-500"></i>
+                                รอบเวลาสร้างคลิปทุกวัน (Daily Times)
+                            </label>
+                            <button onclick="promptAddSchedulerTime()" class="text-xs text-shopee-600 hover:text-shopee-700 font-semibold flex items-center gap-1">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> เพิ่มเวลา
+                            </button>
+                        </div>
+                        <div id="scheduler-times-container" class="flex flex-wrap gap-2 min-h-[42px] p-2 bg-white rounded-xl border border-slate-200 items-center">
+                            <!-- Time Tags inserted dynamically -->
+                        </div>
+                        <p class="text-[11px] text-slate-400">แนะนำ: 10:00 น. (ช่วงพักเช้า/บ่าย) และ 18:00 น. (ช่วงเลิกงานคนดูคลิปเยอะ)</p>
+                    </div>
+
+                    <!-- Batch Count & Source Select -->
+                    <div class="space-y-3 p-4 rounded-xl border border-slate-200 bg-slate-50/50">
+                        <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i data-lucide="database" class="w-4 h-4 text-emerald-600"></i>
+                            จำนวนและแหล่งที่มาของสินค้าในแต่ละรอบ
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[11px] text-slate-500 block mb-1">จำนวนคลิปต่อรอบ:</label>
+                                <select id="scheduler-count-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                    <option value="1">1 คลิป / รอบ</option>
+                                    <option value="2">2 คลิป / รอบ</option>
+                                    <option value="3" selected>3 คลิป / รอบ (แนะนำ)</option>
+                                    <option value="5">5 คลิป / รอบ</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-slate-500 block mb-1">คัดเลือกสินค้าจาก:</label>
+                                <select id="scheduler-source-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                    <option value="my_products" selected>สินค้าของฉัน (My Products) ก่อน</option>
+                                    <option value="high_commission">สินค้าค่าคอมสูง 25%+ เท่านั้น</option>
+                                    <option value="all">ผสมกันทั้งหมด (Smart Mix)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Template & Voice for Auto Mode -->
+                        <div class="grid grid-cols-2 gap-3 pt-1">
+                            <div>
+                                <label class="text-[11px] text-slate-500 block mb-1">สไตล์ Template:</label>
+                                <select id="scheduler-template-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                    <option value="clean" selected>Clean Modern (สว่าง สดใส)</option>
+                                    <option value="minimal">Minimal Cream (มินิมอล อบอุ่น)</option>
+                                    <option value="sale">Bold Sale (สีส้ม ป้ายแดง)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[11px] text-slate-500 block mb-1">เสียงพากย์ AI:</label>
+                                <select id="scheduler-voice-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                    <option value="th-TH-NiwatNeural" selected>นิวัฒน์ (Niwat) ชาย</option>
+                                    <option value="th-TH-PremwadeeNeural">เปรมวดี (Premwadee) หญิง</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Delivery Options -->
+                <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
+                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <i data-lucide="bell" class="w-4 h-4 text-amber-500"></i>
+                        ช่องทางการส่งคลิปเมื่อสร้างเสร็จ
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" id="scheduler-send-telegram" class="rounded text-shopee-600 focus:ring-shopee-500">
+                            <div class="flex-1">
+                                <span class="font-semibold text-slate-800 flex items-center gap-1.5">
+                                    <i data-lucide="send" class="w-3.5 h-3.5 text-sky-500"></i>
+                                    ส่งตรงเข้า Telegram ของฉัน
+                                </span>
+                                <span id="telegram-status-note" class="text-[11px] text-slate-400 block">ยังไม่ได้ตั้งค่า Bot Token</span>
+                            </div>
+                            <button type="button" onclick="openTelegramModal()" class="text-[11px] text-shopee-600 underline">ตั้งค่า</button>
+                        </label>
+                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100">
+                            <input type="checkbox" id="scheduler-send-discord" class="rounded text-shopee-600 focus:ring-shopee-500">
+                            <div class="flex-1">
+                                <span class="font-semibold text-slate-800 flex items-center gap-1.5">
+                                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-indigo-500"></i>
+                                    แจ้งเตือนผ่าน Discord Webhook
+                                </span>
+                                <span class="text-[11px] text-slate-400 block">ใช้ Webhook เดียวกับด้านล่าง</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
+                    <button onclick="saveSchedulerSettings()" class="w-full sm:flex-1 py-3 px-4 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i>
+                        บันทึกการตั้งค่าตารางเวลา
+                    </button>
+                    <button onclick="runSchedulerNow()" id="scheduler-run-now-btn" class="w-full sm:w-auto py-3 px-5 bg-shopee-600 hover:bg-shopee-700 text-white font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2">
+                        <i data-lucide="zap" class="w-4 h-4"></i>
+                        ⚡ ทดสอบรันรอบอัตโนมัติตอนนี้ (Run Now)
+                    </button>
+                </div>
+
+                <!-- Scheduler Execution History Table -->
+                <div class="space-y-3 pt-4 border-t border-slate-100">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i data-lucide="history" class="w-3.5 h-3.5 text-slate-500"></i>
+                            ประวัติการสร้างคลิปอัตโนมัติ (Execution Logs)
+                        </h4>
+                        <button onclick="loadSchedulerHistory()" class="text-[11px] text-shopee-600 hover:underline flex items-center gap-1">
+                            <i data-lucide="rotate-cw" class="w-3 h-3"></i> รีเฟรชประวัติ
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto rounded-xl border border-slate-200">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                <tr>
+                                    <th class="p-3">วัน-เวลา</th>
+                                    <th class="p-3">สินค้าที่สร้าง</th>
+                                    <th class="p-3">จำนวน</th>
+                                    <th class="p-3">ผลลัพธ์</th>
+                                    <th class="p-3">การจัดส่ง</th>
+                                    <th class="p-3 text-right">การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduler-history-tbody" class="divide-y divide-slate-100 bg-white">
+                                <tr>
+                                    <td colspan="6" class="p-4 text-center text-slate-400">ยังไม่มีประวัติการรันอัตโนมัติ</td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -466,24 +652,39 @@
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
                         <a 
                             id="download-btn" 
                             href="#" 
                             download 
-                            class="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-center text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2"
+                            class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
                         >
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            ดาวน์โหลดวิดีโอ (.mp4)
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                            <span>โหลด MP4</span>
                         </a>
+                        <button 
+                            onclick="openQrModalForCurrent()" 
+                            class="py-2.5 px-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
+                        >
+                            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                            <span>สแกน QR มือถือ</span>
+                        </button>
+                        <button 
+                            onclick="forwardToTelegramCurrent()" 
+                            id="telegram-forward-btn"
+                            class="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
+                        >
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                            <span>ส่ง Telegram</span>
+                        </button>
                         <a 
                             id="shopee-link-btn" 
                             href="#" 
                             target="_blank" 
-                            class="py-3 px-4 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-center text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2"
+                            class="py-2.5 px-3 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
                         >
-                            <i data-lucide="external-link" class="w-4 h-4"></i>
-                            เปิดดูสินค้าใน Shopee
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            <span>ดูใน Shopee</span>
                         </a>
                     </div>
 
@@ -588,6 +789,91 @@
         </div>
     </div>
 
+    <!-- Modal: Mobile QR Code Download -->
+    <div id="qr-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 relative text-center">
+            <button onclick="closeQrModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div class="space-y-1">
+                <div class="w-12 h-12 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center mx-auto mb-2">
+                    <i data-lucide="smartphone" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">สแกน QR โหลดคลิปลงมือถือ</h3>
+                <p class="text-xs text-slate-500">เปิดกล้องมือถือแล้วสแกนเพื่อเล่นหรือบันทึกลง Camera Roll ได้ทันที</p>
+            </div>
+
+            <!-- QR Code Image Container -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl inline-block mx-auto">
+                <img id="qr-modal-image" src="" alt="QR Code" class="w-52 h-52 mx-auto rounded-lg shadow-xs">
+            </div>
+
+            <!-- Direct Link -->
+            <div class="space-y-2 text-xs">
+                <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200 font-mono text-[11px] text-slate-600 break-all" id="qr-modal-url-text">
+                    กำลังสร้างลิงก์...
+                </div>
+                <button onclick="copyQrDownloadUrl()" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span id="qr-copy-btn-text">คัดลอกลิงก์ดาวน์โหลด</span>
+                </button>
+            </div>
+
+            <div class="text-[11px] text-amber-800 bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-left">
+                💡 <strong>ข้อแนะนำ:</strong> มือถือและคอมพิวเตอร์ต้องต่อ Wi-Fi หรือ Hotspot เดียวกันครับ
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Telegram Bot Configuration -->
+    <div id="telegram-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4 relative">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="send" class="w-4 h-4 text-sky-500"></i>
+                    ตั้งค่าเชื่อมต่อ Telegram Bot
+                </h3>
+                <button onclick="closeTelegramModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Telegram Bot Token</label>
+                    <input type="text" id="tg-token-input" placeholder="เช่น 7489234892:AAHj38df9..." class="w-full text-xs font-mono border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Telegram Chat ID (ของคุณหรือ Channel)</label>
+                    <input type="text" id="tg-chatid-input" placeholder="เช่น 123456789 หรือ @mychannel" class="w-full text-xs font-mono border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500">
+                </div>
+
+                <!-- Tutorial instructions -->
+                <div class="bg-sky-50/70 border border-sky-200 rounded-xl p-3 text-[11px] text-sky-900 space-y-1.5">
+                    <p class="font-bold flex items-center gap-1 text-sky-800">
+                        <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> วิธีขอ Bot Token & Chat ID ฟรี 100%:
+                    </p>
+                    <ol class="list-decimal pl-4 space-y-1 text-sky-800/90 text-[11px]">
+                        <li>เปิดแอป Telegram ค้นหา <strong>@BotFather</strong> กด <code>/newbot</code> แล้วตั้งชื่อ จะได้ <strong>Token</strong> มา</li>
+                        <li>กดเข้าไปคุยกับบอทของคุณแล้วพิมพ์อะไรก็ได้ 1 คำ หรือค้นหา <strong>@userinfobot</strong> เพื่อดู <strong>Chat ID</strong> ของคุณ</li>
+                        <li>นำ Token และ Chat ID มากรอกด้านบน แล้วกดทดสอบส่งข้อความได้ทันที</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="testTelegramConfig()" id="tg-test-btn" class="flex-1 py-2.5 border border-sky-300 bg-sky-50 hover:bg-sky-100 text-sky-700 font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    <span>ทดสอบส่งข้อความ</span>
+                </button>
+                <button onclick="saveTelegramConfig()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-xs">
+                    <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                    <span>บันทึกการตั้งค่า</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
         <p>Shopee Clip Maker AI (Database V3) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
@@ -621,6 +907,8 @@
             setupTemplateSelection();
             setupVoiceCardSelection();
             loadHistory();
+            loadSystemInfo();
+            loadSchedulerConfig();
 
             const savedWebhook = localStorage.getItem('shopee_discord_webhook');
             if (savedWebhook) {
@@ -746,19 +1034,33 @@
             currentTab = tab;
             const catBtn = document.getElementById('tab-catalog-btn');
             const custBtn = document.getElementById('tab-custom-btn');
+            const schedBtn = document.getElementById('tab-scheduler-btn');
             const catSection = document.getElementById('tab-catalog');
             const custSection = document.getElementById('tab-custom');
+            const schedSection = document.getElementById('tab-scheduler');
+
+            const activeClass = "pb-3 text-sm font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-2 transition-colors";
+            const inactiveClass = "pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors";
+
+            catBtn.className = inactiveClass;
+            custBtn.className = inactiveClass;
+            if (schedBtn) schedBtn.className = inactiveClass;
+
+            catSection.classList.add('hidden');
+            custSection.classList.add('hidden');
+            if (schedSection) schedSection.classList.add('hidden');
 
             if (tab === 'catalog') {
-                catBtn.className = "pb-3 text-sm font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-2 transition-colors";
-                custBtn.className = "pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors";
+                catBtn.className = activeClass;
                 catSection.classList.remove('hidden');
-                custSection.classList.add('hidden');
-            } else {
-                custBtn.className = "pb-3 text-sm font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-2 transition-colors";
-                catBtn.className = "pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors";
+            } else if (tab === 'custom') {
+                custBtn.className = activeClass;
                 custSection.classList.remove('hidden');
-                catSection.classList.add('hidden');
+            } else if (tab === 'scheduler') {
+                if (schedBtn) schedBtn.className = activeClass;
+                if (schedSection) schedSection.classList.remove('hidden');
+                loadSchedulerConfig();
+                loadSchedulerHistory();
             }
             lucide.createIcons();
         }
@@ -1377,11 +1679,17 @@
                         <p class="text-xs font-bold text-slate-800 line-clamp-1">${item.product_name}</p>
                         <p class="text-[10px] text-slate-500">${item.render_time_seconds} วิ • ${item.file_size_mb.toFixed(1)} MB</p>
                     </div>
-                    <div class="flex gap-2 pt-1">
+                    <div class="flex gap-1.5 pt-1">
                         <a href="/download/${item.video_filename}" download class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-center text-xs font-medium flex items-center justify-center gap-1">
-                            <i data-lucide="download" class="w-3.5 h-3.5"></i> โหลด MP4
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> โหลด
                         </a>
-                        <button onclick="navigator.clipboard.writeText('${item.caption.replace(/\n/g, '\\n')}'); showToast('คัดลอกแคปชันแล้ว');" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 text-xs">
+                        <button onclick="openQrModal('${item.video_filename}')" class="px-2 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs flex items-center justify-center" title="สแกน QR มือถือ">
+                            <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="forwardToTelegram('${item.video_filename}', '${item.product_name}', \`${item.caption ? item.caption.replace(/`/g, '\\`') : ''}\`, '${item.affiliate_link || ''}')" class="px-2 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs flex items-center justify-center" title="ส่ง Telegram">
+                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                        </button>
+                        <button onclick="navigator.clipboard.writeText('${item.caption ? item.caption.replace(/\n/g, '\\n') : ''}'); showToast('คัดลอกแคปชันแล้ว');" class="px-2 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 text-xs flex items-center justify-center" title="คัดลอกแคปชัน">
                             📋
                         </button>
                     </div>
@@ -1538,6 +1846,429 @@
                 lucide.createIcons();
             } catch (e) {
                 console.error("Failed to load history", e);
+            }
+        }
+
+        // --- System Info & LAN Mobile Discovery ---
+        let currentSystemInfo = { local_ip: '127.0.0.1', lan_url: '', telegram_configured: false };
+
+        async function loadSystemInfo() {
+            try {
+                const res = await fetch('/api/system-info');
+                const data = await res.json();
+                currentSystemInfo = data;
+
+                const lanEl = document.getElementById('lan-url-display');
+                if (lanEl) lanEl.textContent = data.lan_url || `http://${data.local_ip}:8000`;
+
+                const tgNote = document.getElementById('telegram-status-note');
+                if (tgNote) {
+                    if (data.telegram_configured) {
+                        tgNote.textContent = 'เชื่อมต่อแล้ว ✓ (พร้อมส่งคลิป)';
+                        tgNote.className = 'text-[11px] text-emerald-600 font-semibold block';
+                    } else {
+                        tgNote.textContent = 'ยังไม่ได้ตั้งค่า Bot Token';
+                        tgNote.className = 'text-[11px] text-slate-400 block';
+                    }
+                }
+            } catch (e) {
+                console.warn("loadSystemInfo failed", e);
+            }
+        }
+
+        function copyLanUrl() {
+            const url = currentSystemInfo.lan_url || `http://${currentSystemInfo.local_ip}:8000`;
+            navigator.clipboard.writeText(url);
+            showToast('คัดลอกลิงก์เปิดบนมือถือแล้ว: ' + url);
+        }
+
+        // --- QR Code Mobile Download ---
+        let currentQrUrl = '';
+
+        async function openQrModal(filename) {
+            if (!filename) {
+                alert('กรุณาระบุชื่อไฟล์วิดีโอ');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/qr-url?filename=${encodeURIComponent(filename)}`);
+                const data = await res.json();
+                currentQrUrl = data.download_url;
+
+                document.getElementById('qr-modal-image').src = data.qr_image_url;
+                document.getElementById('qr-modal-url-text').textContent = data.download_url;
+                document.getElementById('qr-modal').classList.remove('hidden');
+                lucide.createIcons();
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการสร้าง QR Code: ' + e.message);
+            }
+        }
+
+        function openQrModalForCurrent() {
+            if (!lastCreatedVideoFilename) {
+                alert('ยังไม่มีวิดีโอที่เพิ่งสร้าง กรุณาสร้างวิดีโอก่อนครับ');
+                return;
+            }
+            openQrModal(lastCreatedVideoFilename);
+        }
+
+        function closeQrModal() {
+            document.getElementById('qr-modal').classList.add('hidden');
+        }
+
+        function copyQrDownloadUrl() {
+            if (!currentQrUrl) return;
+            navigator.clipboard.writeText(currentQrUrl);
+            const btnText = document.getElementById('qr-copy-btn-text');
+            if (btnText) {
+                btnText.textContent = 'คัดลอกแล้ว! ✓';
+                setTimeout(() => { btnText.textContent = 'คัดลอกลิงก์ดาวน์โหลด'; }, 2000);
+            }
+            showToast('คัดลอกลิงก์สำหรับเปิดในมือถือแล้ว');
+        }
+
+        // --- Telegram Integration ---
+        function openTelegramModal() {
+            document.getElementById('telegram-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeTelegramModal() {
+            document.getElementById('telegram-modal').classList.add('hidden');
+        }
+
+        async function testTelegramConfig() {
+            const token = document.getElementById('tg-token-input').value.trim();
+            const chatId = document.getElementById('tg-chatid-input').value.trim();
+            const btn = document.getElementById('tg-test-btn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>กำลังส่ง...</span>';
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/test-telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bot_token: token, chat_id: chatId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('ส่งข้อความทดสอบสำเร็จ! เช็คใน Telegram ได้เลย 🎉');
+                } else {
+                    alert('ส่งไม่สำเร็จ: ' + (data.detail || 'Token หรือ Chat ID ไม่ถูกต้อง'));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ Telegram');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i><span>ทดสอบส่งข้อความ</span>';
+                lucide.createIcons();
+            }
+        }
+
+        async function saveTelegramConfig() {
+            const token = document.getElementById('tg-token-input').value.trim();
+            const chatId = document.getElementById('tg-chatid-input').value.trim();
+
+            if (!token || !chatId) {
+                alert('กรุณากรอกทั้ง Bot Token และ Chat ID');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/save-telegram-config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bot_token: token, chat_id: chatId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('บันทึกการตั้งค่า Telegram Bot สำเร็จแล้ว!');
+                    closeTelegramModal();
+                    loadSystemInfo();
+                } else {
+                    alert('บันทึกไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการบันทึก');
+            }
+        }
+
+        async function forwardToTelegram(filename, title, caption, affiliateUrl) {
+            showToast('กำลังส่งวิดีโอเข้า Telegram...');
+            try {
+                const res = await fetch('/api/send-telegram', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        video_filename: filename,
+                        title: title || '',
+                        caption: caption || '',
+                        affiliate_url: affiliateUrl || ''
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('ส่งคลิปเข้า Telegram สำเร็จแล้ว! 🚀 เปิดดูในมือถือได้เลย');
+                } else {
+                    alert('ส่งเข้า Telegram ไม่สำเร็จ: ' + (data.detail || 'กรุณาตรวจสอบการตั้งค่า Bot Token'));
+                }
+            } catch (e) {
+                alert('ส่งเข้า Telegram ล้มเหลว กรุณาตรวจสอบการเชื่อมต่อ');
+            }
+        }
+
+        function forwardToTelegramCurrent() {
+            if (!lastCreatedVideoFilename) {
+                alert('ยังไม่มีวิดีโอที่เพิ่งสร้าง');
+                return;
+            }
+            const title = document.getElementById('result-title').textContent;
+            const caption = document.getElementById('result-caption').value;
+            const affiliateBtn = document.getElementById('shopee-link-btn');
+            const affUrl = affiliateBtn ? affiliateBtn.href : '';
+            forwardToTelegram(lastCreatedVideoFilename, title, caption, affUrl);
+        }
+
+        // --- Automated Scheduler Functions ---
+        let schedulerConfig = {
+            enabled: false,
+            run_times: ["10:00", "18:00"],
+            items_per_run: 3,
+            product_source: "my_products",
+            default_template: "clean",
+            default_voice: "th-TH-NiwatNeural",
+            send_telegram: true,
+            send_discord: false
+        };
+
+        async function loadSchedulerConfig() {
+            try {
+                const res = await fetch('/api/scheduler/config');
+                const data = await res.json();
+                const cfg = data.config || data;
+                schedulerConfig = {
+                    ...schedulerConfig,
+                    ...cfg,
+                    run_times: cfg.run_times || cfg.times || ["10:00", "18:00"],
+                    items_per_run: cfg.items_per_run || cfg.count_per_run || 3,
+                    product_source: cfg.product_source || cfg.source || 'my_products',
+                    send_telegram: cfg.send_telegram ?? cfg.notify_telegram ?? true,
+                    send_discord: cfg.send_discord ?? cfg.notify_discord ?? false
+                };
+                renderSchedulerUI();
+            } catch (e) {
+                console.error("loadSchedulerConfig failed", e);
+            }
+        }
+
+        function renderSchedulerUI() {
+            const toggle = document.getElementById('scheduler-enabled-toggle');
+            const badge = document.getElementById('scheduler-status-badge');
+            const icon = document.getElementById('scheduler-status-icon');
+            const timesBox = document.getElementById('scheduler-times-container');
+
+            if (toggle) toggle.checked = schedulerConfig.enabled;
+            if (badge) {
+                if (schedulerConfig.enabled) {
+                    badge.textContent = 'กำลังทำงาน (Active) ✓';
+                    badge.className = 'px-2 py-0.5 text-[11px] font-semibold rounded-full bg-emerald-100 text-emerald-800';
+                    if (icon) {
+                        icon.className = 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold animate-pulse';
+                    }
+                } else {
+                    badge.textContent = 'ปิดใช้งานอยู่';
+                    badge.className = 'px-2 py-0.5 text-[11px] font-semibold rounded-full bg-slate-200 text-slate-600';
+                    if (icon) {
+                        icon.className = 'w-10 h-10 rounded-xl bg-slate-200 text-slate-500 flex items-center justify-center font-bold';
+                    }
+                }
+            }
+
+            const countSel = document.getElementById('scheduler-count-select');
+            if (countSel) countSel.value = schedulerConfig.items_per_run || 3;
+
+            const sourceSel = document.getElementById('scheduler-source-select');
+            if (sourceSel) sourceSel.value = schedulerConfig.product_source || 'my_products';
+
+            const tmplSel = document.getElementById('scheduler-template-select');
+            if (tmplSel) tmplSel.value = schedulerConfig.default_template || 'clean';
+
+            const voiceSel = document.getElementById('scheduler-voice-select');
+            if (voiceSel) voiceSel.value = schedulerConfig.default_voice || 'th-TH-NiwatNeural';
+
+            const tgCheck = document.getElementById('scheduler-send-telegram');
+            if (tgCheck) tgCheck.checked = schedulerConfig.send_telegram ?? true;
+
+            const dcCheck = document.getElementById('scheduler-send-discord');
+            if (dcCheck) dcCheck.checked = schedulerConfig.send_discord ?? false;
+
+            // Render Time Tags
+            if (timesBox) {
+                timesBox.innerHTML = '';
+                const times = schedulerConfig.run_times || ["10:00", "18:00"];
+                times.forEach(t => {
+                    const tag = document.createElement('span');
+                    tag.className = 'inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-shopee-50 border border-shopee-200 text-shopee-700 text-xs font-semibold';
+                    tag.innerHTML = `
+                        <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                        <span>${t} น.</span>
+                        <button onclick="removeSchedulerTime('${t}')" class="text-shopee-400 hover:text-shopee-700 ml-1">
+                            &times;
+                        </button>
+                    `;
+                    timesBox.appendChild(tag);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        function toggleSchedulerEnabled() {
+            const toggle = document.getElementById('scheduler-enabled-toggle');
+            schedulerConfig.enabled = toggle.checked;
+            renderSchedulerUI();
+        }
+
+        function promptAddSchedulerTime() {
+            const time = prompt('กรุณาใส่เวลาที่ต้องการ (รูปแบบ HH:MM เช่น 12:30):', '12:00');
+            if (!time) return;
+            const match = time.trim().match(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/);
+            if (!match) {
+                alert('รูปแบบเวลาไม่ถูกต้อง กรุณาใส่เช่น 09:30 หรือ 18:00');
+                return;
+            }
+            let formatted = time.trim();
+            if (formatted.length === 4) formatted = '0' + formatted;
+            if (!schedulerConfig.run_times) schedulerConfig.run_times = [];
+            if (!schedulerConfig.run_times.includes(formatted)) {
+                schedulerConfig.run_times.push(formatted);
+                schedulerConfig.run_times.sort();
+                renderSchedulerUI();
+            }
+        }
+
+        function removeSchedulerTime(time) {
+            schedulerConfig.run_times = (schedulerConfig.run_times || []).filter(t => t !== time);
+            renderSchedulerUI();
+        }
+
+        async function saveSchedulerSettings() {
+            const countSel = document.getElementById('scheduler-count-select');
+            const sourceSel = document.getElementById('scheduler-source-select');
+            const tmplSel = document.getElementById('scheduler-template-select');
+            const voiceSel = document.getElementById('scheduler-voice-select');
+            const tgCheck = document.getElementById('scheduler-send-telegram');
+            const dcCheck = document.getElementById('scheduler-send-discord');
+
+            const countVal = parseInt(countSel.value) || 3;
+            schedulerConfig.items_per_run = countVal;
+            schedulerConfig.count_per_run = countVal;
+            schedulerConfig.product_source = sourceSel.value;
+            schedulerConfig.source = sourceSel.value;
+            schedulerConfig.default_template = tmplSel.value;
+            schedulerConfig.template = tmplSel.value;
+            schedulerConfig.default_voice = voiceSel.value;
+            schedulerConfig.voice_type = voiceSel.value.includes('Niwat') ? 'male' : 'female';
+            schedulerConfig.send_telegram = tgCheck ? tgCheck.checked : true;
+            schedulerConfig.notify_telegram = schedulerConfig.send_telegram;
+            schedulerConfig.send_discord = dcCheck ? dcCheck.checked : false;
+            schedulerConfig.notify_discord = schedulerConfig.send_discord;
+            schedulerConfig.times = schedulerConfig.run_times || ["10:00", "18:00"];
+
+            try {
+                const res = await fetch('/api/scheduler/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(schedulerConfig)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('บันทึกการตั้งค่าตารางสร้างคลิปอัตโนมัติแล้ว! ✓');
+                    renderSchedulerUI();
+                } else {
+                    alert('บันทึกไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการบันทึกตารางเวลา');
+            }
+        }
+
+        async function runSchedulerNow() {
+            const btn = document.getElementById('scheduler-run-now-btn');
+            if (!confirm('ต้องการเริ่มรันรอบสร้างคลิปอัตโนมัติตอนนี้เลยหรือไม่?')) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i><span>กำลังประมวลผลรอบอัตโนมัติ...</span>';
+            lucide.createIcons();
+            showToast('กำลังเริ่มรันรอบอัตโนมัติเบื้องหลัง...');
+
+            try {
+                const res = await fetch('/api/scheduler/run-now', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`รันรอบอัตโนมัติสำเร็จ! สร้างแล้ว ${data.result?.created_count || 0} คลิป 🎉`);
+                    loadSchedulerHistory();
+                    loadHistory();
+                } else {
+                    alert('รันรอบอัตโนมัติไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการทดสอบรัน: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="zap" class="w-4 h-4"></i><span>⚡ ทดสอบรันรอบอัตโนมัติตอนนี้ (Run Now)</span>';
+                lucide.createIcons();
+            }
+        }
+
+        async function loadSchedulerHistory() {
+            try {
+                const res = await fetch('/api/scheduler/history');
+                const data = await res.json();
+                const tbody = document.getElementById('scheduler-history-tbody');
+                if (!tbody) return;
+
+                const history = data.history || [];
+                if (history.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-slate-400">ยังไม่มีประวัติการรันอัตโนมัติ</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                history.forEach(log => {
+                    const row = document.createElement('tr');
+                    const isSuccess = log.status === 'success' || (log.count || 0) > 0 || (log.created_count || 0) > 0;
+                    const statusBadge = isSuccess 
+                        ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-[10px]">สำเร็จ</span>'
+                        : '<span class="px-2 py-0.5 rounded-full bg-red-100 text-red-800 font-semibold text-[10px]">ล้มเหลว</span>';
+
+                    const tgBadge = log.telegram_sent 
+                        ? '<span class="text-sky-600 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3 h-3"></i> Telegram</span>'
+                        : '<span class="text-slate-400">-</span>';
+
+                    const productList = (log.products || []).map(p => (typeof p === 'string' ? p : (p.name || p.id))).join(', ') || '-';
+                    const videoFile = (log.videos && log.videos.length > 0) ? (typeof log.videos[0] === 'string' ? log.videos[0] : (log.videos[0].video_filename || '')) : '';
+
+                    row.innerHTML = `
+                        <td class="p-3 font-mono text-[11px] text-slate-600">${log.timestamp || ''}</td>
+                        <td class="p-3 text-slate-800 font-medium max-w-xs truncate" title="${productList}">${productList}</td>
+                        <td class="p-3 text-slate-600">${log.count || log.created_count || 0} คลิป</td>
+                        <td class="p-3">${statusBadge}</td>
+                        <td class="p-3">${tgBadge}</td>
+                        <td class="p-3 text-right">
+                            ${videoFile ? `
+                                <button onclick="openQrModal('${videoFile}')" class="px-2 py-1 bg-sky-50 text-sky-700 hover:bg-sky-100 rounded-lg text-[11px] font-semibold border border-sky-200">
+                                    QR มือถือ
+                                </button>
+                            ` : '-'}
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                lucide.createIcons();
+            } catch (e) {
+                console.error("loadSchedulerHistory failed", e);
             }
         }
     </script>

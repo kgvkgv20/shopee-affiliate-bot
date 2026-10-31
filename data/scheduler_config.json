@@ -1,0 +1,17 @@
+{
+  "enabled": false,
+  "times": [
+    "10:00",
+    "18:00"
+  ],
+  "count_per_run": 3,
+  "source": "my_products",
+  "template": "clean",
+  "enable_voice": true,
+  "voice_type": "female",
+  "bgm_track": "cheerful",
+  "notify_telegram": true,
+  "notify_discord": false,
+  "total_automated_runs": 0,
+  "total_videos_created": 0
+}
