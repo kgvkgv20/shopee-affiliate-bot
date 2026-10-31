@@ -14,14 +14,17 @@ import io
 import time
 import json
 import logging
+import re
 from pathlib import Path
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 CATALOG_FILE = DATA_DIR / "products_database.json"
 MY_PRODUCTS_FILE = DATA_DIR / "my_products.json"
+OUTPUT_DIR = Path(__file__).resolve().parent.parent / "output"
+MY_LINKS_FILE = Path(__file__).resolve().parent.parent / "my_links.txt"
 
 
 # คลังสินค้าขายดี Extra Commission ยอดนิยมบน Shopee (แบรนด์ทางการ ภาพจริงตรงปก)
@@ -357,14 +360,58 @@ class CatalogManager:
             with open(MY_PRODUCTS_FILE, "w", encoding="utf-8") as f:
                 json.dump([], f, ensure_ascii=False, indent=2)
 
+    def get_video_status_map(self) -> Dict[str, Any]:
+        """
+        สแกนโฟลเดอร์ output เพื่อจับคู่สินค้ากับวิดีโอที่สร้างแล้ว
+        คืนค่า dict แมปปิ้งทั้งตาม id, name และ url
+        """
+        status_by_id: Dict[str, List[Dict]] = {}
+        status_by_name: Dict[str, List[Dict]] = {}
+
+        def _clean_str(s: str) -> str:
+            return "".join(s.lower().split())
+
+        meta_files = sorted(OUTPUT_DIR.glob("*_meta.json"), key=os.path.getmtime, reverse=True)
+        for mf in meta_files:
+            try:
+                with open(mf, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                    p_name = meta.get("product_name", "").strip()
+                    v_file = meta.get("video_filename", "")
+                    explicit_id = meta.get("product_id", "")
+
+                    if explicit_id:
+                        status_by_id.setdefault(explicit_id, []).append(meta)
+
+                    if p_name:
+                        status_by_name.setdefault(_clean_str(p_name), []).append(meta)
+
+                    # สกัด ID จากชื่อไฟล์ เช่น product_web_beauty_mizumi_uv.mp4 หรือ product_auto_beauty_banobagi_mask_1793480088.mp4
+                    stem = Path(v_file).stem
+                    parts = stem.split("_")
+                    if len(parts) >= 4:
+                        possible_id = "_".join(parts[3:])
+                        if re.search(r"_\d{10}$", possible_id):
+                            possible_id = re.sub(r"_\d{10}$", "", possible_id)
+                        status_by_id.setdefault(possible_id, []).append(meta)
+            except Exception:
+                continue
+
+        return {
+            "by_id": status_by_id,
+            "by_name": status_by_name,
+            "total_meta_files": len(meta_files),
+        }
+
     def get_all_products(
         self,
         category: Optional[str] = None,
         query: Optional[str] = None,
         min_commission: int = 0,
         source: str = "all",  # 'all', 'catalog', 'my_products'
+        video_status_filter: str = "all",  # 'all', 'pending', 'completed'
     ) -> List[Dict]:
-        """ดึงรายการสินค้าพร้อมค้นหาและกรอง"""
+        """ดึงรายการสินค้าพร้อมค้นหา กรอง และแนบสถานะการผลิตวิดีโอ (Video Status)"""
         products = []
 
         if source in ["all", "catalog"]:
@@ -405,7 +452,125 @@ class CatalogManager:
                     filtered.append(p)
             products = filtered
 
+        # แนบข้อมูลสถานะวิดีโอ (Video Creation Status)
+        vmap = self.get_video_status_map()
+        by_id = vmap["by_id"]
+        by_name = vmap["by_name"]
+
+        def _clean_str(s: str) -> str:
+            return "".join(s.lower().split())
+
+        for p in products:
+            p_id = p.get("id", "")
+            p_name = p.get("name", "")
+            clean_name = _clean_str(p_name)
+
+            matched_videos = []
+            if p_id and p_id in by_id:
+                matched_videos.extend(by_id[p_id])
+            elif clean_name and clean_name in by_name:
+                matched_videos.extend(by_name[clean_name])
+            else:
+                # Substring matching fallback
+                for kname, vlist in by_name.items():
+                    if clean_name and (clean_name in kname or kname in clean_name or clean_name[:15] in kname):
+                        matched_videos.extend(vlist)
+                        break
+
+            # Deduplicate videos by video_filename
+            unique_videos = []
+            seen_files = set()
+            for v in matched_videos:
+                fn = v.get("video_filename")
+                if fn and fn not in seen_files:
+                    seen_files.add(fn)
+                    unique_videos.append(v)
+
+            has_video = len(unique_videos) > 0
+            latest = unique_videos[0] if has_video else None
+
+            p["video_status"] = {
+                "has_video": has_video,
+                "video_count": len(unique_videos),
+                "latest_video_filename": latest.get("video_filename") if latest else None,
+                "latest_video_url": latest.get("video_url") if latest else None,
+                "latest_thumbnail_url": latest.get("thumbnail_url") if latest else None,
+                "latest_created_at": latest.get("created_at") if latest else None,
+                "videos": [
+                    {
+                        "filename": v.get("video_filename"),
+                        "video_url": v.get("video_url"),
+                        "thumbnail_url": v.get("thumbnail_url"),
+                        "created_at": v.get("created_at"),
+                        "duration": v.get("duration", 10),
+                    }
+                    for v in unique_videos
+                ]
+            }
+
+        # กรองสถานะวิดีโอ (pending = ยังไม่ได้ทำ, completed = ทำแล้ว)
+        if video_status_filter == "pending":
+            products = [p for p in products if not p["video_status"]["has_video"]]
+        elif video_status_filter == "completed":
+            products = [p for p in products if p["video_status"]["has_video"]]
+
         return products
+
+    def get_video_stats(self) -> Dict[str, int]:
+        """ดึงสถิติจำนวนสินค้าที่ทำคลิปไปแล้ว และที่ยังรอทำคลิป"""
+        all_items = self.get_all_products(source="all", video_status_filter="all")
+        completed = sum(1 for p in all_items if p["video_status"]["has_video"])
+        pending = len(all_items) - completed
+        total_vids = sum(p["video_status"]["video_count"] for p in all_items)
+        return {
+            "total_products": len(all_items),
+            "completed_count": completed,
+            "pending_count": pending,
+            "total_videos_created": total_vids,
+        }
+
+    def get_links_file_content(self) -> str:
+        """อ่านเนื้อหาจากไฟล์ my_links.txt"""
+        if MY_LINKS_FILE.exists():
+            try:
+                with open(MY_LINKS_FILE, "r", encoding="utf-8") as f:
+                    return f.read()
+            except Exception as e:
+                logger.error(f"Error reading my_links.txt: {e}")
+        return ""
+
+    def save_links_file_content(self, content: str) -> bool:
+        """บันทึกเนื้อหาลงไฟล์ my_links.txt"""
+        try:
+            with open(MY_LINKS_FILE, "w", encoding="utf-8") as f:
+                f.write(content)
+            return True
+        except Exception as e:
+            logger.error(f"Error writing my_links.txt: {e}")
+            return False
+
+    def parse_links_file(self) -> List[Dict]:
+        """แยกบรรทัดในไฟล์ my_links.txt ออกเป็นรายการลิงก์"""
+        content = self.get_links_file_content()
+        items = []
+        for line in content.splitlines():
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if "|" in line:
+                parts = line.split("|", 1)
+                name_hint = parts[0].strip()
+                url = parts[1].strip()
+            else:
+                name_hint = ""
+                url = line.strip()
+            if url:
+                items.append({
+                    "name_hint": name_hint,
+                    "url": url,
+                    "raw": line
+                })
+        return items
 
     def get_product_by_id(self, product_id: str) -> Optional[Dict]:
         """ค้นหาสินค้าจาก ID ในทั้งสองคลัง"""

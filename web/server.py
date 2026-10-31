@@ -118,22 +118,130 @@ async def get_catalog(
     query: Optional[str] = None,
     min_commission: int = 0,
     source: str = "all",
+    video_status: str = "all",
 ):
-    """ดึงรายการสินค้าแนะนำจาก High Commission Database พร้อมค้นหาและกรอง"""
+    """ดึงรายการสินค้าแนะนำจาก High Commission Database พร้อมค้นหา กรอง และสถิติสถานะวิดีโอ"""
     items = catalog_mgr.get_all_products(
         category=category,
         query=query,
         min_commission=min_commission,
         source=source,
+        video_status_filter=video_status,
     )
-    return {"success": True, "count": len(items), "products": items}
+    stats = catalog_mgr.get_video_stats()
+    return {
+        "success": True,
+        "count": len(items),
+        "products": items,
+        "stats": stats,
+    }
 
 
 @app.get("/api/my-products")
-async def get_my_products():
+async def get_my_products(video_status: str = "all"):
     """ดึงรายการสินค้าส่วนตัวของผู้ใช้ (My Products)"""
-    items = catalog_mgr.get_all_products(source="my_products")
-    return {"success": True, "count": len(items), "products": items}
+    items = catalog_mgr.get_all_products(source="my_products", video_status_filter=video_status)
+    stats = catalog_mgr.get_video_stats()
+    return {"success": True, "count": len(items), "products": items, "stats": stats}
+
+
+@app.get("/api/sync/status")
+async def get_sync_status():
+    """ดึงสถานะและรายการลิงก์ใน my_links.txt และสถิติภาพรวม"""
+    links = catalog_mgr.parse_links_file()
+    stats = catalog_mgr.get_video_stats()
+    raw_content = catalog_mgr.get_links_file_content()
+    return {
+        "success": True,
+        "links": links,
+        "total_links": len(links),
+        "raw_content": raw_content,
+        "stats": stats,
+    }
+
+
+@app.post("/api/sync/links-file")
+async def save_links_file(data: dict):
+    """บันทึกเนื้อหาลงไฟล์ my_links.txt"""
+    content = data.get("content", "")
+    ok = catalog_mgr.save_links_file_content(content)
+    if not ok:
+        raise HTTPException(status_code=500, detail="ไม่สามารถบันทึกไฟล์ได้")
+    return {"success": True, "message": "บันทึกไฟล์ my_links.txt เรียบร้อยแล้ว"}
+
+
+@app.post("/api/sync/run")
+async def run_sync_links(data: dict):
+    """
+    ดึงข้อมูลและรูปภาพจริงอัตโนมัติจาก Shopee เพื่อทำคลิปล่าสุด (Auto-Sync)
+    Payload: { "source": "file" | "urls", "urls": ["https://..."] }
+    """
+    source = data.get("source", "file")
+    urls_to_process = []
+
+    if source == "file":
+        parsed = catalog_mgr.parse_links_file()
+        for item in parsed:
+            urls_to_process.append({"url": item["url"], "name_hint": item["name_hint"]})
+    elif source == "urls":
+        raw_urls = data.get("urls", [])
+        for u in raw_urls:
+            if isinstance(u, str) and u.strip():
+                urls_to_process.append({"url": u.strip(), "name_hint": ""})
+            elif isinstance(u, dict) and u.get("url"):
+                urls_to_process.append({"url": u["url"].strip(), "name_hint": u.get("name_hint", "")})
+
+    if not urls_to_process:
+        raise HTTPException(status_code=400, detail="ไม่พบลิงก์สำหรับดึงข้อมูล กรุณาใส่ลิงก์ Shopee อย่างน้อย 1 ลิงก์")
+
+    results = []
+    logger.info(f"🔄 เริ่มต้นดึงข้อมูลสินค้าล่าสุดจาก Shopee {len(urls_to_process)} รายการ...")
+
+    for target in urls_to_process:
+        url = target["url"]
+        name_hint = target["name_hint"]
+        try:
+            # ใช้ Playwright Direct Extractor ดึงภาพแท้และชื่อจริง
+            extracted = await extract_shopee_product_direct(url)
+
+            # ถ้า Direct ได้ภาพไม่ครบ ลอง Fallback
+            if not extracted.get("has_real_images") or len(extracted.get("local_images", [])) == 0:
+                fb = extract_shopee_product_data(url)
+                if fb.get("has_real_images"):
+                    extracted["local_images"] = fb["local_images"]
+                    extracted["has_real_images"] = True
+
+            product_name = extracted.get("name") or name_hint or "สินค้า Shopee แนะนำ"
+            images = extracted.get("local_images", [])
+
+            # บันทึกเข้า 'สินค้าของฉัน'
+            item_data = {
+                "name": product_name,
+                "brand": extracted.get("brand", "ร้านแนะนำ"),
+                "category": extracted.get("category", "general"),
+                "commission_rate": "25%",
+                "commission_badge": "My Pick 25%",
+                "price_thb": 0.0,
+                "shop_type": "ร้านแนะนำ",
+                "highlight": "สินค้าขายดีคุณภาพสูง สั่งซื้อผ่านตะกร้าส้ม",
+                "images": images,
+                "affiliate_link": extracted.get("affiliate_url", url),
+                "rating": 4.9,
+                "sold_count": 10000,
+            }
+            saved = catalog_mgr.add_my_product(item_data)
+            results.append(saved)
+        except Exception as e:
+            logger.error(f"Sync failed for {url}: {e}")
+
+    stats = catalog_mgr.get_video_stats()
+    return {
+        "success": True,
+        "count": len(results),
+        "message": f"ดึงข้อมูลและรูปภาพสินค้าสำเร็จ {len(results)} รายการ พร้อมทำคลิปได้ทันที!",
+        "products": results,
+        "stats": stats,
+    }
 
 
 @app.post("/api/my-products")
@@ -346,6 +454,7 @@ async def generate_catalog(data: dict):
         sold_count=int(item.get("sold_count", 50000)),
         description=item["highlight"],
     )
+    product.product_id = item.get("id", "")
 
     return _process_video_generation(
         product=product,
@@ -400,6 +509,7 @@ async def batch_generate(data: dict):
             sold_count=int(item.get("sold_count", 50000)),
             description=item["highlight"],
         )
+        product.product_id = item.get("id", "")
         try:
             res = _process_video_generation(
                 product=product,
@@ -570,7 +680,9 @@ def _process_video_generation(
         # บันทึก metadata เพื่อดึงประวัติ
         meta_filename = Path(result.video_path).stem + "_meta.json"
         meta_path = OUTPUT_DIR / meta_filename
+        prod_id = getattr(product, "product_id", "") or getattr(product, "item_id", "")
         metadata = {
+            "product_id": prod_id,
             "product_name": product.name,
             "category": product.category,
             "video_filename": Path(result.video_path).name,
@@ -878,10 +990,16 @@ async def execute_scheduled_routine(is_manual: bool = False) -> Dict:
         logger.warning("Scheduler: ไม่พบสินค้าสำหรับสร้างคลิป")
         return {"success": False, "message": "ไม่พบสินค้าสำหรับสร้างคลิป"}
 
-    # สุ่มเลือกตามจำนวนที่ตั้งไว้
-    selected = candidates[:count] if len(candidates) <= count else random.sample(candidates, count)
+    # ให้ความสำคัญกับสินค้าที่ 'ยังไม่ได้ทำคลิป' เป็นอันดับแรก
+    pending_items = [c for c in candidates if not c.get("video_status", {}).get("has_video")]
+    if pending_items:
+        # สุ่มจากรายการที่ยังไม่ได้ทำคลิป
+        selected = pending_items[:count] if len(pending_items) <= count else random.sample(pending_items, count)
+    else:
+        # ถ้าทำครบหมดแล้ว ให้สุ่มวนซ้ำจากทั้งหมด
+        selected = candidates[:count] if len(candidates) <= count else random.sample(candidates, count)
 
-    logger.info(f"⏰ [Scheduler] เริ่มต้นสร้างคลิปอัตโนมัติ {len(selected)} รายการ...")
+    logger.info(f"⏰ [Scheduler] เริ่มต้นสร้างคลิปอัตโนมัติ {len(selected)} รายการ (ค้างทำคลิป: {len(pending_items)} รายการ)...")
     results = []
 
     for item in selected:
@@ -901,6 +1019,7 @@ async def execute_scheduled_routine(is_manual: bool = False) -> Dict:
                 sold_count=int(item.get("sold_count", 50000)),
                 description=item["highlight"],
             )
+            product.product_id = item.get("id", "")
 
             res = _process_video_generation(
                 product=product,

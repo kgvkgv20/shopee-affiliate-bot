@@ -64,6 +64,10 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2 text-xs">
+                <button onclick="openSyncModal()" class="px-3 py-1.5 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold rounded-lg flex items-center gap-1.5 transition shadow-xs">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-900"></i>
+                    <span>🔄 ดึงสินค้าล่าสุด</span>
+                </button>
                 <button onclick="openTelegramModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
                     <i data-lucide="send" class="w-3.5 h-3.5"></i>
                     <span>ตั้งค่า Telegram Bot</span>
@@ -167,6 +171,34 @@
                             <button onclick="selectAllVisible()" class="text-[11px] underline text-shopee-600 hover:text-shopee-700">เลือกทั้งหมด</button>
                             <button onclick="clearBatch()" class="text-[11px] underline text-slate-500 hover:text-slate-700">ล้าง</button>
                         </div>
+                    </div>
+
+                    <!-- Video Creation Status Filter & Quick Sync Row -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 bg-slate-50/80 p-2.5 rounded-xl">
+                        <div class="flex items-center gap-1.5 overflow-x-auto text-xs">
+                            <span class="text-slate-500 font-semibold flex items-center gap-1 shrink-0">
+                                <i data-lucide="video" class="w-3.5 h-3.5 text-slate-400"></i>
+                                สถานะคลิป:
+                            </span>
+                            <button onclick="filterByVideoStatus('all')" id="vstat-btn-all" class="vstat-pill active px-3 py-1 rounded-lg font-semibold bg-slate-900 text-white transition flex items-center gap-1 shrink-0">
+                                <span>ทั้งหมด</span>
+                                <span id="vstat-count-all" class="text-[10px] bg-white/25 px-1.5 py-0.2 rounded-full font-bold">...</span>
+                            </button>
+                            <button onclick="filterByVideoStatus('pending')" id="vstat-btn-pending" class="vstat-pill px-3 py-1 rounded-lg font-semibold bg-white text-amber-700 border border-amber-200 hover:bg-amber-50 transition flex items-center gap-1 shrink-0">
+                                <span>🟡 ยังไม่ได้ทำคลิป</span>
+                                <span id="vstat-count-pending" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">...</span>
+                            </button>
+                            <button onclick="filterByVideoStatus('completed')" id="vstat-btn-completed" class="vstat-pill px-3 py-1 rounded-lg font-semibold bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50 transition flex items-center gap-1 shrink-0">
+                                <span>🟢 ทำวิดีโอแล้ว</span>
+                                <span id="vstat-count-completed" class="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full font-bold">...</span>
+                            </button>
+                        </div>
+
+                        <!-- One-Click Sync Button -->
+                        <button onclick="openSyncModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition shrink-0">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>🔄 ดึงสินค้าล่าสุดสำหรับทำคลิป</span>
+                        </button>
                     </div>
                 </div>
 
@@ -874,6 +906,133 @@
         </div>
     </div>
 
+    <!-- Modal: Auto-Sync Products from Shopee / my_links.txt -->
+    <div id="sync-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">ศูนย์ดึงสินค้าสำหรับทำคลิปล่าสุด (Auto-Sync)</h3>
+                        <p class="text-[11px] text-slate-500">ดึงรูปถ่ายจริง 1024x1024 ตรงปก 100% พร้อมชื่อไทยจาก Shopee เข้าระบบอัตโนมัติ</p>
+                    </div>
+                </div>
+                <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Sync Tabs -->
+            <div class="flex border-b border-slate-200 text-xs gap-1">
+                <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    <span>ดึงจาก my_links.txt (<strong id="sync-file-count">0</strong>)</span>
+                </button>
+                <button id="sync-tab-paste-btn" onclick="switchSyncTab('paste')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+                    <span>วางหลายลิงก์ (Batch Paste)</span>
+                </button>
+                <button id="sync-tab-edit-btn" onclick="switchSyncTab('edit')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>จัดการไฟล์ my_links.txt</span>
+                </button>
+            </div>
+
+            <!-- Subtab 1: File Sync -->
+            <div id="sync-subtab-file" class="space-y-3 text-xs">
+                <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1">
+                    <p class="font-bold text-amber-900 flex items-center gap-1.5">
+                        <i data-lucide="zap" class="w-4 h-4 text-amber-600"></i>
+                        ดึงข้อมูลในคลิกเดียวจากไฟล์ my_links.txt
+                    </p>
+                    <p class="text-amber-800 text-[11px]">
+                        ระบบจะใช้ Headless Browser เปิดหน้าสินค้า Shopee เพื่อดึงภาพจริง 1024x1024 ทุกมุมและชื่อภาษาไทย แล้วบันทึกเข้า "สินค้าของฉัน" พร้อมติดป้าย 🟡 รอทำคลิป อัตโนมัติ
+                    </p>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">รายการลิงก์ที่จะดึงข้อมูล:</label>
+                    <div id="sync-file-list" class="max-h-44 overflow-y-auto border border-slate-200 rounded-xl p-2.5 bg-slate-50 space-y-1.5">
+                        <p class="text-slate-400 text-center py-4">กำลังอ่านไฟล์...</p>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button onclick="startSyncFromFile()" id="sync-file-btn" class="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition">
+                        <i data-lucide="play" class="w-4 h-4"></i>
+                        <span id="sync-file-btn-text">เริ่มดึงสินค้าทั้งหมดทันที (1-Click Auto Sync)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subtab 2: Multi-link Paste -->
+            <div id="sync-subtab-paste" class="hidden space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">วางลิงก์ Shopee หรือ Affiliate Links (บรรทัดละ 1 ลิงก์):</label>
+                    <textarea id="sync-paste-input" rows="5" placeholder="https://s.shopee.co.th/xxxx&#10;https://shopee.co.th/product/352437321/9002752322&#10;https://shope.ee/yyyy" class="w-full font-mono text-[11px] border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500"></textarea>
+                    <p class="text-[11px] text-slate-400 mt-1">รองรับทั้งลิงก์ย่อ Affiliate (s.shopee.co.th / shope.ee) และลิงก์หน้าเว็บ Shopee เต็ม</p>
+                </div>
+                <div class="pt-2">
+                    <button onclick="startSyncFromPasted()" id="sync-paste-btn" class="w-full py-2.5 bg-shopee-500 hover:bg-shopee-600 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition">
+                        <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                        <span id="sync-paste-btn-text">ดึงภาพและชื่อจริงเข้าคลังทั้งหมด</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Subtab 3: Edit my_links.txt -->
+            <div id="sync-subtab-edit" class="hidden space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">แก้ไขเนื้อหาในไฟล์ my_links.txt:</label>
+                    <textarea id="sync-edit-input" rows="7" class="w-full font-mono text-[11px] border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500"></textarea>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button onclick="closeSyncModal()" class="flex-1 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold">ปิด</button>
+                    <button onclick="saveSyncLinksFile()" id="sync-save-file-btn" class="flex-1 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold">บันทึกไฟล์</button>
+                </div>
+            </div>
+
+            <!-- Sync Progress Spinner / Alert -->
+            <div id="sync-progress-box" class="hidden p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center gap-2">
+                <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                <span id="sync-progress-text">กำลังดึงข้อมูลและรูปภาพจริงจาก Shopee กรุณารอสักครู่...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Quick Video Preview Player -->
+    <div id="video-preview-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-3 relative text-center">
+            <button onclick="closeVideoPreviewModal()" class="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <div>
+                <span id="preview-modal-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                    🟢 วิดีโอพร้อมใช้
+                </span>
+                <h4 id="preview-modal-title" class="text-xs font-bold text-slate-900 mt-1 line-clamp-2 px-4"></h4>
+                <p id="preview-modal-date" class="text-[10px] text-slate-400 mt-0.5"></p>
+            </div>
+
+            <div class="phone-mockup mx-auto bg-black rounded-2xl overflow-hidden shadow-lg border-2 border-slate-800 relative">
+                <video id="preview-modal-player" controls playsinline class="w-full h-full object-cover">
+                    <source id="preview-modal-source" src="" type="video/mp4">
+                </video>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
+                <a id="preview-modal-download-btn" href="#" download class="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                    <span>ดาวน์โหลด</span>
+                </a>
+                <button onclick="openQrModalForPreview()" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
+                    <span>QR เข้ามือถือ</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
         <p>Shopee Clip Maker AI (Database V3) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
@@ -894,6 +1053,7 @@
         let currentCategory = 'all';
         let currentSearchQuery = '';
         let currentMinCommission = 0;
+        let currentVideoStatusFilter = 'all';
 
         let isBatchMode = false;
         let selectedProductId = 'mizumi_uv';
@@ -901,6 +1061,8 @@
         let lastCreatedVideoFilename = '';
         let searchTimeout = null;
         let currentCustomImages = [];
+        let allCatalogProducts = [];
+        let previewVideoData = null;
 
         window.addEventListener('DOMContentLoaded', () => {
             loadCatalogProducts();
@@ -920,18 +1082,36 @@
         async function loadCatalogProducts() {
             const grid = document.getElementById('product-grid');
             try {
-                let url = `/api/catalog?category=${currentCategory}&source=${currentSource}&min_commission=${currentMinCommission}`;
+                let url = `/api/catalog?category=${currentCategory}&source=${currentSource}&min_commission=${currentMinCommission}&video_status=${currentVideoStatusFilter}`;
                 if (currentSearchQuery) {
                     url += `&query=${encodeURIComponent(currentSearchQuery)}`;
                 }
                 const res = await fetch(url);
                 const data = await res.json();
 
+                if (data.stats) {
+                    const elAll = document.getElementById('vstat-count-all');
+                    const elPending = document.getElementById('vstat-count-pending');
+                    const elCompleted = document.getElementById('vstat-count-completed');
+                    if (elAll) elAll.textContent = data.stats.total_products;
+                    if (elPending) elPending.textContent = data.stats.pending_count;
+                    if (elCompleted) elCompleted.textContent = data.stats.completed_count;
+                }
+
                 grid.innerHTML = '';
                 if (!data.products || data.products.length === 0) {
-                    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-8 text-center">ไม่พบสินค้าตามเงื่อนไขที่ค้นหา</p>';
+                    const statusText = currentVideoStatusFilter === 'pending' ? 'ไม่พบสินค้าที่รอทำคลิป (คุณทำครบหมดแล้ว 🎉)' : (currentVideoStatusFilter === 'completed' ? 'ยังไม่มีสินค้าที่ทำคลิปในหมวดนี้' : 'ไม่พบสินค้าตามเงื่อนไขที่ค้นหา');
+                    grid.innerHTML = `
+                        <div class="col-span-full py-12 text-center space-y-2">
+                            <div class="text-3xl">📦</div>
+                            <p class="text-xs text-slate-500 font-semibold">${statusText}</p>
+                            ${currentVideoStatusFilter !== 'all' ? `<button onclick="filterByVideoStatus('all')" class="text-xs text-shopee-600 underline font-semibold">ดูสินค้าทั้งหมด (${data.stats ? data.stats.total_products : ''})</button>` : ''}
+                        </div>
+                    `;
                     return;
                 }
+
+                allCatalogProducts = data.products;
 
                 data.products.forEach(item => {
                     const isSelected = selectedProductId === item.id;
@@ -940,8 +1120,11 @@
                     const shopType = item.shop_type || 'ร้านแนะนำ';
                     const isCustom = item.is_custom || false;
 
+                    const vStatus = item.video_status || { has_video: false, video_count: 0 };
+                    const hasVideo = vStatus.has_video;
+
                     const card = document.createElement('div');
-                    card.className = `catalog-card bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all p-3 space-y-2 relative ${isSelected && !isBatchMode ? 'active' : ''} ${isBatchChecked && isBatchMode ? 'active' : ''}`;
+                    card.className = `catalog-card bg-white rounded-xl border ${hasVideo ? 'border-emerald-200' : 'border-slate-200'} overflow-hidden cursor-pointer hover:shadow-md transition-all p-3 space-y-2 relative flex flex-col justify-between ${isSelected && !isBatchMode ? 'active' : ''} ${isBatchChecked && isBatchMode ? 'active' : ''}`;
                     card.setAttribute('data-id', item.id);
                     card.setAttribute('data-category', item.category);
                     card.onclick = () => handleCardClick(item.id);
@@ -949,36 +1132,69 @@
                     const imgPath = (item.images && item.images.length > 0) ? (item.images[0].startsWith('http') || item.images[0].startsWith('/') ? item.images[0] : `/${item.images[0]}`) : '/assets/products/mizumi_uv/img1.jpg';
 
                     card.innerHTML = `
-                        <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative">
-                            <img src="${imgPath}" alt="${item.name}" class="w-full h-full object-cover">
-                            
-                            <span class="absolute top-1.5 left-1.5 text-[9px] font-bold bg-emerald-600 text-white backdrop-blur-xs px-1.5 py-0.5 rounded shadow-xs">
-                                ${commBadge}
-                            </span>
+                        <div class="space-y-2">
+                            <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative">
+                                <img src="${imgPath}" alt="${item.name}" class="w-full h-full object-cover">
+                                
+                                <span class="absolute top-1.5 left-1.5 text-[9px] font-bold bg-emerald-600 text-white backdrop-blur-xs px-1.5 py-0.5 rounded shadow-xs">
+                                    ${commBadge}
+                                </span>
 
-                            ${isCustom ? `
-                            <button onclick="event.stopPropagation(); deleteMyProduct('${item.id}')" title="ลบออกจากสินค้าของฉัน" class="absolute bottom-1.5 right-1.5 w-6 h-6 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs shadow-xs">
-                                ✕
+                                <!-- Video Status Badge on Image -->
+                                ${hasVideo ? `
+                                <span class="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-emerald-700/95 text-white backdrop-blur-xs px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                    <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-200"></i> ทำคลิปแล้ว (${vStatus.video_count})
+                                </span>
+                                ` : `
+                                <span class="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-amber-500/95 text-white backdrop-blur-xs px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                                    <i data-lucide="clock" class="w-3 h-3 text-amber-100"></i> รอทำคลิป
+                                </span>
+                                `}
+
+                                ${isCustom ? `
+                                <button onclick="event.stopPropagation(); deleteMyProduct('${item.id}')" title="ลบออกจากสินค้าของฉัน" class="absolute bottom-1.5 right-1.5 w-6 h-6 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs shadow-xs z-10">
+                                    ✕
+                                </button>
+                                ` : ''}
+
+                                <!-- Batch Checkbox -->
+                                <div class="batch-checkbox ${isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5">
+                                    <input type="checkbox" id="check-${item.id}" ${isBatchChecked ? 'checked' : ''} class="w-4 h-4 text-shopee-600 rounded focus:ring-shopee-500 cursor-pointer pointer-events-none">
+                                </div>
+                                <!-- Single Select Check Badge -->
+                                <div class="single-check ${isSelected && !isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-slate-400 font-medium">${item.brand || 'Shopee'} • ${shopType}</span>
+                                <p class="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight mt-0.5">${item.name}</p>
+                                <p class="text-[11px] text-slate-500 line-clamp-1 mt-1">${item.highlight || ''}</p>
+                            </div>
+                            <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100">
+                                <span class="text-amber-500 flex items-center gap-0.5 font-medium">⭐ ${item.rating || 4.9}</span>
+                                <span>ขายแล้ว ${(item.sold_count || 10000).toLocaleString()}+</span>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Buttons based on Video Status -->
+                        <div class="pt-2 border-t border-slate-100">
+                            ${hasVideo ? `
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="event.stopPropagation(); openVideoPreview('${item.id}')" class="flex-1 py-1.5 px-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-2xs">
+                                    <i data-lucide="play" class="w-3 h-3 text-emerald-600"></i>
+                                    <span>ดูคลิป (${vStatus.video_count})</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); selectCatalogItem('${item.id}')" class="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition" title="สร้างคลิปซ้ำ">
+                                    <i data-lucide="repeat" class="w-3 h-3"></i>
+                                </button>
+                            </div>
+                            ` : `
+                            <button onclick="event.stopPropagation(); selectCatalogItem('${item.id}')" class="w-full py-1.5 px-2 bg-gradient-to-r from-shopee-500 to-orange-500 hover:from-shopee-600 hover:to-orange-600 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-2xs">
+                                <i data-lucide="sparkles" class="w-3 h-3"></i>
+                                <span>⚡ สร้างคลิปทันที</span>
                             </button>
-                            ` : ''}
-
-                            <!-- Batch Checkbox -->
-                            <div class="batch-checkbox ${isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5">
-                                <input type="checkbox" id="check-${item.id}" ${isBatchChecked ? 'checked' : ''} class="w-4 h-4 text-shopee-600 rounded focus:ring-shopee-500 cursor-pointer pointer-events-none">
-                            </div>
-                            <!-- Single Select Check Badge -->
-                            <div class="single-check ${isSelected && !isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 font-medium">${item.brand || 'Shopee'} • ${shopType}</span>
-                            <p class="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight mt-0.5">${item.name}</p>
-                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-1">${item.highlight || ''}</p>
-                        </div>
-                        <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100">
-                            <span class="text-amber-500 flex items-center gap-0.5 font-medium">⭐ ${item.rating || 4.9}</span>
-                            <span>ขายแล้ว ${(item.sold_count || 10000).toLocaleString()}+</span>
+                            `}
                         </div>
                     `;
                     grid.appendChild(card);
@@ -992,6 +1208,31 @@
             } catch (e) {
                 grid.innerHTML = '<p class="text-xs text-red-500 col-span-full py-8 text-center">โหลดสินค้าล้มเหลว กรุณารีเฟรช</p>';
             }
+        }
+
+        function filterByVideoStatus(status) {
+            currentVideoStatusFilter = status;
+            const btnAll = document.getElementById('vstat-btn-all');
+            const btnPending = document.getElementById('vstat-btn-pending');
+            const btnCompleted = document.getElementById('vstat-btn-completed');
+
+            const inactiveAll = "vstat-pill px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition flex items-center gap-1 shrink-0";
+            const inactivePending = "vstat-pill px-3 py-1 rounded-lg font-semibold bg-white text-amber-700 border border-amber-200 hover:bg-amber-50 transition flex items-center gap-1 shrink-0";
+            const inactiveCompleted = "vstat-pill px-3 py-1 rounded-lg font-semibold bg-white text-emerald-700 border border-emerald-200 hover:bg-emerald-50 transition flex items-center gap-1 shrink-0";
+
+            if (btnAll) btnAll.className = inactiveAll;
+            if (btnPending) btnPending.className = inactivePending;
+            if (btnCompleted) btnCompleted.className = inactiveCompleted;
+
+            if (status === 'all' && btnAll) {
+                btnAll.className = "vstat-pill active px-3 py-1 rounded-lg font-semibold bg-slate-900 text-white transition flex items-center gap-1 shrink-0";
+            } else if (status === 'pending' && btnPending) {
+                btnPending.className = "vstat-pill active px-3 py-1 rounded-lg font-semibold bg-amber-600 text-white transition flex items-center gap-1 shrink-0";
+            } else if (status === 'completed' && btnCompleted) {
+                btnCompleted.className = "vstat-pill active px-3 py-1 rounded-lg font-semibold bg-emerald-600 text-white transition flex items-center gap-1 shrink-0";
+            }
+
+            loadCatalogProducts();
         }
 
         function setSource(src) {
@@ -2280,6 +2521,217 @@
                 lucide.createIcons();
             } catch (e) {
                 console.error("loadSchedulerHistory failed", e);
+            }
+        }
+
+        // --- Sync Modal & Functions ---
+        function openSyncModal() {
+            document.getElementById('sync-modal').classList.remove('hidden');
+            loadSyncLinksStatus();
+            lucide.createIcons();
+        }
+
+        function closeSyncModal() {
+            document.getElementById('sync-modal').classList.add('hidden');
+        }
+
+        function switchSyncTab(tab) {
+            const tabs = ['file', 'paste', 'edit'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`sync-tab-${t}-btn`);
+                const subtab = document.getElementById(`sync-subtab-${t}`);
+                if (t === tab) {
+                    if (btn) btn.className = "pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition";
+                    if (subtab) subtab.classList.remove('hidden');
+                } else {
+                    if (btn) btn.className = "pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition";
+                    if (subtab) subtab.classList.add('hidden');
+                }
+            });
+            lucide.createIcons();
+        }
+
+        async function loadSyncLinksStatus() {
+            try {
+                const res = await fetch('/api/sync/status');
+                const data = await res.json();
+                if (data.success) {
+                    const countEl = document.getElementById('sync-file-count');
+                    if (countEl) countEl.textContent = data.total_links;
+
+                    const listEl = document.getElementById('sync-file-list');
+                    if (listEl) {
+                        if (!data.links || data.links.length === 0) {
+                            listEl.innerHTML = '<p class="text-slate-400 text-center py-4">ไม่มีลิงก์ในไฟล์ my_links.txt (เพิ่มได้ในแท็บจัดการไฟล์)</p>';
+                        } else {
+                            listEl.innerHTML = data.links.map((item, idx) => `
+                                <div class="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between text-xs">
+                                    <div class="truncate pr-2">
+                                        <p class="font-semibold text-slate-800 truncate">${item.name_hint || 'สินค้า Shopee'}</p>
+                                        <p class="text-[10px] text-slate-400 font-mono truncate">${item.url}</p>
+                                    </div>
+                                    <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 shrink-0">#${idx + 1}</span>
+                                </div>
+                            `).join('');
+                        }
+                    }
+
+                    const editInput = document.getElementById('sync-edit-input');
+                    if (editInput) editInput.value = data.raw_content;
+                }
+            } catch (e) {
+                console.error("Error loading sync links:", e);
+            }
+        }
+
+        async function startSyncFromFile() {
+            const btn = document.getElementById('sync-file-btn');
+            const btnText = document.getElementById('sync-file-btn-text');
+            const pbox = document.getElementById('sync-progress-box');
+            const ptext = document.getElementById('sync-progress-text');
+
+            btn.disabled = true;
+            btnText.textContent = "กำลังดึงรูปและชื่อสินค้าจาก Shopee...";
+            pbox.classList.remove('hidden');
+            ptext.textContent = "กำลังเปิด Headless Browser เพื่อสกัดภาพ Packshot 1024x1024 จาก Shopee CDN...";
+
+            try {
+                const res = await fetch('/api/sync/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: 'file' })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 ดึงข้อมูลสำเร็จ ${data.count} รายการ พร้อมรูปภาพจริงครบทุกมุม!`);
+                    closeSyncModal();
+                    loadCatalogProducts();
+                } else {
+                    alert('ดึงข้อมูลล้มเหลว: ' + (data.detail || 'เกิดข้อผิดพลาด'));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการดึงข้อมูล: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "เริ่มดึงสินค้าทั้งหมดทันที (1-Click Auto Sync)";
+                pbox.classList.add('hidden');
+            }
+        }
+
+        async function startSyncFromPasted() {
+            const input = document.getElementById('sync-paste-input').value.trim();
+            if (!input) {
+                alert('กรุณาวางลิงก์ Shopee อย่างน้อย 1 ลิงก์');
+                return;
+            }
+
+            const urls = input.split('\n').map(u => u.trim()).filter(u => u.length > 0);
+            const btn = document.getElementById('sync-paste-btn');
+            const btnText = document.getElementById('sync-paste-btn-text');
+            const pbox = document.getElementById('sync-progress-box');
+            const ptext = document.getElementById('sync-progress-text');
+
+            btn.disabled = true;
+            btnText.textContent = "กำลังดึงข้อมูล...";
+            pbox.classList.remove('hidden');
+            ptext.textContent = `กำลังดึงรูปและชื่อสินค้าจริงจาก Shopee (${urls.length} ลิงก์)...`;
+
+            try {
+                const res = await fetch('/api/sync/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ source: 'urls', urls: urls })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 เพิ่มเข้าคลังสำเร็จ ${data.count} รายการ!`);
+                    document.getElementById('sync-paste-input').value = '';
+                    closeSyncModal();
+                    loadCatalogProducts();
+                } else {
+                    alert('ดึงข้อมูลล้มเหลว: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = "ดึงภาพและชื่อจริงเข้าคลังทั้งหมด";
+                pbox.classList.add('hidden');
+            }
+        }
+
+        async function saveSyncLinksFile() {
+            const content = document.getElementById('sync-edit-input').value;
+            const btn = document.getElementById('sync-save-file-btn');
+            btn.disabled = true;
+            btn.textContent = "กำลังบันทึก...";
+            try {
+                const res = await fetch('/api/sync/links-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: content })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("บันทึกไฟล์ my_links.txt สำเร็จ");
+                    loadSyncLinksStatus();
+                } else {
+                    alert('บันทึกล้มเหลว');
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาด: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "บันทึกไฟล์";
+            }
+        }
+
+        // --- Video Preview Modal ---
+        function openVideoPreview(productId) {
+            const prod = allCatalogProducts.find(p => p.id === productId);
+            if (!prod || !prod.video_status || !prod.video_status.has_video) {
+                alert('ยังไม่มีวิดีโอสำหรับสินค้านี้');
+                return;
+            }
+
+            const latest = prod.video_status.latest_video_filename;
+            const videoUrl = prod.video_status.latest_video_url;
+            const created = prod.video_status.latest_created_at || '';
+
+            previewVideoData = {
+                filename: latest,
+                url: videoUrl,
+                title: prod.name,
+                affiliate_link: prod.affiliate_link
+            };
+
+            document.getElementById('preview-modal-title').textContent = prod.name;
+            document.getElementById('preview-modal-date').textContent = created ? `สร้างเมื่อ: ${created}` : '';
+            document.getElementById('preview-modal-badge').textContent = `🟢 ทำคลิปแล้ว (${prod.video_status.video_count} คลิป)`;
+
+            const player = document.getElementById('preview-modal-player');
+            const source = document.getElementById('preview-modal-source');
+            source.src = videoUrl;
+            player.load();
+            player.play().catch(() => {});
+
+            const dlBtn = document.getElementById('preview-modal-download-btn');
+            dlBtn.href = videoUrl;
+            dlBtn.download = latest;
+
+            document.getElementById('video-preview-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeVideoPreviewModal() {
+            const player = document.getElementById('preview-modal-player');
+            if (player) player.pause();
+            document.getElementById('video-preview-modal').classList.add('hidden');
+        }
+
+        function openQrModalForPreview() {
+            if (previewVideoData && previewVideoData.filename) {
+                openQrModal(previewVideoData.filename);
             }
         }
     </script>
