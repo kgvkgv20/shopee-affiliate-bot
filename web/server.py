@@ -43,6 +43,7 @@ from src.trend_researcher import VERIFIED_PRODUCT_CATALOG
 from src.tts_generator import generate_voiceover
 from src.discord_sender import DiscordSender
 from src.catalog_manager import CatalogManager
+from src.image_handler import extract_shopee_product_data, download_image_to_file
 
 OUTPUT_DIR = BASE_DIR / "output"
 ASSETS_DIR = BASE_DIR / "assets"
@@ -153,7 +154,7 @@ async def import_csv(
 @app.post("/api/parse-shopee-url")
 async def parse_shopee_url(data: dict):
     """
-    ดึงชื่อสินค้าและหมวดหมู่อัตโนมัติจากลิงก์ Shopee
+    ดึงชื่อสินค้า หมวดหมู่ และรูปภาพจริงอัตโนมัติจากลิงก์ Shopee (รองรับทั้ง Full URL และ Short Links)
     Payload: { "url": "https://shopee.co.th/..." }
     """
     raw_url = data.get("url", "").strip()
@@ -161,35 +162,15 @@ async def parse_shopee_url(data: dict):
         raise HTTPException(status_code=400, detail="กรุณาระบุลิงก์ Shopee")
 
     try:
-        parsed = urlparse(raw_url)
-        path_decoded = unquote(parsed.path)
-        slug = path_decoded.strip("/").split("/")[-1]
-
-        # กำจัด ID ส่วนท้าย เช่น -i.123456.7890
-        clean_slug = re.sub(r"-i\.\d+\.\d+", "", slug)
-        clean_name = clean_slug.replace("-", " ").strip()
-
-        # ถ้าสกัดชื่อได้สั้นเกินไป ให้ใช้ keyword จาก query หรือ fallback
-        if len(clean_name) < 3:
-            clean_name = "สินค้า Shopee คุณภาพดี"
-
-        # คาดเดาหมวดหมู่จากคำสำคัญ
-        cat = "general"
-        lower_name = clean_name.lower()
-        if any(w in lower_name for w in ["เซรั่ม", "กันแดด", "ครีม", "ล้างหน้า", "มาส์ก", "แป้ง", "ลิป", "สกินแคร์", "เซรัม"]):
-            cat = "beauty"
-        elif any(w in lower_name for w in ["แก้ว", "พัดลม", "หม้อ", "กล่อง", "ที่นอน", "ผ้าปู", "ไม้กวาด", "เก้าอี้", "กระติก"]):
-            cat = "home"
-        elif any(w in lower_name for w in ["หูฟัง", "สายชาร์จ", "คีย์บอร์ด", "เมาส์", "พาวเวอร์แบงค์", "ลำโพง", "บลูทูธ"]):
-            cat = "electronics"
-        elif any(w in lower_name for w in ["กระเป๋า", "ร่ม", "เสื้อ", "กางเกง", "รองเท้า", "หมวก", "แว่น"]):
-            cat = "fashion"
-
+        extracted = extract_shopee_product_data(raw_url)
         return {
             "success": True,
-            "name": clean_name,
-            "category": cat,
-            "affiliate_url": raw_url,
+            "name": extracted["name"],
+            "category": extracted["category"],
+            "affiliate_url": extracted["clean_url"],
+            "images": extracted["local_images"],
+            "cdn_urls": extracted["cdn_urls"],
+            "has_real_images": extracted["has_real_images"],
         }
     except Exception as e:
         logger.warning(f"Parse Shopee URL failed: {e}")
@@ -198,7 +179,31 @@ async def parse_shopee_url(data: dict):
             "name": "สินค้า Shopee แนะนำ",
             "category": "general",
             "affiliate_url": raw_url,
+            "images": [],
+            "has_real_images": False,
         }
+
+
+@app.post("/api/download-image-url")
+async def download_image_url(data: dict):
+    """
+    ดาวน์โหลดรูปภาพจาก URL (เช่น ภาพจาก Shopee, เว็บไซต์ร้านค้า) มาเก็บไว้ในเครื่อง
+    Payload: { "url": "https://..." }
+    """
+    img_url = data.get("url", "").strip()
+    if not img_url:
+        raise HTTPException(status_code=400, detail="กรุณาระบุ Image URL")
+
+    saved_path = download_image_to_file(img_url, prefix="custom_url")
+    if not saved_path:
+        raise HTTPException(status_code=400, detail="ไม่สามารถดาวน์โหลดรูปภาพจาก URL ที่ระบุได้")
+
+    return {
+        "success": True,
+        "message": "ดาวน์โหลดรูปภาพสำเร็จ",
+        "image_path": saved_path,
+        "image_url": f"/{saved_path}"
+    }
 
 
 @app.post("/api/generate-script")
@@ -376,25 +381,46 @@ async def generate_custom(
     custom_hook: Optional[str] = Form(None),
     custom_body: Optional[str] = Form(None),
     custom_cta: Optional[str] = Form(None),
-    images: List[UploadFile] = File(...),
+    images: Optional[List[UploadFile]] = File(None),
+    image_paths_json: Optional[str] = Form(None),
 ):
-    """สร้างคลิปจากสินค้าที่ผู้ใช้อัปโหลดเอง"""
+    """สร้างคลิปจากสินค้าที่ผู้ใช้อัปโหลดเอง หรือภาพที่ดึงมาจาก Shopee CDN"""
     if not name.strip():
         raise HTTPException(status_code=400, detail="กรุณาระบุชื่อสินค้า")
-    if not images or len(images) == 0:
-        raise HTTPException(status_code=400, detail="กรุณาอัปโหลดรูปสินค้าอย่างน้อย 1 รูป")
-
-    session_id = f"custom_{int(time.time())}_{uuid.uuid4().hex[:6]}"
-    target_dir = UPLOAD_DIR / session_id
-    target_dir.mkdir(parents=True, exist_ok=True)
 
     saved_images = []
-    for i, file in enumerate(images[:3]):
-        ext = Path(file.filename).suffix or ".jpg"
-        save_path = target_dir / f"img_{i}{ext}"
-        with open(save_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
-        saved_images.append(str(save_path))
+
+    # 1. ถ้ามีไฟล์อัปโหลดเข้ามา
+    if images and len(images) > 0 and images[0].filename:
+        session_id = f"custom_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+        target_dir = UPLOAD_DIR / session_id
+        target_dir.mkdir(parents=True, exist_ok=True)
+        for i, file in enumerate(images[:3]):
+            if not file.filename:
+                continue
+            ext = Path(file.filename).suffix or ".jpg"
+            save_path = target_dir / f"img_{i}{ext}"
+            with open(save_path, "wb") as f:
+                shutil.copyfileobj(file.file, f)
+            saved_images.append(str(save_path))
+
+    # 2. ถ้าไม่มีไฟล์อัปโหลด แต่มี path ภาพที่ดึงมาจาก Shopee CDN
+    if not saved_images and image_paths_json:
+        try:
+            parsed_paths = json.loads(image_paths_json)
+            if isinstance(parsed_paths, list):
+                for p in parsed_paths:
+                    if os.path.exists(p) or (PROJECT_ROOT / p).exists():
+                        saved_images.append(p)
+        except Exception as e:
+            logger.warning(f"Error parsing image_paths_json: {e}")
+
+    # ถ้ายังไม่มีภาพ ให้แจ้งเตือนผู้ใช้ชัดเจน
+    if not saved_images:
+        raise HTTPException(
+            status_code=400, 
+            detail="กรุณาอัปโหลดรูปภาพสินค้า หรือวางลิงก์ Shopee ที่มีรูปภาพสินค้าเพื่อสร้างคลิป"
+        )
 
     while len(saved_images) < 3:
         saved_images.append(saved_images[0])

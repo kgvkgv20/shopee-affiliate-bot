@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "id": "my_1793464706",
+    "name": "ฮาชชิ พลัส Hashi Plus Ergo Series ใช้ล้างทำความสะอาดโพรงจมูก อุปกรณ์ล้างจมูก",
+    "brand": "Hashi Plus",
+    "category": "home",
+    "commission_rate": "25%",
+    "commission_badge": "My Pick 25%",
+    "price_thb": 185,
+    "shop_type": "ร้านทางการ",
+    "highlight": "อุปกรณ์ล้างจมูกดีไซน์ Ergo Series นุ่มนวล ไม่สำลัก ทำความสะอาดโพรงจมูก ลดภูมิแพ้และฝุ่น PM2.5",
+    "images": [
+      "assets/products/hashi_plus/img1.jpg",
+      "assets/products/hashi_plus/img2.jpg",
+      "assets/products/hashi_plus/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/%E0%B8%AE%E0%B8%B2%E0%B8%8A%E0%B8%8A%E0%B8%B4-%E0%B8%9E%E0%B8%A5%E0%B8%B1%E0%B8%AA-Hashi-Plus-Ergo-Series-%E0%B9%83%E0%B8%8A%E0%B9%89%E0%B8%A5%E0%B9%89%E0%B8%B2%E0%B8%87%E0%B8%97%E0%B8%B3%E0%B8%84%E0%B8%A7%E0%B8%B2%E0%B8%A1%E0%B8%AA%E0%B8%B0%E0%B8%AD%E0%B8%B2%E0%B8%94%E0%B9%82%E0%B8%9E%E0%B8%A3%E0%B8%87%E0%B8%88%E0%B8%A1%E0%B8%B9%E0%B8%81-i.352437321.9002752322?extraParams=%7B%22display_model_id%22%3A24889546584%2C%22model_selection_logic%22%3A3%7D&image_ids=th-11134207-81zto-mi3xwha8x0cnb6",
+    "rating": 4.9,
+    "sold_count": 45000,
+    "is_custom": true
+  }
+]

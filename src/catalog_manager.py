@@ -469,9 +469,28 @@ class CatalogManager:
             if img_raw:
                 images = [u.strip() for u in img_raw.split(";") if u.strip()]
 
-            # ถ้าไม่มีรูป ให้ fallback ใส่ placeholder/stock
+            # ถ้าไม่มีรูปใน CSV ให้ลองแกะจาก affiliate_link ถ้ามี image_ids
             if not images:
-                images = ["assets/products/mizumi_uv/img1.jpg"]
+                link = row.get("affiliate_link") or row.get("ลิงก์", "")
+                if "image_ids=" in link or "image_id=" in link:
+                    try:
+                        from src.image_handler import extract_shopee_product_data
+                        parsed_res = extract_shopee_product_data(link)
+                        if parsed_res.get("local_images"):
+                            images = parsed_res["local_images"]
+                    except Exception:
+                        pass
+
+            # ถ้ายังไม่มีรูป ให้เลือกรูปตามหมวดหมู่ที่ระบุอย่างสมเหตุสมผล
+            if not images:
+                cat = (row.get("category") or row.get("หมวดหมู่", "general")).lower()
+                cat_fallbacks = {
+                    "beauty": "assets/products/cerave_cleanser/img1.jpg",
+                    "home": "assets/products/tyeso_tumbler/img1.jpg",
+                    "electronics": "assets/products/baseus_earbuds/img1.jpg",
+                    "fashion": "assets/products/shoulder_bag/img1.jpg",
+                }
+                images = [cat_fallbacks.get(cat, "assets/products/tyeso_tumbler/img1.jpg")]
 
             item = {
                 "id": f"imported_{int(time.time())}_{len(imported_items)}",
