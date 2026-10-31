@@ -185,13 +185,13 @@
                         ดึงข้อมูลจากลิงก์ Shopee อัตโนมัติ (Smart Link Extractor)
                     </label>
                     <div class="flex gap-2">
-                        <input type="url" id="shopee-url-extract" placeholder="วางลิงก์สินค้า Shopee เช่น https://shopee.co.th/... หรือ https://s.shopee.co.th/..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
-                        <button onclick="extractShopeeUrl()" class="px-4 py-2 bg-shopee-500 hover:bg-shopee-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0">
+                        <input type="url" id="shopee-url-extract" placeholder="วางลิงก์สินค้า Shopee หรือลิงก์ Affiliate เช่น https://s.shopee.co.th/... หรือ https://shopee.co.th/..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                        <button onclick="extractShopeeUrl()" id="extract-shopee-btn" class="px-4 py-2 bg-shopee-500 hover:bg-shopee-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0 shadow-xs">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
-                            <span>ดึงข้อมูล</span>
+                            <span id="extract-btn-text">ดึงรูปและข้อมูลจริง</span>
                         </button>
                     </div>
-                    <p class="text-[11px] text-slate-500">ระบบจะช่วยถอดชื่อสินค้าและเลือกหมวดหมู่ให้อัตโนมัติ</p>
+                    <p class="text-[11px] text-slate-500">ระบบจะจำลองเปิดหน้า Shopee เพื่อตรวจจับภาพ Packshot จริง 1024x1024 ครบทุกมุม พร้อมชื่อสินค้าตรงปก 100%</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1222,12 +1222,19 @@
 
         async function extractShopeeUrl() {
             const urlInput = document.getElementById('shopee-url-extract');
+            const btn = document.getElementById('extract-shopee-btn');
+            const btnText = document.getElementById('extract-btn-text');
             const rawUrl = urlInput.value.trim();
             if (!rawUrl) {
-                alert('กรุณาวางลิงก์ Shopee');
+                alert('กรุณาวางลิงก์ Shopee (รองรับทั้งลิงก์ย่อ s.shopee.co.th และลิงก์สินค้า)');
                 return;
             }
-            showToast('กำลังดึงข้อมูลและรูปภาพจริงจากลิงก์...');
+
+            if (btn) btn.disabled = true;
+            if (btnText) btnText.textContent = "กำลังดึงรูปจริง...";
+            updateImageStatus('⏳ กำลังเปิดหน้า Shopee เพื่อตรวจจับภาพ Packshot จริงตรงปก 100%...', 'text-amber-600 font-medium');
+            showToast('กำลังดึงรูปถ่ายตรงปกจาก Shopee (ประมาณ 3–5 วินาที)...');
+
             try {
                 const res = await fetch('/api/parse-shopee-url', {
                     method: 'POST',
@@ -1243,15 +1250,19 @@
                     if (data.images && data.images.length > 0) {
                         currentCustomImages = data.images;
                         renderImageSlots(currentCustomImages);
-                        updateImageStatus(`✅ ดึงรูปสินค้าจริงจาก Shopee สำเร็จ (${data.images.length} รูป)`, 'text-emerald-600 font-bold');
-                        showToast('ดึงชื่อสินค้าและรูปถ่ายตรงปกเรียบร้อย! 🎉');
+                        updateImageStatus(`✅ ดึงรูปสินค้าจริงจาก Shopee สำเร็จ 100% (${data.images.length} รูปตรงปก)`, 'text-emerald-600 font-bold');
+                        showToast('ดึงชื่อสินค้าและรูปถ่ายตรงปกจาก Shopee สำเร็จแล้ว! 🎉');
                     } else {
-                        updateImageStatus('⚠️ ไม่พบรหัสรูปในลิงก์ กรุณาอัปโหลดรูปหรือวางลิงก์รูป', 'text-amber-600 font-medium');
-                        showToast('ดึงชื่อสินค้าสำเร็จ (สามารถอัปโหลดรูปภาพเพิ่มได้)');
+                        updateImageStatus('⚠️ ดึงภาพอัตโนมัติไม่สำเร็จ สามารถอัปโหลดรูปหรือวางลิงก์รูปได้', 'text-amber-600 font-medium');
+                        showToast('ดึงชื่อสินค้าสำเร็จ');
                     }
                 }
             } catch (e) {
                 alert('ดึงข้อมูลไม่สำเร็จ กรุณาตรวจสอบลิงก์');
+            } finally {
+                if (btn) btn.disabled = false;
+                if (btnText) btnText.textContent = "ดึงรูปและข้อมูลจริง";
+                lucide.createIcons();
             }
         }
 

@@ -46,6 +46,7 @@ from src.tts_generator import generate_voiceover
 from src.discord_sender import DiscordSender
 from src.catalog_manager import CatalogManager
 from src.image_handler import extract_shopee_product_data, download_image_to_file
+from src.shopee_extractor import extract_shopee_product_direct
 from src.telegram_sender import TelegramSender
 from src.scheduler_service import (
     get_local_ip,
@@ -190,26 +191,51 @@ async def parse_shopee_url(data: dict):
         raise HTTPException(status_code=400, detail="กรุณาระบุลิงก์ Shopee")
 
     try:
-        extracted = extract_shopee_product_data(raw_url)
+        # 1. ลองดึงข้อมูลลึกและรูปจริง 100% ตรงปกผ่าน Direct Web Extractor (Playwright Edge)
+        extracted = await extract_shopee_product_direct(raw_url)
+        
+        # 2. ถ้ายังไม่ได้รูป ลอง Fallback ไปยัง URL Query Parameter Extractor
+        if not extracted.get("has_real_images") or len(extracted.get("local_images", [])) == 0:
+            fb = extract_shopee_product_data(raw_url)
+            if fb.get("has_real_images"):
+                extracted["local_images"] = fb["local_images"]
+                extracted["cdn_urls"] = fb["cdn_urls"]
+                extracted["has_real_images"] = True
+                if extracted.get("name") in ["สินค้า Shopee คุณภาพดี", "error", "verify", "Shopee"]:
+                    extracted["name"] = fb["name"]
+
         return {
             "success": True,
-            "name": extracted["name"],
-            "category": extracted["category"],
-            "affiliate_url": extracted["clean_url"],
-            "images": extracted["local_images"],
-            "cdn_urls": extracted["cdn_urls"],
-            "has_real_images": extracted["has_real_images"],
+            "name": extracted.get("name", "สินค้า Shopee คุณภาพดี"),
+            "category": extracted.get("category", "general"),
+            "affiliate_url": extracted.get("affiliate_url", raw_url),
+            "clean_url": extracted.get("clean_url", raw_url),
+            "images": extracted.get("local_images", []),
+            "cdn_urls": extracted.get("cdn_urls", []),
+            "has_real_images": extracted.get("has_real_images", False),
         }
     except Exception as e:
         logger.warning(f"Parse Shopee URL failed: {e}")
-        return {
-            "success": True,
-            "name": "สินค้า Shopee แนะนำ",
-            "category": "general",
-            "affiliate_url": raw_url,
-            "images": [],
-            "has_real_images": False,
-        }
+        try:
+            fb = extract_shopee_product_data(raw_url)
+            return {
+                "success": True,
+                "name": fb.get("name", "สินค้า Shopee แนะนำ"),
+                "category": fb.get("category", "general"),
+                "affiliate_url": fb.get("clean_url", raw_url),
+                "images": fb.get("local_images", []),
+                "cdn_urls": fb.get("cdn_urls", []),
+                "has_real_images": fb.get("has_real_images", False),
+            }
+        except Exception:
+            return {
+                "success": True,
+                "name": "สินค้า Shopee แนะนำ",
+                "category": "general",
+                "affiliate_url": raw_url,
+                "images": [],
+                "has_real_images": False,
+            }
 
 
 @app.post("/api/download-image-url")
