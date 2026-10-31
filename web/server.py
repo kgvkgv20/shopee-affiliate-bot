@@ -417,6 +417,7 @@ async def generate_script(data: dict):
     product_id = data.get("product_id")
     tone = data.get("tone", "friend")
 
+    images = []
     if product_id:
         item = catalog_mgr.get_product_by_id(product_id)
         if not item:
@@ -424,10 +425,12 @@ async def generate_script(data: dict):
         name = item["name"]
         category = item["category"]
         highlight = item["highlight"]
+        images = item.get("images", [])
     else:
         name = data.get("name", "").strip()
         category = data.get("category", "general")
         highlight = data.get("highlight", "")
+        images = data.get("images", [])
 
     if not name:
         raise HTTPException(status_code=400, detail="กรุณาระบุชื่อสินค้า")
@@ -439,7 +442,7 @@ async def generate_script(data: dict):
         price=0.0,
         original_price=0.0,
         discount_percent=0,
-        image_urls=[],
+        image_urls=images,
         affiliate_link="",
         category=category,
         rating=4.9,
@@ -447,7 +450,7 @@ async def generate_script(data: dict):
         description=highlight,
     )
 
-    content: VideoContent = script_generator.generate_video_content(prod)
+    content: VideoContent = script_generator.generate_video_content(prod, image_paths=images)
     return {
         "success": True,
         "hook": content.hook,
@@ -455,6 +458,7 @@ async def generate_script(data: dict):
         "cta": content.cta,
         "caption": content.caption,
         "hashtags": content.hashtags,
+        "visual_notes": getattr(content, "visual_notes", ""),
     }
 
 
@@ -508,6 +512,189 @@ async def generate_catalog(data: dict):
         custom_body=custom_body,
         custom_cta=custom_cta,
     )
+
+
+# ============================================================
+# Phase 3: Background Batch Render State & Engine
+# ============================================================
+batch_render_state = {
+    "is_running": False,
+    "cancel_requested": False,
+    "total": 0,
+    "current_index": 0,
+    "percent": 0,
+    "current_product": "",
+    "current_step": "พร้อมทำงาน",
+    "completed_count": 0,
+    "failed_count": 0,
+    "completed_items": [],
+    "failed_items": [],
+    "logs": [],
+    "started_at": None,
+    "finished_at": None,
+}
+
+
+async def _run_batch_render_task(items: list, config: dict):
+    """Background Worker สำหรับสร้างวิดีโอแบบ Batch อัตโนมัติทีละรายการ"""
+    global batch_render_state
+    batch_render_state["is_running"] = True
+    batch_render_state["cancel_requested"] = False
+    batch_render_state["total"] = len(items)
+    batch_render_state["current_index"] = 0
+    batch_render_state["percent"] = 0
+    batch_render_state["completed_count"] = 0
+    batch_render_state["failed_count"] = 0
+    batch_render_state["completed_items"] = []
+    batch_render_state["failed_items"] = []
+    batch_render_state["logs"] = [f"⚡ เริ่มต้นการสร้าง Batch Render สำหรับ {len(items)} สินค้า..."]
+    batch_render_state["started_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    batch_render_state["finished_at"] = None
+
+    for idx, item in enumerate(items):
+        if batch_render_state.get("cancel_requested"):
+            batch_render_state["logs"].append("🛑 ได้รับคำสั่งยกเลิกงาน Batch Render จากผู้ใช้")
+            break
+
+        batch_render_state["current_index"] = idx + 1
+        batch_render_state["current_product"] = item.get("name", "สินค้า")
+        batch_render_state["current_step"] = f"กำลังประมวลผล [{idx+1}/{len(items)}]: Gemini Vision + Voice + FFmpeg"
+        batch_render_state["percent"] = int((idx / len(items)) * 100)
+        batch_render_state["logs"].append(f"▶ [{idx+1}/{len(items)}] เริ่มต้น: {item.get('name', '')[:35]}")
+
+        try:
+            def _render_single():
+                prod = Product(
+                    item_id=f"web_{item.get('category', 'general')}_{item.get('id', uuid.uuid4().hex[:6])}",
+                    shop_id="official_mall",
+                    name=item["name"],
+                    price=0.0,
+                    original_price=0.0,
+                    discount_percent=0,
+                    image_urls=item.get("images", []),
+                    affiliate_link=item.get("affiliate_link", ""),
+                    category=item.get("category", "general"),
+                    rating=float(item.get("rating", 4.9)),
+                    sold_count=int(item.get("sold_count", 50000)),
+                    description=item.get("highlight", ""),
+                )
+                prod.product_id = item.get("id", "")
+                return _process_video_generation(
+                    product=prod,
+                    image_paths=item.get("images", []),
+                    template=config.get("template", "clean"),
+                    enable_voice=config.get("enable_voice", True),
+                    voice_type=config.get("voice_type", "female"),
+                    bgm_track=config.get("bgm_track", "cheerful"),
+                )
+
+            res = await asyncio.to_thread(_render_single)
+            batch_render_state["completed_count"] += 1
+            batch_render_state["completed_items"].append({
+                "id": item.get("id"),
+                "name": item.get("name"),
+                "video_url": res.get("video_url"),
+                "thumbnail_url": res.get("thumbnail_url"),
+                "visual_notes": res.get("visual_notes", ""),
+                "render_time": res.get("render_time_seconds"),
+            })
+            batch_render_state["logs"].append(f"✅ สำเร็จ [{idx+1}/{len(items)}]: {item.get('name')[:30]} ({res.get('render_time_seconds')}s)")
+
+        except Exception as e:
+            logger.error(f"Batch Render failed for {item.get('id')}: {e}")
+            batch_render_state["failed_count"] += 1
+            batch_render_state["failed_items"].append({
+                "id": item.get("id"),
+                "name": item.get("name"),
+                "error": str(e),
+            })
+            batch_render_state["logs"].append(f"❌ ผิดพลาด: {item.get('name')[:25]} - {str(e)[:45]}")
+
+        batch_render_state["percent"] = int(((idx + 1) / len(items)) * 100)
+        # Delay สั้นๆ เพื่อพักและเคารพ Rate Limits
+        await asyncio.sleep(1.0)
+
+    batch_render_state["is_running"] = False
+    batch_render_state["current_step"] = "เสร็จสิ้นการประมวลผลทั้งหมด"
+    batch_render_state["finished_at"] = time.strftime("%Y-%m-%d %H:%M:%S")
+    batch_render_state["logs"].append(
+        f"🎉 Batch Render จบแล้ว! ทำสำเร็จ {batch_render_state['completed_count']} รายการ (ล้มเหลว {batch_render_state['failed_count']})"
+    )
+
+
+@app.post("/api/batch-render/start")
+async def start_batch_render(data: dict):
+    """
+    เริ่มต้นรัน Batch Render ในเบื้องหลัง (สร้างคลิปทั้งหมดที่ค้างอยู่ หรือเลือกสินค้า)
+    Payload: { "target": "pending" | "all" | "selected", "source": "all", "max_items": 0 }
+    """
+    global batch_render_state
+    if batch_render_state.get("is_running"):
+        return {
+            "success": False,
+            "message": "ระบบกำลังประมวลผล Batch Render งานเดิมอยู่แล้ว",
+            "state": batch_render_state,
+        }
+
+    target = data.get("target", "pending")
+    product_ids = data.get("product_ids", [])
+    source = data.get("source", "all")
+
+    if target == "pending":
+        items = catalog_mgr.get_all_products(source=source, video_status_filter="pending")
+    elif target == "selected" and product_ids:
+        all_items = catalog_mgr.get_all_products(source="all")
+        items = [p for p in all_items if p.get("id") in product_ids]
+    else:
+        items = catalog_mgr.get_all_products(source=source)
+
+    if not items:
+        return {
+            "success": False,
+            "message": "ไม่มีสินค้าที่รอการทำวิดีโอ (ทำครบทุกตัวแล้ว)",
+            "count": 0,
+        }
+
+    max_items = int(data.get("max_items", 0))
+    if max_items > 0:
+        items = items[:max_items]
+
+    config = {
+        "template": data.get("template", "clean"),
+        "enable_voice": data.get("enable_voice", True),
+        "voice_type": data.get("voice_type", "female"),
+        "bgm_track": data.get("bgm_track", "cheerful"),
+    }
+
+    asyncio.create_task(_run_batch_render_task(items, config))
+
+    return {
+        "success": True,
+        "message": f"เริ่มต้นสร้างวิดีโอจำนวน {len(items)} รายการในเบื้องหลังเรียบร้อย",
+        "total": len(items),
+        "target": target,
+    }
+
+
+@app.get("/api/batch-render/status")
+async def get_batch_render_status():
+    """ดึงสถานะและความคืบหน้าของ Batch Render แบบเรียลไทม์"""
+    global batch_render_state
+    return {
+        "success": True,
+        "state": batch_render_state,
+        "stats": catalog_mgr.get_video_stats(),
+    }
+
+
+@app.post("/api/batch-render/stop")
+async def stop_batch_render():
+    """ยกเลิกงาน Batch Render ที่กำลังทำงานอยู่"""
+    global batch_render_state
+    if batch_render_state.get("is_running"):
+        batch_render_state["cancel_requested"] = True
+        return {"success": True, "message": "ส่งคำขอยกเลิกงาน Batch Render เรียบร้อยแล้ว"}
+    return {"success": False, "message": "ไม่มีงาน Batch Render ที่กำลังรันอยู่"}
 
 
 @app.post("/api/batch-generate")
@@ -677,8 +864,8 @@ def _process_video_generation(
         start_time = time.time()
         logger.info(f"🚀 เริ่มต้นสร้างวิดีโอสำหรับ: {product.name[:30]}... (Template: {template}, Voice: {enable_voice}, BGM: {bgm_track})")
 
-        # 1. เขียนสคริปต์ด้วย Gemini หรือใช้ค่าที่ผู้ใช้แก้ไข
-        content: VideoContent = script_generator.generate_video_content(product)
+        # 1. เขียนสคริปต์ด้วย Gemini Vision (อ่านภาพจริง 100% ตรงปก) หรือใช้ค่าที่ผู้ใช้แก้ไข
+        content: VideoContent = script_generator.generate_video_content(product, image_paths=image_paths)
 
         if custom_hook and custom_hook.strip():
             content.hook = custom_hook.strip()
@@ -734,6 +921,7 @@ def _process_video_generation(
             "cta": content.cta,
             "caption": content.caption,
             "hashtags": content.hashtags,
+            "visual_notes": getattr(content, "visual_notes", ""),
             "affiliate_url": product.affiliate_link,
             "template": template,
             "has_voice": bool(voice_audio_path),

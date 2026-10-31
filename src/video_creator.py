@@ -297,14 +297,32 @@ class FFmpegVideoCreator:
         return paths[:target]
 
     def _build_text_overlay_filter(self, content: VideoContent, template: str = "clean") -> str:
-        """สร้าง FFmpeg drawtext filter chain รองรับหลากหลาย Template สไตล์"""
+        """สร้าง FFmpeg drawtext filter chain รองรับหลากหลาย Template สไตล์ พร้อมป้าย Shopee Video Badges"""
         font = self.font_path.replace("\\", "/").replace(":", "\\:")
 
         hook = self._esc(content.hook[:36])
         body = self._esc(content.body[:52])
         cta = self._esc(content.cta[:40])
 
+        # Shopee CTA helper เพื่อกระตุ้นการจิ้มตะกร้าส้มซ้ายล่าง
+        cta_display = cta
+        if "ตะกร้า" not in cta_display:
+            cta_display = f"🛒 {cta} (จิ้มตะกร้าส้มซ้ายล่าง)"
+        cta_display = self._esc(cta_display[:46])
+
+        # Header Badge ป้ายการันตี
+        badge_text = self._esc("🏷️ Shopee Video Exclusive | การันตีของแท้")
+
         filters = []
+
+        # 1. ป้าย Shopee Video Header Badge บนสุด
+        filters.append(
+            f"drawtext=fontfile='{font}':text='{badge_text}'"
+            f":fontcolor=white:fontsize=32"
+            f":x=(w-text_w)/2:y=30"
+            f":box=1:boxborderw=8:boxcolor=0x000000@0.55"
+        )
+
         if template == "neon":
             # Template: Neon Flash Sale / Pop
             # Hook: ดำบนเหลืองนีออนสด
@@ -321,9 +339,9 @@ class FFmpegVideoCreator:
                 f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
                 f":box=1:boxborderw=14:boxcolor=0xFF0055@0.88"
             )
-            # CTA: ดำบนฟ้าสว่างสดใส
+            # CTA: ดำบนฟ้าสว่างสดใส ชี้ตะกร้าส้ม
             filters.append(
-                f"drawtext=fontfile='{font}':text='{cta}'"
+                f"drawtext=fontfile='{font}':text='{cta_display}'"
                 f":fontcolor=0x0F172A:fontsize={FONTSIZE_CTA}"
                 f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
                 f":box=1:boxborderw=16:boxcolor=0x00E5FF@0.95"
@@ -344,9 +362,9 @@ class FFmpegVideoCreator:
                 f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
                 f":box=1:boxborderw=12:boxcolor=0x334155@0.85"
             )
-            # CTA: ขาวบน Slate ดำ
+            # CTA: ขาวบน Slate ดำ ชี้ตะกร้าส้ม
             filters.append(
-                f"drawtext=fontfile='{font}':text='{cta}'"
+                f"drawtext=fontfile='{font}':text='{cta_display}'"
                 f":fontcolor=white:fontsize={FONTSIZE_CTA}"
                 f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
                 f":box=1:boxborderw=16:boxcolor=0x0F172A@0.92"
@@ -357,7 +375,7 @@ class FFmpegVideoCreator:
                 f"drawtext=fontfile='{font}':text='{hook}'"
                 f":fontcolor=white:fontsize={FONTSIZE_HOOK}"
                 f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
-                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.92"
+                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.94"
             )
             filters.append(
                 f"drawtext=fontfile='{font}':text='{body}'"
@@ -366,11 +384,13 @@ class FFmpegVideoCreator:
                 f":box=1:boxborderw=14:boxcolor=0x000000@0.65"
             )
             filters.append(
-                f"drawtext=fontfile='{font}':text='{cta}'"
+                f"drawtext=fontfile='{font}':text='{cta_display}'"
                 f":fontcolor=white:fontsize={FONTSIZE_CTA}"
                 f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
-                f":box=1:boxborderw=16:boxcolor=0x1E293B@0.92"
+                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.95"
             )
+
+        return ",".join(filters)
 
         return ",".join(filters)
 
@@ -399,12 +419,28 @@ class FFmpegVideoCreator:
 
         filter_parts = []
 
-        # scale แต่ละ input ให้เป็น 1080x1920 30fps yuv420p
+        # Dynamic Ken Burns Motion: ซูมสลับเข้า/ออก เพื่อให้ภาพนิ่งดูมีมิติ มีชีวิตชีวา
         for i in range(n):
+            if i % 2 == 0:
+                # สไลด์คู่: ค่อยๆ ซูมเข้าเบาๆ (1.0x -> 1.05x)
+                zoom_filter = (
+                    f"scale=w='{VIDEO_WIDTH}*(1+0.05*t/{slide_in_dur:.2f})':"
+                    f"h='{VIDEO_HEIGHT}*(1+0.05*t/{slide_in_dur:.2f})':eval=frame,"
+                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+                )
+            else:
+                # สไลด์คี่: ค่อยๆ ซูมออกเบาๆ (1.05x -> 1.0x)
+                zoom_filter = (
+                    f"scale=w='{VIDEO_WIDTH}*(1.05-0.05*t/{slide_in_dur:.2f})':"
+                    f"h='{VIDEO_HEIGHT}*(1.05-0.05*t/{slide_in_dur:.2f})':eval=frame,"
+                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+                )
+
             filter_parts.append(
                 f"[{i}:v]scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:"
                 f"force_original_aspect_ratio=increase,"
                 f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
+                f"{zoom_filter},"
                 f"fps={VIDEO_FPS},"
                 f"format=yuv420p[v{i}]"
             )
@@ -443,9 +479,11 @@ class FFmpegVideoCreator:
             curr_audio_idx += 1
 
         if has_voice and has_bgm:
-            filter_parts.append(f"[{voice_idx}:a]volume=1.0[va]")
-            filter_parts.append(f"[{bgm_idx}:a]volume=0.18[ba]")
-            filter_parts.append(f"[va][ba]amix=inputs=2:duration=first[aout]")
+            # Smart Audio Ducking: ใช้ asplit แยกเสียงพากย์เพื่อเป็นทั้งเสียงหลัก และตัวทริกเกอร์ sidechaincompress หรี่ BGM
+            filter_parts.append(f"[{voice_idx}:a]aformat=channel_layouts=stereo:sample_rates=44100,volume=1.0,asplit=2[va_main][va_trigger]")
+            filter_parts.append(f"[{bgm_idx}:a]aformat=channel_layouts=stereo:sample_rates=44100,volume=0.22[bgm_in]")
+            filter_parts.append(f"[bgm_in][va_trigger]sidechaincompress=threshold=0.08:ratio=4:attack=50:release=350[bgm_ducked]")
+            filter_parts.append(f"[va_main][bgm_ducked]amix=inputs=2:duration=first[aout]")
             audio_map = "[aout]"
         elif has_voice:
             filter_parts.append(f"[{voice_idx}:a]volume=1.0[aout]")
@@ -480,7 +518,7 @@ class FFmpegVideoCreator:
 
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
         if result.returncode != 0:
-            logger.warning("xfade ล้มเหลว — ลอง concat fallback")
+            logger.warning(f"xfade ล้มเหลว ({result.stderr[-300:]}) — ลอง concat fallback")
             self._build_video_concat_fallback(image_paths, content, output_path)
 
     def _build_video_concat_fallback(
@@ -514,7 +552,8 @@ class FFmpegVideoCreator:
             list_path = os.path.join(tmp2, "list.txt")
             with open(list_path, "w") as f:
                 for c in clips:
-                    f.write(f"file '{c}'\n")
+                    clean_c = c.replace("\\", "/")
+                    f.write(f"file '{clean_c}'\n")
 
             # concat + drawtext
             text_filter = self._build_text_overlay_filter(content)
@@ -553,6 +592,7 @@ class FFmpegVideoCreator:
         return (
             text
             .replace("\\", "\\\\")
+            .replace("%", " เปอร์เซ็นต์")
             .replace("'", "\u2019")   # แทน ' ด้วย right single quote
             .replace(":", "\\:")
             .replace("[", "\\[")

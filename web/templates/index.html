@@ -194,11 +194,17 @@
                             </button>
                         </div>
 
-                        <!-- One-Click Sync Button -->
-                        <button onclick="openSyncModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition shrink-0">
-                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                            <span>🔄 ดึงสินค้าล่าสุดสำหรับทำคลิป</span>
-                        </button>
+                        <!-- Action Buttons: Batch Render & Quick Sync -->
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button onclick="openBatchRenderModal()" id="btn-batch-render-pending" class="px-3 py-1.5 bg-gradient-to-r from-red-500 via-rose-500 to-shopee-600 hover:from-red-600 hover:to-shopee-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center justify-center gap-1.5 transition">
+                                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-200"></i>
+                                <span>⚡ สร้างคลิปที่ค้างอยู่ (<strong id="btn-batch-pending-count">0</strong>)</span>
+                            </button>
+                            <button onclick="openSyncModal()" class="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold rounded-lg shadow-xs flex items-center justify-center gap-1.5 transition">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                                <span>🔄 ดึงสินค้าล่าสุด</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1087,6 +1093,146 @@
         </div>
     </div>
 
+    <!-- Modal: Batch Render Pending Products (Phase 3 Upgrade) -->
+    <div id="batch-render-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-rose-500 to-shopee-500 text-white flex items-center justify-center shadow-xs">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">ระบบสร้างคลิปอัตโนมัติ (Batch Render Engine)</h3>
+                        <p class="text-[11px] text-slate-500">Gemini Vision อ่านรูปจริง 100% ตรงปก + Ken Burns Motion + ป้ายตะกร้า Shopee</p>
+                    </div>
+                </div>
+                <button onclick="closeBatchRenderModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- View 1: Configuration View (Before Starting) -->
+            <div id="batch-config-view" class="space-y-4 text-xs">
+                <!-- Target Scope Selector -->
+                <div class="space-y-2 p-3.5 bg-amber-50/70 border border-amber-200/80 rounded-xl">
+                    <label class="font-bold text-amber-950 flex items-center gap-1.5">
+                        <i data-lucide="filter" class="w-4 h-4 text-amber-600"></i>
+                        เลือกรายการสินค้าที่จะให้ระบบสร้างคลิป:
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-slate-700">
+                        <label class="flex items-start gap-2 p-2.5 rounded-lg border border-amber-300 bg-white cursor-pointer hover:border-shopee-500 transition">
+                            <input type="radio" name="batch-target-scope" value="pending" checked class="mt-0.5 text-shopee-500 focus:ring-shopee-500">
+                            <div>
+                                <span class="font-bold text-slate-800 block">🟡 เฉพาะสินค้าที่ยังไม่มีคลิป</span>
+                                <span class="text-[11px] text-slate-500">สร้างให้เฉพาะสินค้าสถานะรอทำคลิป (<strong id="batch-modal-pending-count" class="text-amber-600">0</strong> ชิ้น)</span>
+                            </div>
+                        </label>
+                        <label class="flex items-start gap-2 p-2.5 rounded-lg border border-slate-200 bg-white cursor-pointer hover:border-shopee-500 transition">
+                            <input type="radio" name="batch-target-scope" value="all" class="mt-0.5 text-shopee-500 focus:ring-shopee-500">
+                            <div>
+                                <span class="font-bold text-slate-800 block">🌐 สินค้าทั้งหมดในระบบ</span>
+                                <span class="text-[11px] text-slate-500">สร้างใหม่ทั้งหมดรวมตัวเดิมด้วย (<strong id="batch-modal-all-count" class="text-slate-700">0</strong> ชิ้น)</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Render Settings -->
+                <div class="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">สไตล์ Template วิดีโอ:</label>
+                        <select id="batch-template-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                            <option value="clean" selected>Shopee Clean (แนะนำ ยอดขายดี)</option>
+                            <option value="neon">Neon Flash Pop (สีสันสะดุดตา)</option>
+                            <option value="minimal">Minimal Clean (มินิมอลสบายตา)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">เสียงพากย์ AI ภาษาไทย:</label>
+                        <select id="batch-voice-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                            <option value="female" selected>เสียงหญิง (เปรมวดี พากย์สดใส)</option>
+                            <option value="male">เสียงชาย (นิวัฒน์ พากย์นุ่มนวล)</option>
+                            <option value="none">ไม่ใส่เสียงพากย์ (ภาพ+เพลงเท่านั้น)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">เพลงประกอบ (BGM):</label>
+                        <select id="batch-bgm-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                            <option value="cheerful" selected>Cheerful (สนุกสนาน สดใส)</option>
+                            <option value="upbeat">Upbeat (กระฉับกระเฉง จังหวะเร็ว)</option>
+                            <option value="none">ไม่ใส่เพลง BGM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">ขีดจำกัดจำนวนคลิป:</label>
+                        <select id="batch-max-items-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                            <option value="0" selected>ทำทั้งหมดจนหมดคลัง</option>
+                            <option value="3">สูงสุด 3 คลิป</option>
+                            <option value="5">สูงสุด 5 คลิป</option>
+                            <option value="10">สูงสุด 10 คลิป</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Action Button -->
+                <button onclick="startBatchRender()" id="batch-start-btn" class="w-full py-3 bg-gradient-to-r from-red-500 via-rose-500 to-shopee-600 hover:from-red-600 hover:to-shopee-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-md">
+                    <i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i>
+                    <span>⚡ เริ่มต้นสร้างคลิปทั้งหมดทันที (Auto-Pilot Batch)</span>
+                </button>
+            </div>
+
+            <!-- View 2: Live Progress & Terminal Logs (While Running / Done) -->
+            <div id="batch-progress-view" class="hidden space-y-3.5 text-xs">
+                <!-- Status Banner & Progress Bar -->
+                <div class="space-y-2 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="flex items-center justify-between">
+                        <span id="batch-status-title" class="font-bold text-slate-900 flex items-center gap-1.5">
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div>
+                            กำลังเรนเดอร์คลิปในเบื้องหลัง...
+                        </span>
+                        <span id="batch-percent-text" class="font-extrabold text-shopee-600 text-sm">0%</span>
+                    </div>
+
+                    <!-- Progress Bar Track -->
+                    <div class="w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
+                        <div id="batch-progress-bar" class="bg-gradient-to-r from-amber-500 via-orange-500 to-shopee-600 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 pt-0.5">
+                        <span id="batch-current-item-text" class="truncate max-w-[280px]">กำลังเตรียมระบบ...</span>
+                        <span id="batch-counts-text">สำเร็จ 0 / 0</span>
+                    </div>
+                </div>
+
+                <!-- Live Terminal Log Box -->
+                <div class="space-y-1">
+                    <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold px-1">
+                        <span class="flex items-center gap-1">
+                            <i data-lucide="terminal" class="w-3.5 h-3.5 text-slate-400"></i>
+                            Live Execution Logs:
+                        </span>
+                        <span id="batch-stage-badge" class="text-[10px] bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md font-bold">รอเริ่ม...</span>
+                    </div>
+                    <div id="batch-log-console" class="bg-slate-950 text-slate-200 p-3 rounded-xl font-mono text-[11px] h-40 overflow-y-auto space-y-1 border border-slate-800 leading-relaxed shadow-inner">
+                        <div class="text-slate-500">⚡ รอการทำงานของระบบ Batch Render...</div>
+                    </div>
+                </div>
+
+                <!-- Buttons during/after progress -->
+                <div class="flex gap-2 pt-1">
+                    <button onclick="stopBatchRender()" id="batch-stop-btn" class="flex-1 py-2.5 border border-red-300 bg-red-50 hover:bg-red-100 text-red-700 font-bold rounded-xl transition flex items-center justify-center gap-1.5">
+                        <i data-lucide="square" class="w-3.5 h-3.5 text-red-600"></i>
+                        <span>ยกเลิกงาน</span>
+                    </button>
+                    <button onclick="closeBatchRenderModal()" id="batch-close-btn" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-xs">
+                        <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                        <span>ทำงานต่อในเบื้องหลัง / ปิดหน้าต่าง</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
         <p>Shopee Clip Maker AI (Database V3) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
@@ -1147,9 +1293,11 @@
                     const elAll = document.getElementById('vstat-count-all');
                     const elPending = document.getElementById('vstat-count-pending');
                     const elCompleted = document.getElementById('vstat-count-completed');
+                    const elBtnPending = document.getElementById('btn-batch-pending-count');
                     if (elAll) elAll.textContent = data.stats.total_products;
                     if (elPending) elPending.textContent = data.stats.pending_count;
                     if (elCompleted) elCompleted.textContent = data.stats.completed_count;
+                    if (elBtnPending) elBtnPending.textContent = data.stats.pending_count;
                 }
 
                 grid.innerHTML = '';
@@ -2839,6 +2987,190 @@
             if (previewVideoData && previewVideoData.filename) {
                 openQrModal(previewVideoData.filename);
             }
+        }
+
+        // --- Batch Render Modal & Engine (Phase 3 Upgrade) ---
+        let batchPollInterval = null;
+
+        function openBatchRenderModal() {
+            // ดึงสถิติล่าสุดมาอัปเดตใน modal
+            fetch('/api/catalog')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.stats) {
+                        const pEl = document.getElementById('batch-modal-pending-count');
+                        const aEl = document.getElementById('batch-modal-all-count');
+                        if (pEl) pEl.textContent = data.stats.pending_count;
+                        if (aEl) aEl.textContent = data.stats.total_products;
+                    }
+                }).catch(() => {});
+
+            // ตรวจสอบว่าระบบมี batch ที่กำลังรันอยู่หรือไม่
+            fetch('/api/batch-render/status')
+                .then(r => r.json())
+                .then(res => {
+                    if (res.state && res.state.is_running) {
+                        showBatchProgressView(res.state);
+                        startPollingBatchStatus();
+                    } else {
+                        showBatchConfigView();
+                    }
+                }).catch(() => {
+                    showBatchConfigView();
+                });
+
+            document.getElementById('batch-render-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeBatchRenderModal() {
+            document.getElementById('batch-render-modal').classList.add('hidden');
+            if (batchPollInterval) {
+                clearInterval(batchPollInterval);
+                batchPollInterval = null;
+            }
+        }
+
+        function showBatchConfigView() {
+            document.getElementById('batch-config-view').classList.remove('hidden');
+            document.getElementById('batch-progress-view').classList.add('hidden');
+            const btn = document.getElementById('batch-start-btn');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i> <span>⚡ เริ่มต้นสร้างคลิปทั้งหมดทันที (Auto-Pilot Batch)</span>`;
+            }
+            lucide.createIcons();
+        }
+
+        function showBatchProgressView(state) {
+            document.getElementById('batch-config-view').classList.add('hidden');
+            document.getElementById('batch-progress-view').classList.remove('hidden');
+            updateBatchProgressUI(state);
+        }
+
+        async function startBatchRender() {
+            const scopeRadio = document.querySelector('input[name="batch-target-scope"]:checked');
+            const target = scopeRadio ? scopeRadio.value : 'pending';
+            const template = document.getElementById('batch-template-select').value;
+            const voice = document.getElementById('batch-voice-select').value;
+            const bgm = document.getElementById('batch-bgm-select').value;
+            const maxItems = parseInt(document.getElementById('batch-max-items-select').value) || 0;
+
+            const btn = document.getElementById('batch-start-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> <span>กำลังเริ่มต้นงาน...</span>`;
+
+            try {
+                const res = await fetch('/api/batch-render/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: target,
+                        template: template,
+                        enable_voice: voice !== 'none',
+                        voice_type: voice === 'male' ? 'male' : 'female',
+                        bgm_track: bgm,
+                        max_items: maxItems
+                    })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    showToast(data.message || 'ไม่สามารถเริ่มงานได้');
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i> <span>⚡ เริ่มต้นสร้างคลิปทั้งหมดทันที (Auto-Pilot Batch)</span>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                showToast(`🚀 เริ่มต้นเรนเดอร์ ${data.total} รายการในเบื้องหลัง`);
+                showBatchProgressView({
+                    is_running: true,
+                    total: data.total,
+                    current_index: 0,
+                    percent: 0,
+                    current_product: 'เริ่มต้นกระบวนการ...',
+                    completed_count: 0,
+                    failed_count: 0,
+                    logs: ['⚡ เริ่มต้นงาน Batch Render ในเบื้องหลัง...']
+                });
+                startPollingBatchStatus();
+
+            } catch (err) {
+                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="zap" class="w-4 h-4 text-yellow-200"></i> <span>⚡ เริ่มต้นสร้างคลิปทั้งหมดทันที (Auto-Pilot Batch)</span>`;
+                lucide.createIcons();
+            }
+        }
+
+        async function stopBatchRender() {
+            if (!confirm('ต้องการยกเลิกงาน Batch Render หรือไม่? (คลิปที่สร้างเสร็จแล้วจะยังคงอยู่)')) return;
+            try {
+                const res = await fetch('/api/batch-render/stop', { method: 'POST' });
+                const data = await res.json();
+                showToast(data.message || 'ส่งคำขอยกเลิกแล้ว');
+            } catch (err) {
+                showToast('ไม่สามารถยกเลิกงานได้');
+            }
+        }
+
+        function startPollingBatchStatus() {
+            if (batchPollInterval) clearInterval(batchPollInterval);
+            batchPollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch('/api/batch-render/status');
+                    const data = await res.json();
+                    if (data.state) {
+                        updateBatchProgressUI(data.state);
+                        if (!data.state.is_running) {
+                            clearInterval(batchPollInterval);
+                            batchPollInterval = null;
+                            loadCatalogProducts();
+                        }
+                    }
+                } catch (e) {}
+            }, 2000);
+        }
+
+        function updateBatchProgressUI(state) {
+            const bar = document.getElementById('batch-progress-bar');
+            const pctText = document.getElementById('batch-percent-text');
+            const itemText = document.getElementById('batch-current-item-text');
+            const countsText = document.getElementById('batch-counts-text');
+            const titleText = document.getElementById('batch-status-title');
+            const consoleBox = document.getElementById('batch-log-console');
+            const stageBadge = document.getElementById('batch-stage-badge');
+
+            if (bar) bar.style.width = `${state.percent || 0}%`;
+            if (pctText) pctText.textContent = `${state.percent || 0}%`;
+            if (itemText) itemText.textContent = state.current_product ? `กำลังทำ: ${state.current_product}` : 'พร้อมทำงาน';
+            if (countsText) countsText.textContent = `สำเร็จ ${state.completed_count || 0} / ${state.total || 0} (ล้มเหลว ${state.failed_count || 0})`;
+
+            if (state.is_running) {
+                if (titleText) titleText.innerHTML = `<div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></div> กำลังเรนเดอร์ [${state.current_index}/${state.total}]...`;
+                if (stageBadge) {
+                    stageBadge.className = 'text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold';
+                    stageBadge.textContent = '⚡ กำลังประมวลผล';
+                }
+            } else {
+                if (titleText) titleText.innerHTML = `<span class="text-emerald-600 font-bold flex items-center gap-1.5"><i data-lucide="check-circle" class="w-4 h-4 text-emerald-500"></i> เสร็จสิ้นการสร้างคลิปทั้งหมดแล้ว!</span>`;
+                if (stageBadge) {
+                    stageBadge.className = 'text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md font-bold';
+                    stageBadge.textContent = '✅ เสร็จสิ้น';
+                }
+            }
+
+            if (consoleBox && state.logs && state.logs.length > 0) {
+                consoleBox.innerHTML = state.logs.map(log => {
+                    let color = 'text-slate-300';
+                    if (log.includes('✅')) color = 'text-emerald-400 font-semibold';
+                    else if (log.includes('❌') || log.includes('ล้มเหลว')) color = 'text-rose-400';
+                    else if (log.includes('⚡') || log.includes('▶')) color = 'text-amber-300';
+                    return `<div class="${color}">${log}</div>`;
+                }).join('');
+                consoleBox.scrollTop = consoleBox.scrollHeight;
+            }
+            lucide.createIcons();
         }
     </script>
 </body>
