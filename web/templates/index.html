@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopee Clip Maker AI 🎬 — สร้างคลิปสั้นป้ายยาใน 5 วินาที</title>
+    <title>Shopee Clip Maker AI 🎬 Pro — สร้างคลิปสั้นป้ายยาอัตโนมัติ</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -30,13 +30,19 @@
         * { font-family: 'Prompt', sans-serif; }
         .phone-mockup {
             aspect-ratio: 9 / 16;
-            max-width: 340px;
+            max-width: 320px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
         }
         .catalog-card.active {
             border-color: #ee4d2d;
             box-shadow: 0 0 0 3px rgba(238, 77, 45, 0.25);
             background-color: #fff9f8;
+        }
+        .template-pill.active {
+            border-color: #ee4d2d;
+            background-color: #fff5f2;
+            color: #ee4d2d;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -46,42 +52,46 @@
     <header class="bg-gradient-to-r from-shopee-600 to-shopee-500 text-white shadow-md sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
             <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl">
+                <div class="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-2xl shadow-inner">
                     🛒
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
                         Shopee Clip Maker AI
-                        <span class="text-xs font-medium bg-white/25 px-2 py-0.5 rounded-full uppercase tracking-wider">MVP</span>
+                        <span class="text-xs font-semibold bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full uppercase tracking-wider">PRO V2</span>
                     </h1>
-                    <p class="text-xs text-white/80">ระบบผลิตวิดีโอนายหน้า Shopee อัตโนมัติใน 5 วินาที</p>
+                    <p class="text-xs text-white/80">ระบบตัดต่อคลิปป้ายยา • เสียงพากย์ AI • เพลง BGM • สร้างแบบ Batch</p>
                 </div>
             </div>
-            <div class="hidden sm:flex items-center space-x-2 text-xs bg-black/15 px-3 py-1.5 rounded-lg border border-white/10">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>Gemini 2.5 Flash Lite + FFmpeg 1080p</span>
+            <div class="hidden sm:flex items-center space-x-3 text-xs">
+                <div class="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-lg border border-white/10">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span>Edge-TTS Thai Voice + FFmpeg 1080p</span>
+                </div>
             </div>
         </div>
     </header>
 
     <!-- Main Content Container -->
-    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 space-y-8">
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-6 space-y-6">
 
         <!-- Intro Banner & Compliance Badge -->
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="space-y-1">
                 <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
                     <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    ปลอดภัย 100% ตามกฎ Shopee Video AI (8 ข้อห้าม)
+                    ปลอดภัย 100% ตามกฎ Shopee Video AI (Safe Zone ตะกร้าส้ม + ไม่ Overclaim)
                 </div>
-                <h2 class="text-lg font-bold text-slate-900">เลือกสินค้าหรือใส่ลิงก์ แล้วกดสร้างคลิปพร้อมโพสต์ได้ทันที</h2>
-                <p class="text-sm text-slate-500">
-                    ระบบจะตัดต่อวิดีโอ 9:16 แนวตั้ง เว้นพื้นที่ตะกร้าส้มล่าง 25% และเขียนแคปชันดึงดูดใจให้อัตโนมัติ
+                <h2 class="text-lg font-bold text-slate-900">สร้างคลิปป้ายยาสั้น 10 วิ พร้อมเสียงพากย์และเพลงในไม่กี่วินาที</h2>
+                <p class="text-xs text-slate-500">
+                    เลือกสินค้าจากแคตตาล็อก หรือวางลิงก์ Shopee เพื่อดึงข้อมูลอัตโนมัติ แล้วเลือกสไตล์ที่ต้องการได้เลย
                 </p>
             </div>
-            <div class="flex items-center gap-2 text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200 shrink-0">
-                <i data-lucide="clock" class="w-4 h-4 text-shopee-500"></i>
-                <span>ความยาวคลิป <strong>10 วินาที</strong> พอดีตามมาตรฐาน</span>
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="toggleBatchMode()" id="batch-toggle-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:border-shopee-500 hover:text-shopee-600 transition flex items-center gap-1.5 bg-slate-50">
+                    <i data-lucide="layers" class="w-4 h-4 text-shopee-500"></i>
+                    <span id="batch-toggle-text">เปิดโหมดเลือกหลายคลิป (Batch)</span>
+                </button>
             </div>
         </div>
 
@@ -90,24 +100,32 @@
             <div class="flex border-b border-slate-200 gap-4">
                 <button id="tab-catalog-btn" onclick="switchTab('catalog')" class="pb-3 text-sm font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-2 transition-colors">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    1. เลือกสินค้าขายดีติดเทรนด์ (มีภาพจริงตรงรุ่น 100%)
+                    1. เลือกสินค้าขายดีติดเทรนด์ (ภาพตรงรุ่น 100%)
                 </button>
                 <button id="tab-custom-btn" onclick="switchTab('custom')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
-                    <i data-lucide="upload" class="w-4 h-4"></i>
-                    2. กำหนดสินค้าเอง / อัปโหลดรูปเอง
+                    <i data-lucide="link" class="w-4 h-4"></i>
+                    2. วางลิงก์ Shopee / ใส่สินค้าเอง
                 </button>
             </div>
 
             <!-- TAB 1: CATALOG -->
             <div id="tab-catalog" class="space-y-4">
-                <!-- Category Filter Pills -->
-                <div class="flex items-center gap-2 overflow-x-auto pb-2 text-xs">
-                    <span class="text-slate-400 font-medium whitespace-nowrap">หมวดหมู่:</span>
-                    <button onclick="filterCatalog('all')" class="cat-pill active px-3 py-1.5 rounded-full font-medium bg-slate-900 text-white transition">ทั้งหมด</button>
-                    <button onclick="filterCatalog('beauty')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">💄 สกินแคร์ & บิวตี้</button>
-                    <button onclick="filterCatalog('home')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🏠 ของใช้ในบ้าน</button>
-                    <button onclick="filterCatalog('electronics')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🎧 อุปกรณ์ไอที</button>
-                    <button onclick="filterCatalog('fashion')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">👜 แฟชั่น & ร่มกันแดด</button>
+                <!-- Category Filter Pills & Batch Info -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                        <span class="text-slate-400 font-medium whitespace-nowrap">หมวดหมู่:</span>
+                        <button onclick="filterCatalog('all')" class="cat-pill active px-3 py-1.5 rounded-full font-medium bg-slate-900 text-white transition">ทั้งหมด</button>
+                        <button onclick="filterCatalog('beauty')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">💄 บิวตี้</button>
+                        <button onclick="filterCatalog('home')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🏠 เครื่องใช้</button>
+                        <button onclick="filterCatalog('electronics')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🎧 ไอที</button>
+                        <button onclick="filterCatalog('fashion')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">👜 แฟชั่น</button>
+                    </div>
+
+                    <div id="batch-action-bar" class="hidden flex items-center gap-2 text-xs bg-shopee-50 border border-shopee-200 p-2 rounded-xl">
+                        <span class="font-medium text-shopee-700">เลือกแล้ว <strong id="batch-count" class="text-shopee-600">0</strong> รายการ</span>
+                        <button onclick="selectAllVisible()" class="text-[11px] underline text-shopee-600 hover:text-shopee-700">เลือกทั้งหมด</button>
+                        <button onclick="clearBatch()" class="text-[11px] underline text-slate-500 hover:text-slate-700">ล้าง</button>
+                    </div>
                 </div>
 
                 <!-- Product Grid -->
@@ -117,14 +135,19 @@
                         class="catalog-card bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all p-3 space-y-2 relative"
                         data-id="{{ item.id }}"
                         data-category="{{ item.category }}"
-                        onclick="selectCatalogItem('{{ item.id }}')"
+                        onclick="handleCardClick('{{ item.id }}')"
                     >
                         <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative">
                             <img src="/{{ item.images[0] }}" alt="{{ item.name }}" class="w-full h-full object-cover">
                             <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold bg-black/60 text-white backdrop-blur-xs px-1.5 py-0.5 rounded">
                                 {{ item.brand }}
                             </span>
-                            <div class="check-icon hidden absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
+                            <!-- Batch Checkbox -->
+                            <div class="batch-checkbox hidden absolute top-1.5 right-1.5">
+                                <input type="checkbox" id="check-{{ item.id }}" class="w-4 h-4 text-shopee-600 rounded focus:ring-shopee-500 cursor-pointer pointer-events-none">
+                            </div>
+                            <!-- Single Select Check Badge -->
+                            <div class="single-check hidden absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
                                 <i data-lucide="check" class="w-4 h-4"></i>
                             </div>
                         </div>
@@ -133,48 +156,66 @@
                             <p class="text-[11px] text-slate-500 line-clamp-1 mt-1">{{ item.highlight }}</p>
                         </div>
                         <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100">
-                            <span class="text-amber-500 flex items-center gap-0.5 font-medium">
-                                ⭐ {{ item.rating }}
-                            </span>
-                            <span>ขายแล้ว {{ "{:,}".format(item.sold_count) }}+</span>
+                            <span class="text-amber-500 flex items-center gap-0.5 font-medium">⭐ {{ item.rating }}</span>
+                            <span>ขาย {{ "{:,}".format(item.sold_count) }}+</span>
                         </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- TAB 2: CUSTOM PRODUCT -->
+            <!-- TAB 2: CUSTOM PRODUCT & SMART LINK EXTRACTOR -->
             <div id="tab-custom" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <!-- Smart Link Extractor Bar -->
+                <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 space-y-2">
+                    <label class="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <i data-lucide="link" class="w-4 h-4 text-shopee-500"></i>
+                        ดึงข้อมูลจากลิงก์ Shopee อัตโนมัติ (Smart Link Extractor)
+                    </label>
+                    <div class="flex gap-2">
+                        <input type="url" id="shopee-url-extract" placeholder="วางลิงก์สินค้า Shopee เช่น https://shopee.co.th/..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                        <button onclick="extractShopeeUrl()" class="px-4 py-2 bg-shopee-500 hover:bg-shopee-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                            <span>ดึงข้อมูล</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-slate-500">ระบบจะช่วยถอดชื่อสินค้าและเลือกหมวดหมู่ให้อัตโนมัติ</p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อสินค้า (สั้นกระชับเข้าใจง่าย) *</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ชื่อสินค้า *</label>
                             <input type="text" id="custom-name" placeholder="เช่น กันแดดสูตรน้ำ MizuMi หลอดส้ม" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">หมวดหมู่</label>
                                 <select id="custom-category" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
-                                    <option value="beauty">สกินแคร์ / เครื่องสำอาง</option>
+                                    <option value="beauty">สกินแคร์ / บิวตี้</option>
                                     <option value="home">ของใช้ในบ้าน / แก้วน้ำ</option>
-                                    <option value="electronics">อุปกรณ์ไอที / หูฟัง</option>
+                                    <option value="electronics">ไอที / หูฟัง</option>
                                     <option value="fashion">แฟชั่น / กระเป๋า</option>
                                     <option value="general">ทั่วไป</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">จุดเด่นสำคัญ (ถ้ามี)</label>
-                                <input type="text" id="custom-highlight" placeholder="เช่น เบาบาง ไม่เหนอะ คุมมัน" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">จุดเด่นสำคัญ</label>
+                                <input type="text" id="custom-highlight" placeholder="เช่น คุมมัน ไม่เหนอะหนะ" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
                             </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">ลิงก์นายหน้า Shopee ของคุณ (Affiliate Link)</label>
+                            <input type="url" id="custom-affiliate-link" placeholder="https://s.shopee.co.th/xxxx" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดรูปสินค้า (1 - 3 รูป) *</label>
-                        <div class="border-2 border-dashed border-slate-300 hover:border-shopee-500 rounded-2xl p-5 text-center cursor-pointer transition bg-slate-50 flex flex-col items-center justify-center min-h-[140px]" onclick="document.getElementById('custom-images').click()">
+                        <div class="border-2 border-dashed border-slate-300 hover:border-shopee-500 rounded-2xl p-5 text-center cursor-pointer transition bg-slate-50 flex flex-col items-center justify-center min-h-[160px]" onclick="document.getElementById('custom-images').click()">
                             <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mb-2"></i>
                             <span class="text-xs text-slate-600 font-medium">คลิกเพื่อเลือกไฟล์รูปสินค้า (.jpg, .png)</span>
-                            <span class="text-[11px] text-slate-400 mt-1">แนะนำรูปชัดเจน พื้นหลังสะอาด สัดส่วน 1:1 หรือแนวตั้ง</span>
+                            <span class="text-[11px] text-slate-400 mt-1">แนะนำรูปชัดเจน สัดส่วน 1:1 หรือแนวตั้ง</span>
                             <input type="file" id="custom-images" multiple accept="image/*" class="hidden" onchange="previewCustomImages(this)">
                         </div>
                         <div id="image-preview-container" class="flex gap-2 mt-3 overflow-x-auto"></div>
@@ -183,47 +224,101 @@
             </div>
         </section>
 
-        <!-- Step 2: Settings (Tone & Affiliate Link) -->
-        <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <!-- Step 2: Customization Bar (Template, Voice, Music, Tone) -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
             <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
                 <i data-lucide="sliders" class="w-4 h-4 text-shopee-500"></i>
-                ตั้งค่าสไตล์คลิป & ลิงก์นายหน้าของคุณ
+                ปรับแต่งสไตล์คลิป & เสียงพากย์ AI
             </h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Tone Selection -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-2">สไตล์บทพูด (AI Persona)</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <label class="tone-card border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50">
-                            <input type="radio" name="tone" value="friend" checked class="hidden">
-                            <p class="text-xs font-semibold text-slate-800">👭 เพื่อนป้ายยา</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">จริงใจ เป็นกันเอง</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- 1. Video Template -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-700">🎨 สไตล์ Template วิดีโอ</label>
+                    <div class="grid grid-cols-3 gap-1.5 text-xs">
+                        <label class="template-pill active border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50">
+                            <input type="radio" name="video_template" value="clean" checked class="hidden">
+                            <p class="font-bold">Shopee Clean</p>
+                            <p class="text-[10px] opacity-75">ส้ม/ดำ ชัดเจน</p>
                         </label>
-                        <label class="tone-card border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200">
-                            <input type="radio" name="tone" value="problem_solver" class="hidden">
-                            <p class="text-xs font-semibold text-slate-800">🎯 แก้ปัญหา</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">ตรงจุด ชัดเจน</p>
+                        <label class="template-pill border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200 text-slate-600">
+                            <input type="radio" name="video_template" value="neon" class="hidden">
+                            <p class="font-bold">Neon Pop ⚡</p>
+                            <p class="text-[10px] opacity-75">เหลือง/ฟ้า สดใส</p>
                         </label>
-                        <label class="tone-card border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200">
-                            <input type="radio" name="tone" value="fast" class="hidden">
-                            <p class="text-xs font-semibold text-slate-800">⚡ ไวรัลสั้นกระชับ</p>
-                            <p class="text-[10px] text-slate-500 mt-0.5">เน้นฮิต ติดกระแส</p>
+                        <label class="template-pill border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200 text-slate-600">
+                            <input type="radio" name="video_template" value="minimal" class="hidden">
+                            <p class="font-bold">Minimal 🌿</p>
+                            <p class="text-[10px] opacity-75">พาสเทล มินิมอล</p>
                         </label>
                     </div>
                 </div>
 
-                <!-- Custom Affiliate Link -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">
-                        Shopee Affiliate Link ส่วนตัวของคุณ (ไม่บังคับ)
-                    </label>
-                    <input 
-                        type="url" 
-                        id="affiliate-url-input" 
-                        placeholder="เช่น https://s.shopee.co.th/xxxx หรือทิ้งว่างไว้เพื่อใช้ค่าเริ่มต้น" 
-                        class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500"
-                    >
-                    <p class="text-[11px] text-slate-400 mt-1">ลิงก์นี้จะถูกนำไปใส่ในข้อความแคปชัน เพื่อให้คุณได้ค่าคอมมิชชัน 100%</p>
+                <!-- 2. Voice-over AI -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-semibold text-slate-700">🔊 เสียงพากย์ AI ภาษาไทย</label>
+                        <label class="flex items-center gap-1.5 text-xs cursor-pointer">
+                            <input type="checkbox" id="voice-enable-toggle" checked class="w-4 h-4 text-shopee-600 rounded">
+                            <span class="text-[11px] text-slate-600">เปิดเสียงพากย์</span>
+                        </label>
+                    </div>
+                    <div id="voice-options" class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50 voice-card">
+                            <input type="radio" name="voice_type" value="female" checked class="hidden">
+                            <p class="font-semibold text-slate-800">👩 เสียงผู้หญิง</p>
+                            <p class="text-[10px] text-slate-500">สดใส ป้ายยาเพื่อน</p>
+                        </label>
+                        <label class="border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200 voice-card">
+                            <input type="radio" name="voice_type" value="male" class="hidden">
+                            <p class="font-semibold text-slate-800">👨 เสียงผู้ชาย</p>
+                            <p class="text-[10px] text-slate-500">อบอุ่น น่าเชื่อถือ</p>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 3. BGM Music -->
+                <div class="space-y-2">
+                    <label class="block text-xs font-semibold text-slate-700">🎵 เพลงพื้นหลัง (BGM)</label>
+                    <select id="bgm-select" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                        <option value="cheerful" selected>🎶 จังหวะน่ารัก สดใส (Cheerful Bell)</option>
+                        <option value="upbeat">⚡ จังหวะป๊อป สนุกสนาน (Upbeat Pop)</option>
+                        <option value="none">🔇 ไม่ใส่เพลง (เสียงเงียบ)</option>
+                    </select>
+                    <p class="text-[11px] text-slate-400">ระบบจะดึงเสียงเพลงลงอัตโนมัติเมื่อมีเสียงพากย์</p>
+                </div>
+            </div>
+
+            <!-- Script Preview / Edit Accordion -->
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50">
+                <button onclick="toggleScriptEditor()" class="w-full px-4 py-3 text-left text-xs font-semibold text-slate-700 flex items-center justify-between hover:bg-slate-100 transition">
+                    <span class="flex items-center gap-2">
+                        <i data-lucide="edit-3" class="w-4 h-4 text-shopee-500"></i>
+                        ✍️ ดูก่อนและแก้ไขบทสคริปต์ (Preview & Edit Script ก่อน Render)
+                    </span>
+                    <i id="script-arrow" data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform"></i>
+                </button>
+                <div id="script-editor-body" class="hidden p-4 space-y-3 bg-white border-t border-slate-200 text-xs">
+                    <div class="flex justify-end">
+                        <button onclick="fetchAiScript()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-medium flex items-center gap-1.5 text-xs">
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-shopee-500"></i>
+                            ให้ AI คิดบทให้ใหม่
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Hook (ข้อความเปิดหัวคลิป)</label>
+                            <input type="text" id="edit-hook" placeholder="เช่น แก น้ำแข็งละลายไวเซ็งป่ะ?" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-shopee-500">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">Body (จุดเด่น/แก้ปัญหา)</label>
+                            <input type="text" id="edit-body" placeholder="เช่น สแตนเลสแท้ เก็บความเย็นข้ามวัน" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-shopee-500">
+                        </div>
+                        <div>
+                            <label class="block font-semibold text-slate-700 mb-1">CTA (ปิดท้ายให้กดซื้อ)</label>
+                            <input type="text" id="edit-cta" placeholder="เช่น พิกัดตะกร้าส้มซ้ายล่างเลยจ้า" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-shopee-500">
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -235,7 +330,7 @@
                     class="w-full py-4 bg-gradient-to-r from-shopee-500 to-shopee-600 hover:from-shopee-600 hover:to-shopee-700 text-white font-bold rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-base active:scale-[0.99]"
                 >
                     <i data-lucide="play" class="w-5 h-5 fill-current"></i>
-                    <span>สร้างคลิปวิดีโอทันที (ประมาณ 5 วินาที)</span>
+                    <span id="generate-btn-text">สร้างคลิปวิดีโอทันที (พร้อมเสียงพากย์และ BGM)</span>
                 </button>
             </div>
         </section>
@@ -245,25 +340,25 @@
             <div class="w-16 h-16 border-4 border-shopee-200 border-t-shopee-500 rounded-full animate-spin mx-auto"></div>
             <div>
                 <h4 id="loading-title" class="text-base font-bold text-slate-900">กำลังประมวลผลคลิปวิดีโอ...</h4>
-                <p id="loading-desc" class="text-xs text-slate-500 mt-1">Gemini AI กำลังคิดบทป้ายยา และ FFmpeg กำลังเรนเดอร์ภาพ 1080x1920</p>
+                <p id="loading-desc" class="text-xs text-slate-500 mt-1">Gemini คิดบท • Neural TTS พากย์เสียง • FFmpeg รวมภาพและ BGM 1080p</p>
             </div>
             <div class="max-w-md mx-auto space-y-2 text-xs text-slate-600 text-left bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div id="step-ai" class="flex items-center gap-2 text-slate-400">
                     <i data-lucide="circle" class="w-3.5 h-3.5"></i>
                     <span>1. Gemini AI วิเคราะห์จุดขายและเขียนบท hook/cta</span>
                 </div>
-                <div id="step-safezone" class="flex items-center gap-2 text-slate-400">
+                <div id="step-voice" class="flex items-center gap-2 text-slate-400">
                     <i data-lucide="circle" class="w-3.5 h-3.5"></i>
-                    <span>2. จัดการ Safe Zone เว้นพื้นที่ตะกร้าส้ม Shopee ล่าง 25%</span>
+                    <span>2. สร้างเสียงพากย์ AI ภาษาไทย + เพลง BGM</span>
                 </div>
                 <div id="step-render" class="flex items-center gap-2 text-slate-400">
                     <i data-lucide="circle" class="w-3.5 h-3.5"></i>
-                    <span>3. FFmpeg เรนเดอร์วิดีโอแนวตั้ง 10 วินาที คมชัด 1080p</span>
+                    <span>3. FFmpeg เรนเดอร์วิดีโอ 9:16 แนวตั้ง คมชัด 1080p</span>
                 </div>
             </div>
         </div>
 
-        <!-- Result Section (Shown when done) -->
+        <!-- Result Section: Single Video -->
         <section id="result-section" class="hidden bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-md space-y-6">
             <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                 <div class="flex items-center gap-2.5">
@@ -272,7 +367,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">วิดีโอของคุณพร้อมใช้งานแล้ว! 🎉</h3>
-                        <p id="result-rendertime" class="text-xs text-slate-500">เรนเดอร์เสร็จใน 4.2 วินาที • ขนาด 1.8 MB</p>
+                        <p id="result-rendertime" class="text-xs text-slate-500">เรนเดอร์เสร็จใน 4.2 วินาที • เสียงพากย์ + BGM</p>
                     </div>
                 </div>
                 <span class="text-xs bg-emerald-50 text-emerald-700 font-semibold px-3 py-1 rounded-full border border-emerald-200">
@@ -286,15 +381,13 @@
                     <div class="phone-mockup w-full bg-black rounded-3xl overflow-hidden relative border-4 border-slate-800">
                         <video id="result-video" controls class="w-full h-full object-cover">
                             <source src="" type="video/mp4">
-                            เบราว์เซอร์ของคุณไม่รองรับการเล่นวิดีโอ
                         </video>
                     </div>
                     <p class="text-xs text-slate-400 mt-2">อัตราส่วน 9:16 (1080×1920) พร้อมลง Shopee Video</p>
                 </div>
 
                 <!-- Right: Caption, Hashtags & Download -->
-                <div class="md:col-span-7 space-y-5">
-                    <!-- Product Title -->
+                <div class="md:col-span-7 space-y-4">
                     <div>
                         <span class="text-xs font-semibold text-shopee-600 uppercase tracking-wider">สินค้า</span>
                         <h4 id="result-title" class="text-base font-bold text-slate-900 mt-0.5">ชื่อสินค้า</h4>
@@ -315,20 +408,20 @@
                         <div class="relative">
                             <textarea 
                                 id="result-caption" 
-                                rows="6" 
+                                rows="5" 
                                 readonly 
-                                class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-slate-700 font-mono focus:outline-none"
+                                class="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 font-mono focus:outline-none"
                             ></textarea>
                         </div>
                     </div>
 
-                    <!-- Quick Actions -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <!-- Action Buttons -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                         <a 
                             id="download-btn" 
                             href="#" 
                             download 
-                            class="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-center text-sm shadow-sm transition flex items-center justify-center gap-2"
+                            class="py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-center text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2"
                         >
                             <i data-lucide="download" class="w-4 h-4"></i>
                             ดาวน์โหลดวิดีโอ (.mp4)
@@ -337,26 +430,52 @@
                             id="shopee-link-btn" 
                             href="#" 
                             target="_blank" 
-                            class="py-3 px-4 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-center text-sm shadow-sm transition flex items-center justify-center gap-2"
+                            class="py-3 px-4 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-center text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2"
                         >
                             <i data-lucide="external-link" class="w-4 h-4"></i>
-                            ทดสอบเปิดดูสินค้าใน Shopee
+                            เปิดดูสินค้าใน Shopee
                         </a>
                     </div>
 
+                    <!-- Instant Forward to Discord / Telegram -->
+                    <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3.5 space-y-2">
+                        <label class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
+                            <i data-lucide="send" class="w-3.5 h-3.5 text-indigo-600"></i>
+                            ส่งเข้า Discord ทันที (เด้งเข้ามือถือ)
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="url" id="discord-webhook-input" placeholder="วาง Discord Webhook URL ของคุณ" class="flex-1 text-xs border border-indigo-200 rounded-lg px-2.5 py-1.5 bg-white">
+                            <button onclick="forwardToDiscord()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shrink-0 flex items-center gap-1">
+                                <i data-lucide="send" class="w-3 h-3"></i>
+                                <span>ส่งเลย</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Rule Reminder -->
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3.5 text-xs text-amber-900 space-y-1">
-                        <p class="font-bold flex items-center gap-1.5">
-                            <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
-                            ข้อควรจำก่อนกดโพสต์ใน Shopee Video:
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 space-y-1">
+                        <p class="font-bold flex items-center gap-1.5 text-[11px]">
+                            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-amber-600"></i>
+                            ข้อควรจำก่อนโพสต์ใน Shopee Video:
                         </p>
-                        <p class="text-amber-800">
-                            • อย่าลืม<strong>ติ๊กเปิด "ระบุว่าเป็นเนื้อหาที่สร้างโดย AI"</strong> ที่หน้าตั้งค่าก่อนโพสต์<br>
-                            • ใส่เพลงฮิตจากคลังเสียงของ Shopee เพิ่มเติมเพื่อดันยอดวิวให้ปังยิ่งขึ้นครับ
+                        <p class="text-[11px] text-amber-800">
+                            • อย่าลืม<strong>ติ๊กเปิด "ระบุว่าเป็นเนื้อหาที่สร้างโดย AI"</strong> ก่อนกดโพสต์เสมอ<br>
+                            • ใส่เพลงเพิ่มเติมจากคลังเสียงของ Shopee เพื่อช่วยดันการมองเห็นครับ
                         </p>
                     </div>
                 </div>
             </div>
+        </section>
+
+        <!-- Result Section: Batch Mode -->
+        <section id="batch-result-section" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-md space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-emerald-500"></i>
+                    สร้างคลิปแบบ Batch สำเร็จ (<span id="batch-done-count">0</span> คลิป)
+                </h3>
+            </div>
+            <div id="batch-results-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
         </section>
 
         <!-- History Section -->
@@ -379,7 +498,7 @@
 
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        <p>Shopee Clip Maker AI (MVP) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้องและปลอดภัย</p>
+        <p>Shopee Clip Maker AI (Pro V2) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
     </footer>
 
     <!-- Toast Notification -->
@@ -390,17 +509,26 @@
 
     <!-- Frontend Script -->
     <script>
-        // Init Lucide
         lucide.createIcons();
 
         let currentTab = 'catalog';
-        let selectedProductId = 'mizumi_uv'; // Default selection
+        let isBatchMode = false;
+        let selectedProductId = 'mizumi_uv';
+        let batchSelectedIds = new Set();
+        let lastCreatedVideoFilename = '';
 
-        // Select first item on load
         window.addEventListener('DOMContentLoaded', () => {
             selectCatalogItem('mizumi_uv');
-            setupToneSelection();
+            setupTemplateSelection();
+            setupVoiceCardSelection();
             loadHistory();
+
+            // Load saved discord webhook from localStorage
+            const savedWebhook = localStorage.getItem('shopee_discord_webhook');
+            if (savedWebhook) {
+                const input = document.getElementById('discord-webhook-input');
+                if (input) input.value = savedWebhook;
+            }
         });
 
         function switchTab(tab) {
@@ -424,18 +552,90 @@
             lucide.createIcons();
         }
 
+        function toggleBatchMode() {
+            isBatchMode = !isBatchMode;
+            const toggleText = document.getElementById('batch-toggle-text');
+            const actionBar = document.getElementById('batch-action-bar');
+            const genBtnText = document.getElementById('generate-btn-text');
+
+            if (isBatchMode) {
+                toggleText.textContent = "ปิดโหมด Batch (กลับสู่โหมดเดี่ยว)";
+                actionBar.classList.remove('hidden');
+                document.querySelectorAll('.batch-checkbox').forEach(el => el.classList.remove('hidden'));
+                document.querySelectorAll('.single-check').forEach(el => el.classList.add('hidden'));
+                updateBatchUI();
+            } else {
+                toggleText.textContent = "เปิดโหมดเลือกหลายคลิป (Batch)";
+                actionBar.classList.add('hidden');
+                document.querySelectorAll('.batch-checkbox').forEach(el => el.classList.add('hidden'));
+                batchSelectedIds.clear();
+                selectCatalogItem(selectedProductId || 'mizumi_uv');
+                genBtnText.textContent = "สร้างคลิปวิดีโอทันที (พร้อมเสียงพากย์และ BGM)";
+            }
+            lucide.createIcons();
+        }
+
+        function handleCardClick(id) {
+            if (isBatchMode) {
+                const checkbox = document.getElementById(`check-${id}`);
+                if (batchSelectedIds.has(id)) {
+                    batchSelectedIds.delete(id);
+                    if (checkbox) checkbox.checked = false;
+                } else {
+                    batchSelectedIds.add(id);
+                    if (checkbox) checkbox.checked = true;
+                }
+                updateBatchUI();
+            } else {
+                selectCatalogItem(id);
+            }
+        }
+
         function selectCatalogItem(id) {
             selectedProductId = id;
             document.querySelectorAll('.catalog-card').forEach(card => {
                 if (card.getAttribute('data-id') === id) {
                     card.classList.add('active');
-                    card.querySelector('.check-icon').classList.remove('hidden');
+                    card.querySelector('.single-check').classList.remove('hidden');
                 } else {
                     card.classList.remove('active');
-                    card.querySelector('.check-icon').classList.add('hidden');
+                    card.querySelector('.single-check').classList.add('hidden');
                 }
             });
             lucide.createIcons();
+        }
+
+        function updateBatchUI() {
+            document.getElementById('batch-count').textContent = batchSelectedIds.size;
+            document.querySelectorAll('.catalog-card').forEach(card => {
+                const id = card.getAttribute('data-id');
+                const checkbox = document.getElementById(`check-${id}`);
+                if (batchSelectedIds.has(id)) {
+                    card.classList.add('active');
+                    if (checkbox) checkbox.checked = true;
+                } else {
+                    card.classList.remove('active');
+                    if (checkbox) checkbox.checked = false;
+                }
+            });
+            const genBtnText = document.getElementById('generate-btn-text');
+            if (batchSelectedIds.size > 0) {
+                genBtnText.textContent = `⚡ สร้างคลิปทั้งหมดแบบ Batch (${batchSelectedIds.size} คลิปพร้อมกัน)`;
+            } else {
+                genBtnText.textContent = "กรุณาเลือกสินค้าอย่างน้อย 1 รายการ";
+            }
+        }
+
+        function selectAllVisible() {
+            document.querySelectorAll('.catalog-card:not(.hidden)').forEach(card => {
+                batchSelectedIds.add(card.getAttribute('data-id'));
+            });
+            updateBatchUI();
+        }
+
+        function clearBatch() {
+            batchSelectedIds.clear();
+            updateBatchUI();
         }
 
         function filterCatalog(category) {
@@ -454,22 +654,104 @@
             });
         }
 
-        function setupToneSelection() {
-            document.querySelectorAll('.tone-card').forEach(card => {
+        function setupTemplateSelection() {
+            document.querySelectorAll('.template-pill').forEach(card => {
                 card.addEventListener('click', () => {
-                    document.querySelectorAll('.tone-card').forEach(c => {
-                        c.className = "tone-card border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200";
+                    document.querySelectorAll('.template-pill').forEach(c => {
+                        c.className = "template-pill border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200 text-slate-600";
                     });
-                    card.className = "tone-card border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50";
+                    card.className = "template-pill active border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50";
                 });
             });
+        }
+
+        function setupVoiceCardSelection() {
+            document.querySelectorAll('.voice-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    document.querySelectorAll('.voice-card').forEach(c => {
+                        c.className = "border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-slate-200 voice-card";
+                    });
+                    card.className = "border rounded-xl p-2.5 text-center cursor-pointer hover:border-shopee-500 transition border-shopee-500 bg-shopee-50/50 voice-card";
+                });
+            });
+        }
+
+        function toggleScriptEditor() {
+            const body = document.getElementById('script-editor-body');
+            const arrow = document.getElementById('script-arrow');
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                arrow.style.transform = 'rotate(180deg)';
+                if (!document.getElementById('edit-hook').value) {
+                    fetchAiScript();
+                }
+            } else {
+                body.classList.add('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function fetchAiScript() {
+            try {
+                showToast('กำลังให้ Gemini คิดบท...');
+                let payload = {};
+                if (currentTab === 'catalog') {
+                    payload = { product_id: selectedProductId };
+                } else {
+                    payload = {
+                        name: document.getElementById('custom-name').value.trim() || 'สินค้า Shopee คุณภาพดี',
+                        category: document.getElementById('custom-category').value,
+                        highlight: document.getElementById('custom-highlight').value.trim()
+                    };
+                }
+                const res = await fetch('/api/generate-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('edit-hook').value = data.hook || '';
+                    document.getElementById('edit-body').value = data.body || '';
+                    document.getElementById('edit-cta').value = data.cta || '';
+                    showToast('ดึงบทสคริปต์เรียบร้อย สามารถแก้ไขได้เลย');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function extractShopeeUrl() {
+            const urlInput = document.getElementById('shopee-url-extract');
+            const rawUrl = urlInput.value.trim();
+            if (!rawUrl) {
+                alert('กรุณาวางลิงก์ Shopee');
+                return;
+            }
+            showToast('กำลังดึงข้อมูลจากลิงก์...');
+            try {
+                const res = await fetch('/api/parse-shopee-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: rawUrl })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById('custom-name').value = data.name;
+                    document.getElementById('custom-category').value = data.category;
+                    document.getElementById('custom-affiliate-link').value = data.affiliate_url;
+                    showToast('ดึงชื่อสินค้าและหมวดหมู่อัตโนมัติแล้ว!');
+                }
+            } catch (e) {
+                alert('ดึงข้อมูลไม่สำเร็จ');
+            }
         }
 
         function previewCustomImages(input) {
             const container = document.getElementById('image-preview-container');
             container.innerHTML = '';
             if (input.files) {
-                Array.from(input.files).slice(0, 3).forEach((file, index) => {
+                Array.from(input.files).slice(0, 3).forEach(file => {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const img = document.createElement('img');
@@ -483,44 +765,60 @@
         }
 
         async function handleGenerate() {
+            if (isBatchMode) {
+                await handleBatchGenerate();
+                return;
+            }
+
             const genBtn = document.getElementById('generate-btn');
             const loadingCard = document.getElementById('loading-card');
             const resultSection = document.getElementById('result-section');
+            const batchResultSection = document.getElementById('batch-result-section');
 
-            // Get Tone & Affiliate Link
-            const toneEl = document.querySelector('input[name="tone"]:checked');
-            const tone = toneEl ? toneEl.value : 'friend';
-            const affiliateUrl = document.getElementById('affiliate-url-input').value.trim();
+            // Template, Voice, BGM
+            const templateEl = document.querySelector('input[name="video_template"]:checked');
+            const template = templateEl ? templateEl.value : 'clean';
+            const enableVoice = document.getElementById('voice-enable-toggle').checked;
+            const voiceTypeEl = document.querySelector('input[name="voice_type"]:checked');
+            const voiceType = voiceTypeEl ? voiceTypeEl.value : 'female';
+            const bgmTrack = document.getElementById('bgm-select').value;
+
+            // Custom Script fields (if modified)
+            const customHook = document.getElementById('edit-hook').value.trim();
+            const customBody = document.getElementById('edit-body').value.trim();
+            const customCta = document.getElementById('edit-cta').value.trim();
 
             genBtn.disabled = true;
             genBtn.classList.add('opacity-50', 'cursor-not-allowed');
             loadingCard.classList.remove('hidden');
             resultSection.classList.add('hidden');
+            batchResultSection.classList.add('hidden');
             loadingCard.scrollIntoView({ behavior: 'smooth' });
 
-            // Animate progress steps
             simulateSteps();
 
             try {
                 let response;
                 if (currentTab === 'catalog') {
-                    if (!selectedProductId) {
-                        alert('กรุณาเลือกสินค้าจากรายการ');
-                        return;
-                    }
                     response = await fetch('/api/generate-catalog', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             product_id: selectedProductId,
-                            tone: tone,
-                            affiliate_url: affiliateUrl
+                            template: template,
+                            enable_voice: enableVoice,
+                            voice_type: voiceType,
+                            bgm_track: bgmTrack,
+                            custom_hook: customHook,
+                            custom_body: customBody,
+                            custom_cta: customCta,
                         })
                     });
                 } else {
                     const name = document.getElementById('custom-name').value.trim();
                     const category = document.getElementById('custom-category').value;
                     const highlight = document.getElementById('custom-highlight').value.trim();
+                    const affiliateLink = document.getElementById('custom-affiliate-link').value.trim();
                     const fileInput = document.getElementById('custom-images');
 
                     if (!name) {
@@ -536,8 +834,15 @@
                     formData.append('name', name);
                     formData.append('category', category);
                     formData.append('highlight', highlight);
-                    formData.append('tone', tone);
-                    formData.append('affiliate_url', affiliateUrl);
+                    formData.append('affiliate_url', affiliateLink);
+                    formData.append('template', template);
+                    formData.append('enable_voice', enableVoice);
+                    formData.append('voice_type', voiceType);
+                    formData.append('bgm_track', bgmTrack);
+                    if (customHook) formData.append('custom_hook', customHook);
+                    if (customBody) formData.append('custom_body', customBody);
+                    if (customCta) formData.append('custom_cta', customCta);
+
                     for (let i = 0; i < fileInput.files.length; i++) {
                         formData.append('images', fileInput.files[i]);
                     }
@@ -553,7 +858,6 @@
                     throw new Error(result.detail || 'การสร้างวิดีโอล้มเหลว');
                 }
 
-                // Render Results
                 displayResult(result);
                 loadHistory();
 
@@ -566,30 +870,122 @@
             }
         }
 
+        async function handleBatchGenerate() {
+            if (batchSelectedIds.size === 0) {
+                alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการเพื่อสร้างแบบ Batch');
+                return;
+            }
+
+            const genBtn = document.getElementById('generate-btn');
+            const loadingCard = document.getElementById('loading-card');
+            const batchResultSection = document.getElementById('batch-result-section');
+            const resultSection = document.getElementById('result-section');
+
+            const templateEl = document.querySelector('input[name="video_template"]:checked');
+            const template = templateEl ? templateEl.value : 'clean';
+            const enableVoice = document.getElementById('voice-enable-toggle').checked;
+            const voiceTypeEl = document.querySelector('input[name="voice_type"]:checked');
+            const voiceType = voiceTypeEl ? voiceTypeEl.value : 'female';
+            const bgmTrack = document.getElementById('bgm-select').value;
+
+            genBtn.disabled = true;
+            genBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            loadingCard.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            batchResultSection.classList.add('hidden');
+
+            document.getElementById('loading-title').textContent = `กำลังสร้างคลิป Batch จำนวน ${batchSelectedIds.size} รายการ...`;
+            document.getElementById('loading-desc').textContent = 'ระบบกำลังเรนเดอร์ทีละคลิปอย่างรวดเร็ว กรุณารอสักครู่ครับ';
+            loadingCard.scrollIntoView({ behavior: 'smooth' });
+
+            try {
+                const response = await fetch('/api/batch-generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_ids: Array.from(batchSelectedIds),
+                        template: template,
+                        enable_voice: enableVoice,
+                        voice_type: voiceType,
+                        bgm_track: bgmTrack
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    throw new Error(data.detail || 'สร้าง Batch ล้มเหลว');
+                }
+
+                displayBatchResults(data.results);
+                loadHistory();
+
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในโหมด Batch: ' + err.message);
+            } finally {
+                loadingCard.classList.add('hidden');
+                genBtn.disabled = false;
+                genBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function displayBatchResults(results) {
+            const batchSection = document.getElementById('batch-result-section');
+            const grid = document.getElementById('batch-results-grid');
+            document.getElementById('batch-done-count').textContent = results.length;
+            grid.innerHTML = '';
+
+            results.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2";
+                card.innerHTML = `
+                    <div class="aspect-[9/16] bg-black rounded-lg overflow-hidden relative border border-slate-300">
+                        <video src="${item.video_url}" poster="${item.thumbnail_url}" controls class="w-full h-full object-cover"></video>
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 line-clamp-1">${item.product_name}</p>
+                        <p class="text-[10px] text-slate-500">${item.render_time_seconds} วิ • ${item.file_size_mb.toFixed(1)} MB</p>
+                    </div>
+                    <div class="flex gap-2 pt-1">
+                        <a href="/download/${item.video_filename}" download class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-center text-xs font-medium flex items-center justify-center gap-1">
+                            <i data-lucide="download" class="w-3.5 h-3.5"></i> โหลด MP4
+                        </a>
+                        <button onclick="navigator.clipboard.writeText('${item.caption.replace(/\n/g, '\\n')}'); showToast('คัดลอกแคปชันแล้ว');" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 rounded-lg text-slate-700 text-xs">
+                            📋
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            batchSection.classList.remove('hidden');
+            batchSection.scrollIntoView({ behavior: 'smooth' });
+            lucide.createIcons();
+        }
+
         function simulateSteps() {
             const step1 = document.getElementById('step-ai');
-            const step2 = document.getElementById('step-safezone');
+            const step2 = document.getElementById('step-voice');
             const step3 = document.getElementById('step-render');
 
             step1.className = "flex items-center gap-2 text-shopee-600 font-semibold animate-pulse";
-            step1.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>1. Gemini AI กำลังวิเคราะห์จุดขายและเขียนบท hook/cta...</span>';
+            step1.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>1. Gemini AI กำลังวิเคราะห์จุดขายและเขียนบท...</span>';
             lucide.createIcons();
 
             setTimeout(() => {
                 step1.className = "flex items-center gap-2 text-emerald-600 font-medium";
-                step1.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>1. Gemini AI เขียนบทเสร็จเรียบร้อย</span>';
+                step1.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>1. เขียนบทเสร็จสมบูรณ์</span>';
                 step2.className = "flex items-center gap-2 text-shopee-600 font-semibold animate-pulse";
-                step2.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>2. จัดการ Safe Zone เว้นพื้นที่ตะกร้าส้ม Shopee ล่าง 25%...</span>';
+                step2.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>2. กำลังสังเคราะห์เสียงพากย์ Neural TTS & มิกซ์ BGM...</span>';
                 lucide.createIcons();
-            }, 1800);
+            }, 1500);
 
             setTimeout(() => {
                 step2.className = "flex items-center gap-2 text-emerald-600 font-medium";
-                step2.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>2. วาง Safe Zone เรียบร้อย</span>';
+                step2.innerHTML = '<i data-lucide="check-circle" class="w-3.5 h-3.5"></i><span>2. เสียงพากย์และ BGM พร้อม</span>';
                 step3.className = "flex items-center gap-2 text-shopee-600 font-semibold animate-pulse";
                 step3.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>3. FFmpeg กำลังเรนเดอร์วิดีโอ 1080p...</span>';
                 lucide.createIcons();
-            }, 3200);
+            }, 3000);
         }
 
         function displayResult(data) {
@@ -601,10 +997,12 @@
             const downloadBtn = document.getElementById('download-btn');
             const shopeeLinkBtn = document.getElementById('shopee-link-btn');
 
+            lastCreatedVideoFilename = data.video_filename;
             titleEl.textContent = data.product_name;
-            renderTimeEl.textContent = `เรนเดอร์เสร็จใน ${data.render_time_seconds} วินาที • ขนาด ${data.file_size_mb} MB`;
+            const voiceLabel = data.has_voice ? ' • เสียงพากย์ AI' : '';
+            const bgmLabel = data.bgm_track !== 'none' ? ' • มี BGM' : '';
+            renderTimeEl.textContent = `เรนเดอร์เสร็จใน ${data.render_time_seconds} วินาที • ${data.file_size_mb.toFixed(1)} MB${voiceLabel}${bgmLabel}`;
 
-            // Prepare caption text with hashtags
             const tags = data.hashtags ? data.hashtags.map(t => t.startsWith('#') ? t : `#${t}`).join(' ') : '';
             captionEl.value = `${data.caption}\n\n${tags}`;
 
@@ -632,6 +1030,40 @@
             setTimeout(() => {
                 copyBtnText.textContent = 'คัดลอกแคปชัน';
             }, 2500);
+        }
+
+        async function forwardToDiscord() {
+            const webhookUrl = document.getElementById('discord-webhook-input').value.trim();
+            if (!webhookUrl) {
+                alert('กรุณาใส่ Discord Webhook URL');
+                return;
+            }
+            if (!lastCreatedVideoFilename) {
+                alert('ยังไม่มีวิดีโอที่เพิ่งสร้าง');
+                return;
+            }
+            localStorage.setItem('shopee_discord_webhook', webhookUrl);
+            showToast('กำลังส่งวิดีโอเข้า Discord...');
+
+            try {
+                const res = await fetch('/api/forward', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        video_filename: lastCreatedVideoFilename,
+                        channel: 'discord',
+                        target: webhookUrl
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('ส่งวิดีโอเข้า Discord สำเร็จแล้ว! 🎉');
+                } else {
+                    alert('ส่งไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('ส่งไม่สำเร็จ กรุณาตรวจสอบ URL');
+            }
         }
 
         function showToast(message) {

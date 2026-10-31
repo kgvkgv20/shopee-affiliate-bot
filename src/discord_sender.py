@@ -19,20 +19,23 @@ class DiscordSender:
     ส่งคลิปวิดีโอ .mp4 และแคปชันเข้าห้องแชท Discord ผ่าน Webhook
     """
 
-    def __init__(self):
-        self.webhook_url = os.getenv("DISCORD_WEBHOOK_URL")
-        if not self.webhook_url:
-            raise ValueError("ต้องกำหนด DISCORD_WEBHOOK_URL ใน .env")
+    def __init__(self, webhook_url: str = None):
+        self.webhook_url = webhook_url or os.getenv("DISCORD_WEBHOOK_URL", "")
 
     def send_video(
         self,
         video_result: VideoResult,
         content: VideoContent,
         affiliate_link: str,
+        webhook_url: str = None,
     ) -> bool:
         """
         ส่งไฟล์วิดีโอ .mp4 พร้อมแคปชันและลิงก์สินค้าเข้า Discord
         """
+        target_url = webhook_url or self.webhook_url
+        if not target_url:
+            raise ValueError("ต้องระบุ Discord Webhook URL")
+
         video_path = video_result.video_path
         if not os.path.exists(video_path):
             logger.error(f"❌ ไม่พบไฟล์วิดีโอ: {video_path}")
@@ -55,9 +58,10 @@ class DiscordSender:
                 data = {
                     "content": message_text
                 }
-                resp = requests.post(self.webhook_url, data=data, files=files, timeout=30)
+                resp = requests.post(target_url, data=data, files=files, timeout=30)
                 if resp.status_code in [200, 204]:
                     logger.info("  ✅ ส่งวิดีโอไปยัง Discord สำเร็จ!")
+                    return True
                     return True
                 else:
                     logger.error(f"  ❌ ส่ง Discord ไม่สำเร็จ ({resp.status_code}): {resp.text}")

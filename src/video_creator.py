@@ -21,6 +21,7 @@ import requests
 import tempfile
 from pathlib import Path
 from dataclasses import dataclass
+from typing import Optional
 from src.shopee_scraper import Product
 from src.gemini_generator import VideoContent
 
@@ -208,23 +209,20 @@ class FFmpegVideoCreator:
         product: Product,
         content: VideoContent,
         image_paths: list[str],
+        template: str = "clean",
+        voice_audio_path: Optional[str] = None,
+        bgm_audio_path: Optional[str] = None,
     ) -> VideoResult:
         """
         สร้างวิดีโอ 10 วินาที 1080×1920 (Phase 1 spec)
+        รองรับ Template สไตล์วิดีโอ, เสียงพากย์ AI ภาษาไทย และเพลง BGM
 
         ขั้นตอน:
         1. Resize รูปให้ fill เต็ม canvas 1080×1920
         2. สร้าง slideshow 3 รูป × 3.33 วิ = 10 วิ
-        3. วาง text overlay (hook / body / cta) ใน safe zone
-        4. Export MP4 พร้อม thumbnail
-
-        Args:
-            product: ข้อมูลสินค้า
-            content: script จาก Gemini (Phase 1 compliant)
-            image_paths: paths รูปสินค้าที่ดาวน์โหลดแล้ว
-
-        Returns:
-            VideoResult
+        3. วาง text overlay (hook / body / cta) ใน safe zone ตาม template
+        4. รวมเสียงพากย์ AI + เพลง BGM (ถ้ามี)
+        5. Export MP4 พร้อม thumbnail
         """
         if not image_paths:
             raise ValueError("ไม่มีรูปสินค้า — ไม่สามารถสร้างวิดีโอได้")
@@ -241,8 +239,15 @@ class FFmpegVideoCreator:
             # === Step 2: เติมรูปให้ครบ SLIDE_COUNT ===
             resized_paths = self._pad_images_to_count(resized_paths, SLIDE_COUNT)
 
-            # === Step 3: สร้าง slideshow + text overlay + xfade ===
-            self._build_final_video(resized_paths, content, output_path)
+            # === Step 3: สร้าง slideshow + text overlay + xfade + audio ===
+            self._build_final_video(
+                resized_paths,
+                content,
+                output_path,
+                template=template,
+                voice_audio_path=voice_audio_path,
+                bgm_audio_path=bgm_audio_path,
+            )
 
             # === Step 4: Thumbnail ===
             self._extract_thumbnail(output_path, thumbnail_path)
@@ -291,49 +296,81 @@ class FFmpegVideoCreator:
             paths = paths + paths
         return paths[:target]
 
-    def _build_text_overlay_filter(self, content: VideoContent) -> str:
-        """สร้าง FFmpeg drawtext filter chain สำหรับ Phase 1"""
+    def _build_text_overlay_filter(self, content: VideoContent, template: str = "clean") -> str:
+        """สร้าง FFmpeg drawtext filter chain รองรับหลากหลาย Template สไตล์"""
         font = self.font_path.replace("\\", "/").replace(":", "\\:")
 
-        hook = self._esc(content.hook[:35])
-        body = self._esc(content.body[:50])
+        hook = self._esc(content.hook[:36])
+        body = self._esc(content.body[:52])
         cta = self._esc(content.cta[:40])
 
-        # กล่อง opacity สำหรับ readability บนรูปหลากหลาย
-        box = "box=1:boxborderw=12"
-
         filters = []
-
-        # HOOK — บนสุด สีส้มสด บน bg มืด
-        filters.append(
-            f"drawtext=fontfile='{font}'"
-            f":text='{hook}'"
-            f":fontcolor=FF6B00:fontsize={FONTSIZE_HOOK}"
-            f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
-            f":{box}:boxcolor=black@0.6"
-        )
-
-        # BODY — กลางบน สีขาว
-        filters.append(
-            f"drawtext=fontfile='{font}'"
-            f":text='{body}'"
-            f":fontcolor=white:fontsize={FONTSIZE_BODY}"
-            f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
-            f":{box}:boxcolor=000000@0.5"
-        )
-
-        # CTA — ล่างสุดของ safe zone สีขาว bg ส้ม Shopee
-        filters.append(
-            f"drawtext=fontfile='{font}'"
-            f":text='{cta}'"
-            f":fontcolor=white:fontsize={FONTSIZE_CTA}"
-            f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
-            f":{box}:boxcolor=EE4D2D@0.85"
-        )
-
-        # SAFE ZONE INDICATOR (semi-transparent line) — debug only
-        # ถ้าอยากซ่อน ลบบรรทัดนี้ออก
-        # filters.append(f"drawbox=x=0:y={SAFE_ZONE_TOP_LIMIT}:w=iw:h=2:color=red@0.5:t=fill")
+        if template == "neon":
+            # Template: Neon Flash Sale / Pop
+            # Hook: ดำบนเหลืองนีออนสด
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{hook}'"
+                f":fontcolor=0x0F172A:fontsize={FONTSIZE_HOOK}"
+                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
+                f":box=1:boxborderw=16:boxcolor=0xFFE600@0.96"
+            )
+            # Body: ขาวบนชมพูนีออนเข้ม
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{body}'"
+                f":fontcolor=white:fontsize={FONTSIZE_BODY}"
+                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
+                f":box=1:boxborderw=14:boxcolor=0xFF0055@0.88"
+            )
+            # CTA: ดำบนฟ้าสว่างสดใส
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{cta}'"
+                f":fontcolor=0x0F172A:fontsize={FONTSIZE_CTA}"
+                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
+                f":box=1:boxborderw=16:boxcolor=0x00E5FF@0.95"
+            )
+        elif template == "minimal":
+            # Template: Minimal Aesthetic Pastel
+            # Hook: กรมท่าบนขาวครีม
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{hook}'"
+                f":fontcolor=0x1E293B:fontsize={FONTSIZE_HOOK-4}"
+                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
+                f":box=1:boxborderw=16:boxcolor=0xF8FAFC@0.95"
+            )
+            # Body: ขาวบนเทาเข้มหรูหรา
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{body}'"
+                f":fontcolor=white:fontsize={FONTSIZE_BODY-2}"
+                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
+                f":box=1:boxborderw=12:boxcolor=0x334155@0.85"
+            )
+            # CTA: ขาวบน Slate ดำ
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{cta}'"
+                f":fontcolor=white:fontsize={FONTSIZE_CTA}"
+                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
+                f":box=1:boxborderw=16:boxcolor=0x0F172A@0.92"
+            )
+        else:
+            # Template: Shopee Clean (Default)
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{hook}'"
+                f":fontcolor=white:fontsize={FONTSIZE_HOOK}"
+                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
+                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.92"
+            )
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{body}'"
+                f":fontcolor=white:fontsize={FONTSIZE_BODY}"
+                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
+                f":box=1:boxborderw=14:boxcolor=0x000000@0.65"
+            )
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{cta}'"
+                f":fontcolor=white:fontsize={FONTSIZE_CTA}"
+                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
+                f":box=1:boxborderw=16:boxcolor=0x1E293B@0.92"
+            )
 
         return ",".join(filters)
 
@@ -342,10 +379,12 @@ class FFmpegVideoCreator:
         image_paths: list[str],
         content: VideoContent,
         output_path: str,
+        template: str = "clean",
+        voice_audio_path: Optional[str] = None,
+        bgm_audio_path: Optional[str] = None,
     ):
         """
-        สร้างวิดีโอสุดท้าย 10 วินาที ด้วย xfade transition + text overlay
-        ใช้ FFmpeg filter_complex เพื่อประสิทธิภาพสูงสุด
+        สร้างวิดีโอสุดท้าย 10 วินาที ด้วย xfade transition + text overlay + audio mix
         """
         n = len(image_paths)  # = SLIDE_COUNT = 3
         xfade_dur = 0.5
@@ -358,7 +397,6 @@ class FFmpegVideoCreator:
         for p in image_paths:
             inputs += ["-loop", "1", "-t", f"{slide_in_dur:.4f}", "-i", p]
 
-        # filter_complex: scale → xfade chain → drawtext
         filter_parts = []
 
         # scale แต่ละ input ให้เป็น 1080x1920 30fps yuv420p
@@ -371,9 +409,7 @@ class FFmpegVideoCreator:
                 f"format=yuv420p[v{i}]"
             )
 
-        # xfade chain:
-        # slide 0 -> slide 1 at offset = 3.33s
-        # slide 1 -> slide 2 at offset = 6.66s
+        # xfade chain
         prev = "v0"
         for i in range(1, n):
             offset = SLIDE_DURATION * i
@@ -384,19 +420,51 @@ class FFmpegVideoCreator:
             )
             prev = nxt
 
-        # text overlay บน xfall พร้อมแปลงเป็น yuv420p มาตรฐาน
-        text_filter = self._build_text_overlay_filter(content)
+        # text overlay บน xfall
+        text_filter = self._build_text_overlay_filter(content, template=template)
         filter_parts.append(f"[xfall]{text_filter},format=yuv420p[vout]")
+
+        # Audio routing
+        audio_inputs = []
+        has_voice = voice_audio_path and os.path.exists(voice_audio_path)
+        has_bgm = bgm_audio_path and os.path.exists(bgm_audio_path)
+
+        curr_audio_idx = n
+        voice_idx = None
+        bgm_idx = None
+
+        if has_voice:
+            audio_inputs += ["-i", voice_audio_path]
+            voice_idx = curr_audio_idx
+            curr_audio_idx += 1
+        if has_bgm:
+            audio_inputs += ["-stream_loop", "-1", "-i", bgm_audio_path]
+            bgm_idx = curr_audio_idx
+            curr_audio_idx += 1
+
+        if has_voice and has_bgm:
+            filter_parts.append(f"[{voice_idx}:a]volume=1.0[va]")
+            filter_parts.append(f"[{bgm_idx}:a]volume=0.18[ba]")
+            filter_parts.append(f"[va][ba]amix=inputs=2:duration=first[aout]")
+            audio_map = "[aout]"
+        elif has_voice:
+            filter_parts.append(f"[{voice_idx}:a]volume=1.0[aout]")
+            audio_map = "[aout]"
+        elif has_bgm:
+            filter_parts.append(f"[{bgm_idx}:a]volume=0.32[aout]")
+            audio_map = "[aout]"
+        else:
+            audio_inputs += ["-f", "lavfi", "-i", "anullsrc=channel_layout=stereo:sample_rate=44100"]
+            audio_map = f"{n}:a"
 
         filter_complex = ";".join(filter_parts)
 
         cmd = [
             "ffmpeg", "-y",
-        ] + inputs + [
-            "-f", "lavfi", "-i", f"anullsrc=channel_layout=stereo:sample_rate=44100",
+        ] + inputs + audio_inputs + [
             "-filter_complex", filter_complex,
             "-map", "[vout]",
-            "-map", f"{n}:a",
+            "-map", audio_map,
             "-c:v", "libx264",
             "-profile:v", "high",
             "-level", "4.1",
@@ -412,7 +480,6 @@ class FFmpegVideoCreator:
 
         result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
         if result.returncode != 0:
-            # ถ้า xfade ล้มเหลว ลอง fallback แบบ concat ธรรมดา
             logger.warning("xfade ล้มเหลว — ลอง concat fallback")
             self._build_video_concat_fallback(image_paths, content, output_path)
 
