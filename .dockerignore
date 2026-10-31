@@ -1,0 +1,17 @@
+.git
+.github
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv
+env/
+venv/
+output/*.mp4
+output/*.jpg
+output/*.json
+output/*.log
+inputs/web_uploads/*
+.DS_Store
+Thumbs.db
