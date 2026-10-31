@@ -42,6 +42,7 @@ from src.video_creator import FFmpegVideoCreator
 from src.trend_researcher import VERIFIED_PRODUCT_CATALOG
 from src.tts_generator import generate_voiceover
 from src.discord_sender import DiscordSender
+from src.catalog_manager import CatalogManager
 
 OUTPUT_DIR = BASE_DIR / "output"
 ASSETS_DIR = BASE_DIR / "assets"
@@ -67,25 +68,86 @@ templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 # Instances
 script_generator = GeminiContentGenerator()
 video_creator = FFmpegVideoCreator()
+catalog_mgr = CatalogManager()
 
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """หน้าแรกของเว็บ Shopee Clip Maker"""
+    all_products = catalog_mgr.get_all_products(source="all")
     return templates.TemplateResponse(
         request=request,
         name="index.html",
-        context={"catalog": VERIFIED_PRODUCT_CATALOG}
+        context={"catalog": all_products}
     )
 
 
 @app.get("/api/catalog")
-async def get_catalog(category: Optional[str] = None):
-    """ดึงรายการสินค้าแนะนำจาก Verified Catalog"""
-    items = VERIFIED_PRODUCT_CATALOG
-    if category and category != "all":
-        items = [p for p in items if p.get("category") == category]
+async def get_catalog(
+    category: Optional[str] = None,
+    query: Optional[str] = None,
+    min_commission: int = 0,
+    source: str = "all",
+):
+    """ดึงรายการสินค้าแนะนำจาก High Commission Database พร้อมค้นหาและกรอง"""
+    items = catalog_mgr.get_all_products(
+        category=category,
+        query=query,
+        min_commission=min_commission,
+        source=source,
+    )
     return {"success": True, "count": len(items), "products": items}
+
+
+@app.get("/api/my-products")
+async def get_my_products():
+    """ดึงรายการสินค้าส่วนตัวของผู้ใช้ (My Products)"""
+    items = catalog_mgr.get_all_products(source="my_products")
+    return {"success": True, "count": len(items), "products": items}
+
+
+@app.post("/api/my-products")
+async def add_my_product(data: dict):
+    """บันทึกสินค้าเข้าหมวด 'สินค้าของฉัน'"""
+    name = data.get("name", "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="กรุณาระบุชื่อสินค้า")
+    saved = catalog_mgr.add_my_product(data)
+    return {"success": True, "message": "บันทึกสินค้าเรียบร้อยแล้ว", "product": saved}
+
+
+@app.delete("/api/my-products/{product_id}")
+async def delete_my_product(product_id: str):
+    """ลบสินค้าออกจากหมวด 'สินค้าของฉัน'"""
+    ok = catalog_mgr.delete_my_product(product_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
+    return {"success": True, "message": "ลบสินค้าเรียบร้อยแล้ว"}
+
+
+@app.post("/api/catalog/import")
+async def import_csv(
+    file: Optional[UploadFile] = File(None),
+    csv_text: Optional[str] = Form(None),
+):
+    """นำเข้าสินค้าจำนวนมากจากไฟล์ CSV หรือข้อความ CSV"""
+    content = ""
+    if file:
+        file_bytes = await file.read()
+        content = file_bytes.decode("utf-8", errors="replace")
+    elif csv_text:
+        content = csv_text
+
+    if not content or not content.strip():
+        raise HTTPException(status_code=400, detail="ไม่พบข้อมูล CSV สำหรับนำเข้า")
+
+    imported = catalog_mgr.import_from_csv(content)
+    return {
+        "success": True,
+        "count": len(imported),
+        "message": f"นำเข้าสินค้าสำเร็จ {len(imported)} รายการ",
+        "products": imported
+    }
 
 
 @app.post("/api/parse-shopee-url")
@@ -149,7 +211,7 @@ async def generate_script(data: dict):
     tone = data.get("tone", "friend")
 
     if product_id:
-        item = next((p for p in VERIFIED_PRODUCT_CATALOG if p["id"] == product_id), None)
+        item = catalog_mgr.get_product_by_id(product_id)
         if not item:
             raise HTTPException(status_code=404, detail="ไม่พบสินค้าในระบบ")
         name = item["name"]
@@ -205,7 +267,7 @@ async def generate_catalog(data: dict):
     custom_body = data.get("custom_body")
     custom_cta = data.get("custom_cta")
 
-    item = next((p for p in VERIFIED_PRODUCT_CATALOG if p["id"] == product_id), None)
+    item = catalog_mgr.get_product_by_id(product_id)
     if not item:
         raise HTTPException(status_code=404, detail="ไม่พบสินค้าในระบบ")
 
@@ -261,7 +323,7 @@ async def batch_generate(data: dict):
     logger.info(f"⚡ เริ่มต้นการสร้าง Batch คลิปจำนวน {len(product_ids)} รายการ...")
 
     for pid in product_ids:
-        item = next((p for p in VERIFIED_PRODUCT_CATALOG if p["id"] == pid), None)
+        item = catalog_mgr.get_product_by_id(pid)
         if not item:
             continue
         custom_link = affiliate_url if affiliate_url else item["affiliate_link"]

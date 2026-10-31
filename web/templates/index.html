@@ -58,16 +58,16 @@
                 <div>
                     <h1 class="text-xl font-bold tracking-tight flex items-center gap-2">
                         Shopee Clip Maker AI
-                        <span class="text-xs font-semibold bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full uppercase tracking-wider">PRO V2</span>
+                        <span class="text-xs font-semibold bg-amber-400 text-slate-900 px-2 py-0.5 rounded-full uppercase tracking-wider">DATABASE V3</span>
                     </h1>
-                    <p class="text-xs text-white/80">ระบบตัดต่อคลิปป้ายยา • เสียงพากย์ AI • เพลง BGM • สร้างแบบ Batch</p>
+                    <p class="text-xs text-white/80">คลังสินค้าค่าคอมสูง • นำเข้า Excel/CSV • บันทึกสินค้าของฉัน • สร้างคลิป Batch</p>
                 </div>
             </div>
-            <div class="hidden sm:flex items-center space-x-3 text-xs">
-                <div class="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-lg border border-white/10">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Edge-TTS Thai Voice + FFmpeg 1080p</span>
-                </div>
+            <div class="flex items-center space-x-2 text-xs">
+                <button onclick="openImportModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
+                    <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
+                    <span>นำเข้า CSV / Excel</span>
+                </button>
             </div>
         </div>
     </header>
@@ -79,15 +79,15 @@
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="space-y-1">
                 <div class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                    ปลอดภัย 100% ตามกฎ Shopee Video AI (Safe Zone ตะกร้าส้ม + ไม่ Overclaim)
+                    <i data-lucide="badge-percent" class="w-3.5 h-3.5 text-emerald-600"></i>
+                    คลังสินค้าเน้น "ได้ค่าคอมจริง" (Extra Commission 20% - 35% จาก Shopee Mall & ร้านแนะนำ)
                 </div>
-                <h2 class="text-lg font-bold text-slate-900">สร้างคลิปป้ายยาสั้น 10 วิ พร้อมเสียงพากย์และเพลงในไม่กี่วินาที</h2>
+                <h2 class="text-lg font-bold text-slate-900">ค้นหาสินค้าค่าคอมสูง วางลิงก์ Shopee หรือสร้างคลิปหลายตัวพร้อมกัน</h2>
                 <p class="text-xs text-slate-500">
-                    เลือกสินค้าจากแคตตาล็อก หรือวางลิงก์ Shopee เพื่อดึงข้อมูลอัตโนมัติ แล้วเลือกสไตล์ที่ต้องการได้เลย
+                    ภาพสินค้าจริงตรงรุ่น 100% พร้อมบทพูดและเสียงพากย์ AI ภาษาไทย ปักตะกร้าส้มในแอป Shopee ได้ค่าคอมทันที
                 </p>
             </div>
-            <div class="flex items-center gap-3 shrink-0">
+            <div class="flex items-center gap-2 shrink-0">
                 <button onclick="toggleBatchMode()" id="batch-toggle-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:border-shopee-500 hover:text-shopee-600 transition flex items-center gap-1.5 bg-slate-50">
                     <i data-lucide="layers" class="w-4 h-4 text-shopee-500"></i>
                     <span id="batch-toggle-text">เปิดโหมดเลือกหลายคลิป (Batch)</span>
@@ -100,71 +100,75 @@
             <div class="flex border-b border-slate-200 gap-4">
                 <button id="tab-catalog-btn" onclick="switchTab('catalog')" class="pb-3 text-sm font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-2 transition-colors">
                     <i data-lucide="sparkles" class="w-4 h-4"></i>
-                    1. เลือกสินค้าขายดีติดเทรนด์ (ภาพตรงรุ่น 100%)
+                    1. คลังสินค้าขายดีค่าคอมสูง (Catalog Database)
                 </button>
                 <button id="tab-custom-btn" onclick="switchTab('custom')" class="pb-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2 transition-colors">
-                    <i data-lucide="link" class="w-4 h-4"></i>
-                    2. วางลิงก์ Shopee / ใส่สินค้าเอง
+                    <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                    2. วางลิงก์ Shopee / เพิ่มเข้า "สินค้าของฉัน"
                 </button>
             </div>
 
-            <!-- TAB 1: CATALOG -->
+            <!-- TAB 1: CATALOG DATABASE -->
             <div id="tab-catalog" class="space-y-4">
-                <!-- Category Filter Pills & Batch Info -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-                        <span class="text-slate-400 font-medium whitespace-nowrap">หมวดหมู่:</span>
-                        <button onclick="filterCatalog('all')" class="cat-pill active px-3 py-1.5 rounded-full font-medium bg-slate-900 text-white transition">ทั้งหมด</button>
-                        <button onclick="filterCatalog('beauty')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">💄 บิวตี้</button>
-                        <button onclick="filterCatalog('home')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🏠 เครื่องใช้</button>
-                        <button onclick="filterCatalog('electronics')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🎧 ไอที</button>
-                        <button onclick="filterCatalog('fashion')" class="cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">👜 แฟชั่น</button>
+                
+                <!-- Search, Source & Filter Bar -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                        <!-- Search Box -->
+                        <div class="sm:col-span-6 relative">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3.5 top-3"></i>
+                            <input 
+                                type="text" 
+                                id="catalog-search-input" 
+                                placeholder="ค้นหาชื่อสินค้า, แบรนด์ เช่น MizuMi, Tyeso, หูฟัง..." 
+                                oninput="debounceFilter()" 
+                                class="w-full text-xs pl-10 pr-3.5 py-2.5 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-shopee-500"
+                            >
+                        </div>
+
+                        <!-- Commission Filter -->
+                        <div class="sm:col-span-3">
+                            <select id="catalog-comm-filter" onchange="applyFilters()" class="w-full text-xs border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                                <option value="0">💰 ทุกเรตค่าคอม</option>
+                                <option value="20">🔥 ค่าคอม 20% ขึ้นไป</option>
+                                <option value="25">⭐ ค่าคอม 25% ขึ้นไป</option>
+                                <option value="30">💎 ค่าคอม 30% ขึ้นไป (สูงสุด)</option>
+                            </select>
+                        </div>
+
+                        <!-- Source Filter (All vs My Products) -->
+                        <div class="sm:col-span-3 flex gap-1">
+                            <button onclick="setSource('all')" id="source-all-btn" class="flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white transition">คลังทั้งหมด</button>
+                            <button onclick="setSource('my_products')" id="source-my-btn" class="flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">📦 สินค้าของฉัน</button>
+                        </div>
                     </div>
 
-                    <div id="batch-action-bar" class="hidden flex items-center gap-2 text-xs bg-shopee-50 border border-shopee-200 p-2 rounded-xl">
-                        <span class="font-medium text-shopee-700">เลือกแล้ว <strong id="batch-count" class="text-shopee-600">0</strong> รายการ</span>
-                        <button onclick="selectAllVisible()" class="text-[11px] underline text-shopee-600 hover:text-shopee-700">เลือกทั้งหมด</button>
-                        <button onclick="clearBatch()" class="text-[11px] underline text-slate-500 hover:text-slate-700">ล้าง</button>
+                    <!-- Category Pills & Batch Action Bar -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1 border-t border-slate-100">
+                        <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                            <span class="text-slate-400 font-medium whitespace-nowrap">หมวดหมู่:</span>
+                            <button onclick="filterCatalog('all')" class="cat-pill active px-3 py-1 rounded-full font-medium bg-slate-900 text-white transition">ทั้งหมด</button>
+                            <button onclick="filterCatalog('beauty')" class="cat-pill px-3 py-1 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">💄 บิวตี้</button>
+                            <button onclick="filterCatalog('home')" class="cat-pill px-3 py-1 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🏠 เครื่องใช้ในบ้าน</button>
+                            <button onclick="filterCatalog('electronics')" class="cat-pill px-3 py-1 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">🎧 อุปกรณ์ไอที</button>
+                            <button onclick="filterCatalog('fashion')" class="cat-pill px-3 py-1 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">👜 แฟชั่น</button>
+                        </div>
+
+                        <div id="batch-action-bar" class="hidden flex items-center gap-2 text-xs bg-shopee-50 border border-shopee-200 px-3 py-1.5 rounded-xl shrink-0">
+                            <span class="font-medium text-shopee-700">เลือกแล้ว <strong id="batch-count" class="text-shopee-600">0</strong> รายการ</span>
+                            <button onclick="selectAllVisible()" class="text-[11px] underline text-shopee-600 hover:text-shopee-700">เลือกทั้งหมด</button>
+                            <button onclick="clearBatch()" class="text-[11px] underline text-slate-500 hover:text-slate-700">ล้าง</button>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Product Grid -->
+                <!-- Product Grid (Dynamic Render) -->
                 <div id="product-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {% for item in catalog %}
-                    <div 
-                        class="catalog-card bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all p-3 space-y-2 relative"
-                        data-id="{{ item.id }}"
-                        data-category="{{ item.category }}"
-                        onclick="handleCardClick('{{ item.id }}')"
-                    >
-                        <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative">
-                            <img src="/{{ item.images[0] }}" alt="{{ item.name }}" class="w-full h-full object-cover">
-                            <span class="absolute top-1.5 left-1.5 text-[10px] font-semibold bg-black/60 text-white backdrop-blur-xs px-1.5 py-0.5 rounded">
-                                {{ item.brand }}
-                            </span>
-                            <!-- Batch Checkbox -->
-                            <div class="batch-checkbox hidden absolute top-1.5 right-1.5">
-                                <input type="checkbox" id="check-{{ item.id }}" class="w-4 h-4 text-shopee-600 rounded focus:ring-shopee-500 cursor-pointer pointer-events-none">
-                            </div>
-                            <!-- Single Select Check Badge -->
-                            <div class="single-check hidden absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
-                                <i data-lucide="check" class="w-4 h-4"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight">{{ item.name }}</p>
-                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-1">{{ item.highlight }}</p>
-                        </div>
-                        <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100">
-                            <span class="text-amber-500 flex items-center gap-0.5 font-medium">⭐ {{ item.rating }}</span>
-                            <span>ขาย {{ "{:,}".format(item.sold_count) }}+</span>
-                        </div>
-                    </div>
-                    {% endfor %}
+                    <p class="text-xs text-slate-400 col-span-full py-8 text-center">กำลังโหลดคลังสินค้า...</p>
                 </div>
             </div>
 
-            <!-- TAB 2: CUSTOM PRODUCT & SMART LINK EXTRACTOR -->
+            <!-- TAB 2: SMART EXTRACTOR & SAVE TO MY PRODUCTS -->
             <div id="tab-custom" class="hidden bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
                 <!-- Smart Link Extractor Bar -->
                 <div class="bg-gradient-to-r from-orange-50 to-amber-50 p-4 rounded-xl border border-orange-200 space-y-2">
@@ -173,7 +177,7 @@
                         ดึงข้อมูลจากลิงก์ Shopee อัตโนมัติ (Smart Link Extractor)
                     </label>
                     <div class="flex gap-2">
-                        <input type="url" id="shopee-url-extract" placeholder="วางลิงก์สินค้า Shopee เช่น https://shopee.co.th/..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
+                        <input type="url" id="shopee-url-extract" placeholder="วางลิงก์สินค้า Shopee เช่น https://shopee.co.th/... หรือ https://s.shopee.co.th/..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
                         <button onclick="extractShopeeUrl()" class="px-4 py-2 bg-shopee-500 hover:bg-shopee-600 text-white text-xs font-bold rounded-xl transition flex items-center gap-1.5 shrink-0">
                             <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
                             <span>ดึงข้อมูล</span>
@@ -193,32 +197,50 @@
                                 <label class="block text-xs font-semibold text-slate-700 mb-1">หมวดหมู่</label>
                                 <select id="custom-category" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500 bg-white">
                                     <option value="beauty">สกินแคร์ / บิวตี้</option>
-                                    <option value="home">ของใช้ในบ้าน / แก้วน้ำ</option>
-                                    <option value="electronics">ไอที / หูฟัง</option>
+                                    <option value="home">ของใช้ในบ้าน / เครื่องครัว</option>
+                                    <option value="electronics">อุปกรณ์ไอที / แก็ดเจ็ต</option>
                                     <option value="fashion">แฟชั่น / กระเป๋า</option>
                                     <option value="general">ทั่วไป</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1">จุดเด่นสำคัญ</label>
-                                <input type="text" id="custom-highlight" placeholder="เช่น คุมมัน ไม่เหนอะหนะ" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1">เรตค่าคอมมิชชันโดยประมาณ</label>
+                                <input type="text" id="custom-comm-rate" placeholder="เช่น 25% หรือ 30%" value="25%" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
                             </div>
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">ลิงก์นายหน้า Shopee ของคุณ (Affiliate Link)</label>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">จุดเด่นสำคัญ</label>
+                            <input type="text" id="custom-highlight" placeholder="เช่น คุมมัน ไม่เหนอะหนะ บำรุงผิวล้ำลึก" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Shopee Affiliate Link ส่วนตัวของคุณ</label>
                             <input type="url" id="custom-affiliate-link" placeholder="https://s.shopee.co.th/xxxx" class="w-full text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-shopee-500">
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดรูปสินค้า (1 - 3 รูป) *</label>
-                        <div class="border-2 border-dashed border-slate-300 hover:border-shopee-500 rounded-2xl p-5 text-center cursor-pointer transition bg-slate-50 flex flex-col items-center justify-center min-h-[160px]" onclick="document.getElementById('custom-images').click()">
-                            <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mb-2"></i>
-                            <span class="text-xs text-slate-600 font-medium">คลิกเพื่อเลือกไฟล์รูปสินค้า (.jpg, .png)</span>
-                            <span class="text-[11px] text-slate-400 mt-1">แนะนำรูปชัดเจน สัดส่วน 1:1 หรือแนวตั้ง</span>
-                            <input type="file" id="custom-images" multiple accept="image/*" class="hidden" onchange="previewCustomImages(this)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">อัปโหลดรูปสินค้า (1 - 3 รูป) *</label>
+                            <div class="border-2 border-dashed border-slate-300 hover:border-shopee-500 rounded-2xl p-5 text-center cursor-pointer transition bg-slate-50 flex flex-col items-center justify-center min-h-[140px]" onclick="document.getElementById('custom-images').click()">
+                                <i data-lucide="image-plus" class="w-8 h-8 text-slate-400 mb-2"></i>
+                                <span class="text-xs text-slate-600 font-medium">คลิกเพื่อเลือกไฟล์รูปสินค้า (.jpg, .png)</span>
+                                <span class="text-[11px] text-slate-400 mt-1">แนะนำรูปชัดเจน สัดส่วน 1:1 หรือแนวตั้ง</span>
+                                <input type="file" id="custom-images" multiple accept="image/*" class="hidden" onchange="previewCustomImages(this)">
+                            </div>
+                            <div id="image-preview-container" class="flex gap-2 mt-2 overflow-x-auto"></div>
                         </div>
-                        <div id="image-preview-container" class="flex gap-2 mt-3 overflow-x-auto"></div>
+
+                        <!-- Save to My Products Button -->
+                        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-bold text-emerald-900">บันทึกสินค้านี้ไว้ในระบบ</p>
+                                <p class="text-[11px] text-emerald-700">คราวหน้าไม่ต้องกรอกใหม่ สามารถเลือกสร้างคลิปได้ตลอดเวลา</p>
+                            </div>
+                            <button onclick="saveToMyProducts()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition shrink-0 flex items-center gap-1 shadow-xs">
+                                <i data-lucide="bookmark-plus" class="w-3.5 h-3.5"></i>
+                                <span>บันทึกสินค้า</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -437,7 +459,7 @@
                         </a>
                     </div>
 
-                    <!-- Instant Forward to Discord / Telegram -->
+                    <!-- Instant Forward to Discord -->
                     <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3.5 space-y-2">
                         <label class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
                             <i data-lucide="send" class="w-3.5 h-3.5 text-indigo-600"></i>
@@ -496,9 +518,51 @@
 
     </main>
 
+    <!-- Modal: Bulk CSV / Excel Import -->
+    <div id="import-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+                    นำเข้าสินค้าจำนวนมาก (CSV / Excel)
+                </h3>
+                <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">เลือกไฟล์ .csv จากคอมพิวเตอร์</label>
+                    <input type="file" id="csv-file-input" accept=".csv" class="w-full text-xs border border-slate-300 rounded-xl p-2 bg-slate-50">
+                </div>
+
+                <div class="text-center text-slate-400 font-medium">— หรือวางข้อมูล CSV ตรงนี้ —</div>
+
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="font-semibold text-slate-700">วางข้อความ CSV (รองรับหัวตาราง)</label>
+                        <button onclick="fillSampleCsv()" class="text-[11px] text-shopee-600 underline">ใส่ข้อมูลตัวอย่าง</button>
+                    </div>
+                    <textarea id="csv-text-input" rows="5" placeholder="name,category,commission_rate,affiliate_link,highlight&#10;กันแดด MizuMi,beauty,25%,https://s.shopee.co.th/xxx,เบาบางซึมไว&#10;แก้ว Tyeso,home,30%,https://s.shopee.co.th/yyy,เก็บเย็นข้ามวัน" class="w-full font-mono text-[11px] border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500"></textarea>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-[11px] text-slate-500 space-y-1">
+                    <p class="font-semibold text-slate-700">รูปแบบคอลัมน์ที่รองรับ:</p>
+                    <p class="font-mono text-[10px] text-slate-600">name, category, commission_rate, affiliate_link, highlight, images</p>
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeImportModal()" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50">ยกเลิก</button>
+                <button onclick="submitCsvImport()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-xs font-semibold text-white shadow-xs">นำเข้าข้อมูลทันที</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        <p>Shopee Clip Maker AI (Pro V2) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
+        <p>Shopee Clip Maker AI (Database V3) — พัฒนาเพื่อการสร้างวิดีโอนายหน้า Shopee Affiliate อย่างถูกต้อง ปลอดภัย และสะดวกรวดเร็ว</p>
     </footer>
 
     <!-- Toast Notification -->
@@ -512,24 +576,142 @@
         lucide.createIcons();
 
         let currentTab = 'catalog';
+        let currentSource = 'all';
+        let currentCategory = 'all';
+        let currentSearchQuery = '';
+        let currentMinCommission = 0;
+
         let isBatchMode = false;
         let selectedProductId = 'mizumi_uv';
         let batchSelectedIds = new Set();
         let lastCreatedVideoFilename = '';
+        let searchTimeout = null;
 
         window.addEventListener('DOMContentLoaded', () => {
-            selectCatalogItem('mizumi_uv');
+            loadCatalogProducts();
             setupTemplateSelection();
             setupVoiceCardSelection();
             loadHistory();
 
-            // Load saved discord webhook from localStorage
             const savedWebhook = localStorage.getItem('shopee_discord_webhook');
             if (savedWebhook) {
                 const input = document.getElementById('discord-webhook-input');
                 if (input) input.value = savedWebhook;
             }
         });
+
+        async function loadCatalogProducts() {
+            const grid = document.getElementById('product-grid');
+            try {
+                let url = `/api/catalog?category=${currentCategory}&source=${currentSource}&min_commission=${currentMinCommission}`;
+                if (currentSearchQuery) {
+                    url += `&query=${encodeURIComponent(currentSearchQuery)}`;
+                }
+                const res = await fetch(url);
+                const data = await res.json();
+
+                grid.innerHTML = '';
+                if (!data.products || data.products.length === 0) {
+                    grid.innerHTML = '<p class="text-xs text-slate-400 col-span-full py-8 text-center">ไม่พบสินค้าตามเงื่อนไขที่ค้นหา</p>';
+                    return;
+                }
+
+                data.products.forEach(item => {
+                    const isSelected = selectedProductId === item.id;
+                    const isBatchChecked = batchSelectedIds.has(item.id);
+                    const commBadge = item.commission_badge || `${item.commission_rate || '25%'} ค่าคอม`;
+                    const shopType = item.shop_type || 'ร้านแนะนำ';
+                    const isCustom = item.is_custom || false;
+
+                    const card = document.createElement('div');
+                    card.className = `catalog-card bg-white rounded-xl border border-slate-200 overflow-hidden cursor-pointer hover:shadow-md transition-all p-3 space-y-2 relative ${isSelected && !isBatchMode ? 'active' : ''} ${isBatchChecked && isBatchMode ? 'active' : ''}`;
+                    card.setAttribute('data-id', item.id);
+                    card.setAttribute('data-category', item.category);
+                    card.onclick = () => handleCardClick(item.id);
+
+                    const imgPath = (item.images && item.images.length > 0) ? (item.images[0].startsWith('http') || item.images[0].startsWith('/') ? item.images[0] : `/${item.images[0]}`) : '/assets/products/mizumi_uv/img1.jpg';
+
+                    card.innerHTML = `
+                        <div class="aspect-square bg-slate-100 rounded-lg overflow-hidden relative">
+                            <img src="${imgPath}" alt="${item.name}" class="w-full h-full object-cover">
+                            
+                            <span class="absolute top-1.5 left-1.5 text-[9px] font-bold bg-emerald-600 text-white backdrop-blur-xs px-1.5 py-0.5 rounded shadow-xs">
+                                ${commBadge}
+                            </span>
+
+                            ${isCustom ? `
+                            <button onclick="event.stopPropagation(); deleteMyProduct('${item.id}')" title="ลบออกจากสินค้าของฉัน" class="absolute bottom-1.5 right-1.5 w-6 h-6 bg-red-500/80 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs shadow-xs">
+                                ✕
+                            </button>
+                            ` : ''}
+
+                            <!-- Batch Checkbox -->
+                            <div class="batch-checkbox ${isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5">
+                                <input type="checkbox" id="check-${item.id}" ${isBatchChecked ? 'checked' : ''} class="w-4 h-4 text-shopee-600 rounded focus:ring-shopee-500 cursor-pointer pointer-events-none">
+                            </div>
+                            <!-- Single Select Check Badge -->
+                            <div class="single-check ${isSelected && !isBatchMode ? '' : 'hidden'} absolute top-1.5 right-1.5 bg-shopee-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-md">
+                                <i data-lucide="check" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-slate-400 font-medium">${item.brand || 'Shopee'} • ${shopType}</span>
+                            <p class="text-xs font-semibold text-slate-800 line-clamp-2 leading-tight mt-0.5">${item.name}</p>
+                            <p class="text-[11px] text-slate-500 line-clamp-1 mt-1">${item.highlight || ''}</p>
+                        </div>
+                        <div class="pt-1 flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100">
+                            <span class="text-amber-500 flex items-center gap-0.5 font-medium">⭐ ${item.rating || 4.9}</span>
+                            <span>ขายแล้ว ${(item.sold_count || 10000).toLocaleString()}+</span>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                if (!selectedProductId && data.products.length > 0) {
+                    selectCatalogItem(data.products[0].id);
+                }
+                lucide.createIcons();
+
+            } catch (e) {
+                grid.innerHTML = '<p class="text-xs text-red-500 col-span-full py-8 text-center">โหลดสินค้าล้มเหลว กรุณารีเฟรช</p>';
+            }
+        }
+
+        function setSource(src) {
+            currentSource = src;
+            const allBtn = document.getElementById('source-all-btn');
+            const myBtn = document.getElementById('source-my-btn');
+            if (src === 'all') {
+                allBtn.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white transition";
+                myBtn.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition";
+            } else {
+                myBtn.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white transition";
+                allBtn.className = "flex-1 py-2 text-xs font-semibold rounded-xl bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition";
+            }
+            loadCatalogProducts();
+        }
+
+        function debounceFilter() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                currentSearchQuery = document.getElementById('catalog-search-input').value.trim();
+                loadCatalogProducts();
+            }, 300);
+        }
+
+        function applyFilters() {
+            currentMinCommission = parseInt(document.getElementById('catalog-comm-filter').value) || 0;
+            loadCatalogProducts();
+        }
+
+        function filterCatalog(category) {
+            currentCategory = category;
+            document.querySelectorAll('.cat-pill').forEach(btn => {
+                btn.className = "cat-pill px-3 py-1 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition";
+            });
+            event.target.className = "cat-pill active px-3 py-1 rounded-full font-medium bg-slate-900 text-white transition";
+            loadCatalogProducts();
+        }
 
         function switchTab(tab) {
             currentTab = tab;
@@ -596,10 +778,12 @@
             document.querySelectorAll('.catalog-card').forEach(card => {
                 if (card.getAttribute('data-id') === id) {
                     card.classList.add('active');
-                    card.querySelector('.single-check').classList.remove('hidden');
+                    const sc = card.querySelector('.single-check');
+                    if (sc) sc.classList.remove('hidden');
                 } else {
                     card.classList.remove('active');
-                    card.querySelector('.single-check').classList.add('hidden');
+                    const sc = card.querySelector('.single-check');
+                    if (sc) sc.classList.add('hidden');
                 }
             });
             lucide.createIcons();
@@ -627,7 +811,7 @@
         }
 
         function selectAllVisible() {
-            document.querySelectorAll('.catalog-card:not(.hidden)').forEach(card => {
+            document.querySelectorAll('.catalog-card').forEach(card => {
                 batchSelectedIds.add(card.getAttribute('data-id'));
             });
             updateBatchUI();
@@ -636,22 +820,6 @@
         function clearBatch() {
             batchSelectedIds.clear();
             updateBatchUI();
-        }
-
-        function filterCatalog(category) {
-            document.querySelectorAll('.cat-pill').forEach(btn => {
-                btn.className = "cat-pill px-3 py-1.5 rounded-full font-medium bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition";
-            });
-            event.target.className = "cat-pill active px-3 py-1.5 rounded-full font-medium bg-slate-900 text-white transition";
-
-            document.querySelectorAll('.catalog-card').forEach(card => {
-                const cardCat = card.getAttribute('data-category');
-                if (category === 'all' || cardCat === category) {
-                    card.classList.remove('hidden');
-                } else {
-                    card.classList.add('hidden');
-                }
-            });
         }
 
         function setupTemplateSelection() {
@@ -747,6 +915,107 @@
             }
         }
 
+        async function saveToMyProducts() {
+            const name = document.getElementById('custom-name').value.trim();
+            const category = document.getElementById('custom-category').value;
+            const commRate = document.getElementById('custom-comm-rate').value.trim() || '25%';
+            const highlight = document.getElementById('custom-highlight').value.trim();
+            const affiliateLink = document.getElementById('custom-affiliate-link').value.trim();
+
+            if (!name) {
+                alert('กรุณากรอกชื่อสินค้า');
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/my-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        category: category,
+                        commission_rate: commRate,
+                        highlight: highlight || 'สินค้าแนะนำคุณภาพดี',
+                        affiliate_link: affiliateLink || `https://shopee.co.th/search?keyword=${name}`,
+                        images: ['assets/products/mizumi_uv/img1.jpg']
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('บันทึกเข้า "สินค้าของฉัน" เรียบร้อยแล้ว! 🎉');
+                    switchTab('catalog');
+                    setSource('my_products');
+                }
+            } catch (e) {
+                alert('บันทึกไม่สำเร็จ');
+            }
+        }
+
+        async function deleteMyProduct(id) {
+            if (!confirm('ต้องการลบสินค้านี้ออกจาก "สินค้าของฉัน" หรือไม่?')) return;
+            try {
+                const res = await fetch(`/api/my-products/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('ลบสินค้าเรียบร้อยแล้ว');
+                    loadCatalogProducts();
+                }
+            } catch (e) {
+                alert('ลบไม่สำเร็จ');
+            }
+        }
+
+        function openImportModal() {
+            document.getElementById('import-modal').classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.add('hidden');
+        }
+
+        function fillSampleCsv() {
+            document.getElementById('csv-text-input').value = `name,category,commission_rate,affiliate_link,highlight
+กันแดด La Roche-Posay,beauty,25%,https://s.shopee.co.th/sample1,ลดสิว คุมมัน
+พัดลมพกพา Jisulife Life 7,home,25%,https://s.shopee.co.th/sample2,ลมแรง แบตอึดทั้งวัน
+หูฟังบลูทูธ Baseus Bowie,electronics,22%,https://s.shopee.co.th/sample3,เบสแน่น ดีเลย์ต่ำ
+กระเป๋าสะพายข้างมินิมอล,fashion,30%,https://s.shopee.co.th/sample4,ผ้าไนลอนกันน้ำ สไตล์เกาหลี`;
+        }
+
+        async function submitCsvImport() {
+            const fileInput = document.getElementById('csv-file-input');
+            const textInput = document.getElementById('csv-text-input').value.trim();
+
+            if (!fileInput.files[0] && !textInput) {
+                alert('กรุณาเลือกไฟล์ .csv หรือวางข้อความ CSV');
+                return;
+            }
+
+            const formData = new FormData();
+            if (fileInput.files[0]) {
+                formData.append('file', fileInput.files[0]);
+            } else {
+                formData.append('csv_text', textInput);
+            }
+
+            showToast('กำลังนำเข้าข้อมูลสินค้า...');
+            try {
+                const res = await fetch('/api/catalog/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message);
+                    closeImportModal();
+                    setSource('my_products');
+                } else {
+                    alert('นำเข้าไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('นำเข้าล้มเหลว');
+            }
+        }
+
         function previewCustomImages(input) {
             const container = document.getElementById('image-preview-container');
             container.innerHTML = '';
@@ -775,7 +1044,6 @@
             const resultSection = document.getElementById('result-section');
             const batchResultSection = document.getElementById('batch-result-section');
 
-            // Template, Voice, BGM
             const templateEl = document.querySelector('input[name="video_template"]:checked');
             const template = templateEl ? templateEl.value : 'clean';
             const enableVoice = document.getElementById('voice-enable-toggle').checked;
@@ -783,7 +1051,6 @@
             const voiceType = voiceTypeEl ? voiceTypeEl.value : 'female';
             const bgmTrack = document.getElementById('bgm-select').value;
 
-            // Custom Script fields (if modified)
             const customHook = document.getElementById('edit-hook').value.trim();
             const customBody = document.getElementById('edit-body').value.trim();
             const customCta = document.getElementById('edit-cta').value.trim();

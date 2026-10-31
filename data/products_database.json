@@ -1,0 +1,515 @@
+[
+  {
+    "id": "mizumi_uv",
+    "name": "กันแดด MizuMi UV Water Serum SPF50+ PA++++ สูตรน้ำผิวแพ้ง่าย",
+    "brand": "MizuMi",
+    "category": "beauty",
+    "commission_rate": "25%",
+    "commission_badge": "Extra Commission 25%",
+    "price_thb": 445,
+    "shop_type": "Shopee Mall",
+    "highlight": "กันแดดเนื้อน้ำ 100% Non-Chemical บางเบา ซึมไว ไม่เหนียวเหนอะหนะ อ่อนโยนต่อผิวเป็นสิว",
+    "images": [
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img2.jpg",
+      "assets/products/mizumi_uv/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=MizuMi+UV+Water+Serum",
+    "rating": 4.9,
+    "sold_count": 89000
+  },
+  {
+    "id": "drpong_28d",
+    "name": "เซรั่ม Dr.PONG 28D Whitening Drone ผิวใส รอยสิวจางไว",
+    "brand": "Dr.PONG",
+    "category": "beauty",
+    "commission_rate": "30%",
+    "commission_badge": "Extra Commission 30%",
+    "price_thb": 399,
+    "shop_type": "Shopee Mall",
+    "highlight": "เซรั่มเทคโนโลยีโดรนส่งสารบำรุงลึกถึงเซลล์ผิว ช่วยลดรอยดำ รอยแดงจากสิว ผิวแลดูกระจ่างใสขึ้น",
+    "images": [
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Dr.PONG+28D",
+    "rating": 4.9,
+    "sold_count": 55000
+  },
+  {
+    "id": "cerave_cleanser",
+    "name": "เจลล้างหน้า CeraVe Foaming Cleanser สำหรับผิวธรรมดา-ผิวมัน",
+    "brand": "CeraVe",
+    "category": "beauty",
+    "commission_rate": "20%",
+    "commission_badge": "Shopee Mall 20%",
+    "price_thb": 490,
+    "shop_type": "Shopee Mall",
+    "highlight": "เจลล้างหน้าผสมเซราไมด์ 3 ชนิดและไนอะซินาไมด์ ทำความสะอาดหมดจด ไม่ทำให้ผิวแห้งตึง ปลอบประโลมผิว",
+    "images": [
+      "assets/products/cerave_cleanser/img1.jpg",
+      "assets/products/cerave_cleanser/img2.jpg",
+      "assets/products/cerave_cleanser/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=CeraVe+Foaming+Cleanser",
+    "rating": 4.9,
+    "sold_count": 120000
+  },
+  {
+    "id": "banobagi_mask",
+    "name": "มาส์กคุณหมอ Banobagi Vita Genic Jelly Mask บำรุงผิวล้ำลึก",
+    "brand": "Banobagi",
+    "category": "beauty",
+    "commission_rate": "35%",
+    "commission_badge": "Extra Commission 35%",
+    "price_thb": 49,
+    "shop_type": "Shopee Mall",
+    "highlight": "มาส์กเจลลี่สูตรคิดค้นโดยทีมแพทย์เกาหลี ฟื้นฟูผิวแบบเร่งด่วน ให้ความชุ่มชื้นเข้มข้น ไม่เหนอะ",
+    "images": [
+      "assets/products/banobagi_mask/img1.jpg",
+      "assets/products/banobagi_mask/img2.jpg",
+      "assets/products/banobagi_mask/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Banobagi+Vita+Genic+Jelly+Mask",
+    "rating": 4.9,
+    "sold_count": 210000
+  },
+  {
+    "id": "skintific_moisturizer",
+    "name": "มอยส์เจอร์ไรเซอร์ SKINTIFIC 5X Ceramide Barrier Repair Gel",
+    "brand": "SKINTIFIC",
+    "category": "beauty",
+    "commission_rate": "30%",
+    "commission_badge": "Viral Best Seller 30%",
+    "price_thb": 329,
+    "shop_type": "Shopee Mall",
+    "highlight": "เจลมอยส์เจอร์ไรเซอร์กู้ผิวโทรม เสริมเกราะป้องกันผิว ล็อคความชุ่มชื้น คุมมัน ซึมไว",
+    "images": [
+      "assets/products/mizumi_uv/img2.jpg",
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=SKINTIFIC+5X+Ceramide",
+    "rating": 4.9,
+    "sold_count": 145000
+  },
+  {
+    "id": "anessa_sunscreen",
+    "name": "กันแดดสีทอง ANESSA Perfect UV Sunscreen Skincare Milk SPF50+",
+    "brand": "ANESSA",
+    "category": "beauty",
+    "commission_rate": "22%",
+    "commission_badge": "Shopee Mall 22%",
+    "price_thb": 850,
+    "shop_type": "Shopee Mall",
+    "highlight": "กันแดดเนื้อน้ำนมคุมมัน กันน้ำ กันเหงื่อ ยิ่งโดนความร้อนยิ่งปกป้อง ไม่เยิ้มระหว่างวัน",
+    "images": [
+      "assets/products/mizumi_uv/img3.jpg",
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img2.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=ANESSA+Perfect+UV",
+    "rating": 4.9,
+    "sold_count": 92000
+  },
+  {
+    "id": "tyeso_tumbler",
+    "name": "แก้วเก็บความเย็น Tyeso 900ml สแตนเลส 304 ของแท้ เก็บน้ำแข็งข้ามวัน",
+    "brand": "Tyeso",
+    "category": "home",
+    "commission_rate": "30%",
+    "commission_badge": "Top Commission 30%",
+    "price_thb": 239,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "แก้วสแตนเลส Food Grade สองชั้น เก็บความเย็นได้นานกว่า 18 ชั่วโมง ไม่มีไอน้ำเกาะรอบแก้ว มีหูหิ้วพกสะดวก",
+    "images": [
+      "assets/products/tyeso_tumbler/img1.jpg",
+      "assets/products/tyeso_tumbler/img2.jpg",
+      "assets/products/tyeso_tumbler/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=แก้ว+Tyeso+ของแท้",
+    "rating": 4.9,
+    "sold_count": 95000
+  },
+  {
+    "id": "jisulife_fan",
+    "name": "พัดลมพกพา JISULIFE Handheld Fan Life 7 ลมแรง แบตอึดทั้งวัน",
+    "brand": "JISULIFE",
+    "category": "home",
+    "commission_rate": "25%",
+    "commission_badge": "Shopee Mall 25%",
+    "price_thb": 499,
+    "shop_type": "Shopee Mall",
+    "highlight": "พัดลมมือถือดีไซน์มินิมอล ลมแรงระดับเทอร์โบ แบตเตอรี่อึดใช้งานได้ข้ามวัน มีหน้าจอดิจิทัลบอกเปอร์เซ็นต์แบต",
+    "images": [
+      "assets/products/jisulife_fan/img1.jpg",
+      "assets/products/jisulife_fan/img2.jpg",
+      "assets/products/jisulife_fan/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=พัดลมพกพา+JISULIFE",
+    "rating": 4.9,
+    "sold_count": 68000
+  },
+  {
+    "id": "deerma_mop",
+    "name": "ไม้ถูพื้นสเปรย์ฉีดน้ำ Deerma Spray Mop 2-in-1 หมุนได้ 360 องศา",
+    "brand": "Deerma",
+    "category": "home",
+    "commission_rate": "28%",
+    "commission_badge": "Top Pick 28%",
+    "price_thb": 299,
+    "shop_type": "Shopee Mall",
+    "highlight": "ไม้ถูพื้นพ่นละอองน้ำ ละอองกว้าง แห้งไว ไม่ทิ้งคราบน้ำ ผ้าม็อบไมโครไฟเบอร์ดักฝุ่นได้หมดจด",
+    "images": [
+      "assets/products/tyeso_tumbler/img2.jpg",
+      "assets/products/tyeso_tumbler/img1.jpg",
+      "assets/products/tyeso_tumbler/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Deerma+Spray+Mop",
+    "rating": 4.8,
+    "sold_count": 83000
+  },
+  {
+    "id": "gaabor_airfryer",
+    "name": "หม้อทอดไร้น้ำมัน Gaabor Air Fryer ขนาด 4 ลิตร ร้อนเร็วทั่วถึง",
+    "brand": "Gaabor",
+    "category": "home",
+    "commission_rate": "25%",
+    "commission_badge": "Shopee Mall 25%",
+    "price_thb": 790,
+    "shop_type": "Shopee Mall",
+    "highlight": "หม้อทอดไร้น้ำมันสไตล์มินิมอล ระบบหมุนเวียนลมร้อน 360 องศา อาหารกรอบอร่อยไม่ง้อน้ำมัน ล้างทำความสะอาดง่าย",
+    "images": [
+      "assets/products/tyeso_tumbler/img3.jpg",
+      "assets/products/tyeso_tumbler/img1.jpg",
+      "assets/products/tyeso_tumbler/img2.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Gaabor+Air+Fryer",
+    "rating": 4.8,
+    "sold_count": 52000
+  },
+  {
+    "id": "baseus_earbuds",
+    "name": "หูฟังบลูทูธไร้สาย Baseus Bowie WM02 TWS Bluetooth 5.3 เบสแน่น ตัดเสียงรบกวน",
+    "brand": "Baseus",
+    "category": "electronics",
+    "commission_rate": "22%",
+    "commission_badge": "Shopee Mall 22%",
+    "price_thb": 389,
+    "shop_type": "Shopee Mall",
+    "highlight": "หูฟังไร้สายไซส์มินิ น้ำหนักเบาใส่สบายไม่เจ็บหู บลูทูธ 5.3 ดีเลย์ต่ำ แบตอึดรวมเคสชาร์จ 25 ชั่วโมง",
+    "images": [
+      "assets/products/baseus_earbuds/img1.jpg",
+      "assets/products/baseus_earbuds/img2.jpg",
+      "assets/products/baseus_earbuds/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Baseus+Bowie+WM02",
+    "rating": 4.8,
+    "sold_count": 82000
+  },
+  {
+    "id": "eloop_e29",
+    "name": "พาวเวอร์แบงค์ Eloop E29 ความจุ 30000mAh ชาร์จเร็ว Quick Charge 3.0",
+    "brand": "Eloop",
+    "category": "electronics",
+    "commission_rate": "18%",
+    "commission_badge": "Shopee Mall 18%",
+    "price_thb": 689,
+    "shop_type": "Shopee Mall",
+    "highlight": "แบตสำรองความจุสูง 30000mAh ชาร์จเร็วรองรับ PD และ QC3.0 พกพาขึ้นเครื่องบินได้ ปลอดภัยมี มอก.",
+    "images": [
+      "assets/products/baseus_earbuds/img2.jpg",
+      "assets/products/baseus_earbuds/img1.jpg",
+      "assets/products/baseus_earbuds/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Eloop+E29",
+    "rating": 4.9,
+    "sold_count": 110000
+  },
+  {
+    "id": "wireless_3in1",
+    "name": "แท่นชาร์จไร้สาย 3-in-1 พับเก็บได้ ชาร์จเร็ว มือถือ นาฬิกา หูฟัง พร้อมกัน",
+    "brand": "TechPro",
+    "category": "electronics",
+    "commission_rate": "25%",
+    "commission_badge": "Extra Commission 25%",
+    "price_thb": 359,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "แท่นชาร์จแม่เหล็กไร้สายแบบพับได้ ชาร์จพร้อมกัน 3 อุปกรณ์ พกพาสะดวก โต๊ะทำงานเป็นระเบียบ",
+    "images": [
+      "assets/products/baseus_earbuds/img3.jpg",
+      "assets/products/baseus_earbuds/img1.jpg",
+      "assets/products/baseus_earbuds/img2.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=แท่นชาร์จไร้สาย+3in1",
+    "rating": 4.8,
+    "sold_count": 39000
+  },
+  {
+    "id": "uv_umbrella",
+    "name": "ร่มพับมินิกันแดด UV เคลือบไวนิลดำ ป้องกันรังสี 99% ขนาดพกพา น้ำหนักเบา",
+    "brand": "SunProtect",
+    "category": "fashion",
+    "commission_rate": "35%",
+    "commission_badge": "High Commission 35%",
+    "price_thb": 159,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "ร่มพับ 5 ตอนขนาดกะทัดรัด เคลือบสารป้องกันรังสี UVA/UVB กรองแสงแดดและความร้อน พกใส่กระเป๋าได้ทุกวัน",
+    "images": [
+      "assets/products/uv_umbrella/img1.jpg",
+      "assets/products/uv_umbrella/img2.jpg",
+      "assets/products/uv_umbrella/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=ร่มพับกันแดด+UV",
+    "rating": 4.8,
+    "sold_count": 41000
+  },
+  {
+    "id": "shoulder_bag",
+    "name": "กระเป๋าสะพายข้างผ้าไนลอนกันน้ำ สไตล์มินิมอล จุของได้เยอะ น้ำหนักเบา",
+    "brand": "UrbanStyle",
+    "category": "fashion",
+    "commission_rate": "30%",
+    "commission_badge": "Extra Commission 30%",
+    "price_thb": 189,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "กระเป๋าสะพายข้างทรงเกี๊ยวยอดฮิต ผ้าไนลอนกันละอองน้ำ แมตช์ง่ายกับทุกลุค ใส่ของจำเป็นได้ครบครัน",
+    "images": [
+      "assets/products/shoulder_bag/img1.jpg",
+      "assets/products/shoulder_bag/img2.jpg",
+      "assets/products/shoulder_bag/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=กระเป๋าสะพายข้างมินิมอล",
+    "rating": 4.8,
+    "sold_count": 33000
+  },
+  {
+    "id": "blue_light_glasses",
+    "name": "แว่นตากรองแสงคอมพิวเตอร์และมือถือ เลนส์บลูบล็อกแท้ ถนอมสายตา",
+    "brand": "EyeCare",
+    "category": "fashion",
+    "commission_rate": "35%",
+    "commission_badge": "Top Commission 35%",
+    "price_thb": 129,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "แว่นกรองแสงสีฟ้า น้ำหนักเบา สวมใส่สบาย ไม่กดดั้ง ช่วยลดอาการเมื่อยล้าตาจากการจ้องจอทั้งวัน",
+    "images": [
+      "assets/products/uv_umbrella/img2.jpg",
+      "assets/products/uv_umbrella/img1.jpg",
+      "assets/products/uv_umbrella/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=แว่นตากรองแสงสีฟ้า",
+    "rating": 4.8,
+    "sold_count": 64000
+  },
+  {
+    "id": "laroche_effaclar",
+    "name": "เซรั่ม La Roche-Posay Effaclar Serum สลายสิวอุดตัน กระชับรูขุมขน",
+    "brand": "La Roche-Posay",
+    "category": "beauty",
+    "commission_rate": "25%",
+    "commission_badge": "Shopee Mall 25%",
+    "price_thb": 1450,
+    "shop_type": "Shopee Mall",
+    "highlight": "เซรั่มโมเลกุลเข้มข้น จัดการสิวเรื้อรัง รอยดำรอยแดงจากสิว ผิวเรียบเนียนขึ้น",
+    "images": [
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=La+Roche+Posay+Effaclar+Serum",
+    "rating": 4.9,
+    "sold_count": 67000
+  },
+  {
+    "id": "gravich_vitc",
+    "name": "เซรั่มวิตามินซี Gravich Triple Vitamin C Booster ผิวกระจ่างใส ลดจุดด่างดำ",
+    "brand": "Gravich",
+    "category": "beauty",
+    "commission_rate": "30%",
+    "commission_badge": "Extra Commission 30%",
+    "price_thb": 350,
+    "shop_type": "Shopee Mall",
+    "highlight": "รวมอนุพันธ์วิตามินซีเข้มข้น 3 ชนิด ปรับสีผิวให้สม่ำเสมอ ผิวใสเปล่งปลั่งอย่างเป็นธรรมชาติ",
+    "images": [
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Gravich+Triple+Vitamin+C",
+    "rating": 4.8,
+    "sold_count": 49000
+  },
+  {
+    "id": "plantnery_teatree",
+    "name": "เซรั่มแต้มสิว Plantnery Tea Tree Intense Serum คุมมัน ลดการเกิดสิวใหม่",
+    "brand": "Plantnery",
+    "category": "beauty",
+    "commission_rate": "35%",
+    "commission_badge": "Top Commission 35%",
+    "price_thb": 169,
+    "shop_type": "Shopee Mall",
+    "highlight": "สารสกัดทีทรีเข้มข้นจากธรรมชาติ ยับยั้งแบคทีเรียสิว ปลอบประโลมผิวอักเสบ ปราศจากแอลกอฮอล์",
+    "images": [
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img2.jpg",
+      "assets/products/mizumi_uv/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Plantnery+Tea+Tree+Serum",
+    "rating": 4.8,
+    "sold_count": 180000
+  },
+  {
+    "id": "deerma_vc20",
+    "name": "เครื่องดูดฝุ่นไร้สาย Deerma VC20 Plus แรงดูดไซโคลน น้ำหนักเบา",
+    "brand": "Deerma",
+    "category": "home",
+    "commission_rate": "25%",
+    "commission_badge": "Shopee Mall 25%",
+    "price_thb": 1290,
+    "shop_type": "Shopee Mall",
+    "highlight": "เครื่องดูดฝุ่นไร้สายดีไซน์เยอรมัน น้ำหนักเบาเพียง 1 กิโลกรัม ดูดได้ทั้งพื้น โซฟา และเพดาน",
+    "images": [
+      "assets/products/tyeso_tumbler/img1.jpg",
+      "assets/products/tyeso_tumbler/img2.jpg",
+      "assets/products/tyeso_tumbler/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Deerma+VC20+Plus",
+    "rating": 4.8,
+    "sold_count": 42000
+  },
+  {
+    "id": "simplus_kettle",
+    "name": "กาต้มน้ำไฟฟ้า Simplus กาต้มน้ำสแตนเลสสองชั้น ตัดไฟอัตโนมัติ",
+    "brand": "Simplus",
+    "category": "home",
+    "commission_rate": "30%",
+    "commission_badge": "Extra Commission 30%",
+    "price_thb": 299,
+    "shop_type": "Shopee Mall",
+    "highlight": "กาต้มน้ำมินิมอล ร้อนเร็วทันใจ ภายนอกไม่ร้อนมือ สแตนเลส Food Grade ปลอดภัย 100%",
+    "images": [
+      "assets/products/jisulife_fan/img1.jpg",
+      "assets/products/jisulife_fan/img2.jpg",
+      "assets/products/jisulife_fan/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=กาต้มน้ำ+Simplus",
+    "rating": 4.9,
+    "sold_count": 78000
+  },
+  {
+    "id": "shoe_box_acrylic",
+    "name": "กล่องใส่รองเท้าพลาสติกใสฝาหน้าแม่เหล็ก วางซ้อนได้ ประหยัดพื้นที่",
+    "brand": "HomeBox",
+    "category": "home",
+    "commission_rate": "35%",
+    "commission_badge": "Viral Best Seller 35%",
+    "price_thb": 89,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "กล่องรองเท้าอเนกประสงค์ พลาสติกหนาแข็งแรง ฝาเปิดปิดแม่เหล็ก ป้องกันฝุ่น จัดระเบียบคอนโด",
+    "images": [
+      "assets/products/tyeso_tumbler/img3.jpg",
+      "assets/products/tyeso_tumbler/img2.jpg",
+      "assets/products/tyeso_tumbler/img1.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=กล่องใส่รองเท้าฝาหน้า",
+    "rating": 4.9,
+    "sold_count": 260000
+  },
+  {
+    "id": "tripod_bluetooth",
+    "name": "ขาตั้งกล้องมือถือบลูทูธ 3-in-1 ไม้เซลฟี่พร้อมรีโมทชัตเตอร์ไร้สาย หมุนได้ 360",
+    "brand": "StudioPro",
+    "category": "electronics",
+    "commission_rate": "30%",
+    "commission_badge": "Top Commission 30%",
+    "price_thb": 199,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "ไม้เซลฟี่และขาตั้งในตัวเดียว พับเก็บไซส์กระเป๋า กางได้สูงถึง 1.6 เมตร ถ่ายคลิปและไลฟ์สะดวกมาก",
+    "images": [
+      "assets/products/baseus_earbuds/img1.jpg",
+      "assets/products/baseus_earbuds/img2.jpg",
+      "assets/products/baseus_earbuds/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=ขาตั้งกล้องมือถือบลูทูธ",
+    "rating": 4.8,
+    "sold_count": 115000
+  },
+  {
+    "id": "ring_light_led",
+    "name": "ไฟวงแหวน LED Ring Light สำหรับไลฟ์สดและถ่ายวิดีโอ ปรับได้ 3 แสง",
+    "brand": "BrightLive",
+    "category": "electronics",
+    "commission_rate": "30%",
+    "commission_badge": "Creator Choice 30%",
+    "price_thb": 249,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "ไฟวงแหวนส่องสว่าง หน้าเนียนไม่หลอกตา ปรับแสงขาว แสงส้ม แสงผสมได้ตามใจ เสียบสาย USB",
+    "images": [
+      "assets/products/baseus_earbuds/img2.jpg",
+      "assets/products/baseus_earbuds/img1.jpg",
+      "assets/products/baseus_earbuds/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=ไฟวงแหวน+LED+Ring+Light",
+    "rating": 4.8,
+    "sold_count": 87000
+  },
+  {
+    "id": "wireless_mic_lavalier",
+    "name": "ไมค์หนีบปกเสื้อไร้สาย Wireless Mic สำหรับถ่ายคลิป ตัดเสียงรบกวนรอบข้าง",
+    "brand": "VoiceClear",
+    "category": "electronics",
+    "commission_rate": "28%",
+    "commission_badge": "Shopee Mall 28%",
+    "price_thb": 299,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "ไมค์ไร้สาย Plug & Play เสียบปุ๊บใช้ได้ทันที ไม่ต้องโหลดแอป เสียงพูดคมชัด ดีเลย์ต่ำมาก",
+    "images": [
+      "assets/products/baseus_earbuds/img3.jpg",
+      "assets/products/baseus_earbuds/img2.jpg",
+      "assets/products/baseus_earbuds/img1.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=ไมค์ไร้สายหนีบปกเสื้อ",
+    "rating": 4.8,
+    "sold_count": 59000
+  },
+  {
+    "id": "canvas_tote_bag",
+    "name": "กระเป๋าผ้าแคนวาสมินิมอล มีซิปและช่องใส่ของ จุโน้ตบุ๊กได้ สไตล์เกาหลี",
+    "brand": "SimpleLife",
+    "category": "fashion",
+    "commission_rate": "35%",
+    "commission_badge": "High Commission 35%",
+    "price_thb": 149,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "กระเป๋าผ้าแคนวาสเนื้อหนา ซักได้ ไม่ย้วย จุของได้จุใจ สะพายไปเรียนหรือทำงานได้ทุกวัน",
+    "images": [
+      "assets/products/shoulder_bag/img1.jpg",
+      "assets/products/shoulder_bag/img2.jpg",
+      "assets/products/shoulder_bag/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=กระเป๋าผ้าแคนวาสมินิมอล",
+    "rating": 4.9,
+    "sold_count": 140000
+  },
+  {
+    "id": "bucket_hat_cotton",
+    "name": "หมวกบักเก็ตมินิมอลใส่ได้สองด้าน ผ้าคอตตอน 100% กันแดด ใส่สบาย",
+    "brand": "SunnyDay",
+    "category": "fashion",
+    "commission_rate": "30%",
+    "commission_badge": "Extra Commission 30%",
+    "price_thb": 99,
+    "shop_type": "ร้านแนะนำ",
+    "highlight": "หมวกบักเก็ตใส่ได้ 2 ด้าน คุ้มเหมือนซื้อ 2 ใบ แมตช์เสื้อผ้าง่าย ทรงสวย ปีกหมวกกันแดดได้ดี",
+    "images": [
+      "assets/products/uv_umbrella/img1.jpg",
+      "assets/products/uv_umbrella/img3.jpg",
+      "assets/products/uv_umbrella/img2.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=หมวกบักเก็ตมินิมอล",
+    "rating": 4.8,
+    "sold_count": 95000
+  }
+]
