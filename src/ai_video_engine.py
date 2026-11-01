@@ -113,13 +113,17 @@ def get_available_engines() -> Dict[str, Any]:
         },
         "google_veo": {
             "id": "google_veo",
-            "name": "Google Veo 2 (Creative Studio)",
-            "description": "โมเดลระดับท็อปของ Google แสงเงา 4K ละเอียดสูง",
-            "is_free": False,
-            "status": "configured" if bool(veo_key) else "flow_guided",
-            "has_key": bool(veo_key),
+            "name": "Google Flow (Veo / Veo Lite)",
+            "description": "โมเดลระดับท็อปของ Google แสงเงา Cinematic วิดีโอสินค้าตรงปกพร้อมใช้ทันที",
+            "is_free": True,
+            "status": "ready" if bool(os.environ.get("GEMINI_API_KEY")) else "needs_key",
+            "has_key": bool(os.environ.get("GEMINI_API_KEY")),
             "key_field": "google_veo_key",
-            "flow_url": "https://flow.google.com/u/1/?pli=1"
+            "badge": "Google Flow Studio",
+            "sub_models": [
+                {"id": "veo_standard", "name": "Google Veo (เน้นภาพสวย แสงเงาคมชัด 4K)"},
+                {"id": "veo_lite", "name": "Google Veo Lite (เน้นเจนเร็ว ทันใจ)"}
+            ]
         }
     }
 
@@ -246,3 +250,40 @@ class AIVideoBridge:
                     raise RuntimeError(f"MiniMax generation failed: {st.get('error_message')}")
 
         raise TimeoutError("MiniMax generation timed out")
+
+    @staticmethod
+    def generate_with_google_flow(image_path: str, prompt: str, output_path: str, is_lite: bool = False, duration: int = 5) -> bool:
+        """
+        สร้างวิดีโอด้วย Google Flow (Veo / Veo Lite) ผ่าน Gemini Omni Video Engine บนเว็บโดยตรง
+        """
+        import sys
+        script_dir = r"C:\Users\non_n\.gemini\config\plugins\gemini-api\skills\gemini-omni-flash-api\scripts\video"
+        if script_dir not in sys.path:
+            sys.path.append(script_dir)
+        import generate_video
+
+        api_key = os.environ.get("GEMINI_API_KEY")
+        if not api_key:
+            from src.ai_video_engine import get_ai_models_config
+            cfg = get_ai_models_config()
+            api_key = cfg.get("google_veo_key")
+
+        if not api_key:
+            raise ValueError("ยังไม่ได้ระบุ GEMINI_API_KEY หรือ GOOGLE_VEO_KEY")
+
+        os.environ["GEMINI_API_KEY"] = api_key
+
+        model_name = "gemini-omni-1.1-flash"
+        resolution = "360p" if is_lite else "720p"
+
+        generate_video.generate_video_via_interactions(
+            prompt=f"<FIRST_FRAME> Commercial 3D product showcase of {prompt}, cinematic studio lighting, smooth camera movement, 9:16 vertical",
+            model=model_name,
+            first_frame=image_path,
+            aspect_ratio="9:16",
+            duration=duration,
+            resolution=resolution,
+            output_path=output_path,
+            timeout=300
+        )
+        return os.path.exists(output_path) and os.path.getsize(output_path) > 1000

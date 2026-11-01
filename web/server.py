@@ -1275,16 +1275,20 @@ def _process_video_generation(
             if bgm_candidate.exists():
                 bgm_audio_path = str(bgm_candidate)
 
-        # 4. ตรวจสอบว่าเลือกโมเดล Image-to-Video ภายนอกหรือไม่ (Luma, MiniMax, Kling)
+        # 4. ตรวจสอบว่าเลือกโมเดล Image-to-Video หรือไม่ (Google Flow Veo, Luma, MiniMax)
         ai_generated = False
         result = None
-        if video_engine in ["luma_ray", "minimax_hailuo"] and image_paths:
+        if video_engine in ["google_veo", "google_veo_lite", "luma_ray", "minimax_hailuo"] and image_paths:
             from src.ai_video_engine import AIVideoBridge
             import subprocess
             dest_file = str(OUTPUT_DIR / f"product_{product.item_id}.mp4")
             prompt_text = f"{content.hook} {content.body}"
             try:
-                if video_engine == "luma_ray":
+                if video_engine == "google_veo":
+                    ai_generated = AIVideoBridge.generate_with_google_flow(image_paths[0], prompt_text, dest_file, is_lite=False)
+                elif video_engine == "google_veo_lite":
+                    ai_generated = AIVideoBridge.generate_with_google_flow(image_paths[0], prompt_text, dest_file, is_lite=True)
+                elif video_engine == "luma_ray":
                     ai_generated = AIVideoBridge.generate_with_luma(image_paths[0], prompt_text, dest_file)
                 elif video_engine == "minimax_hailuo":
                     ai_generated = AIVideoBridge.generate_with_minimax(image_paths[0], prompt_text, dest_file)
