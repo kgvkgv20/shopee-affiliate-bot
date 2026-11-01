@@ -454,7 +454,7 @@ def get_trend_suggestions(category_filter: str = "all", tag_filter: str = "all")
     return results
 
 
-def bulk_import_trends_to_my_products(product_ids: List[str]) -> List[Dict]:
+def bulk_import_trends_to_my_products(product_ids: List[str], fallback_items: List[Dict] = None) -> List[Dict]:
     """
     นำเข้ารายการสินค้ากระแสที่เลือก เข้าสู่ 'สินค้าของฉัน' ทันที
     พร้อมสร้างแคปชัน และติดสถานะ '🟡 รอทำคลิป' ให้อัตโนมัติ
@@ -464,7 +464,9 @@ def bulk_import_trends_to_my_products(product_ids: List[str]) -> List[Dict]:
 
     imported = []
     target_ids = set(product_ids)
+    processed_ids = set()
 
+    # 1. Search in HIGH_COMMISSION_TRENDS
     for item in HIGH_COMMISSION_TRENDS:
         if not target_ids or item["id"] in target_ids:
             saved = catalog_mgr.add_my_product({
@@ -482,6 +484,29 @@ def bulk_import_trends_to_my_products(product_ids: List[str]) -> List[Dict]:
                 "sold_count": int(item.get("sold_count", 50000)),
             })
             imported.append(saved)
+            processed_ids.add(item["id"])
+
+    # 2. Check fallback_items (e.g. from Gemini AI discovery)
+    if fallback_items:
+        for item in fallback_items:
+            i_id = item.get("id")
+            if i_id in target_ids and i_id not in processed_ids:
+                saved = catalog_mgr.add_my_product({
+                    "name": item.get("name", "สินค้ากระแส"),
+                    "brand": item.get("brand", "Shopee Mall"),
+                    "category": item.get("category", "general"),
+                    "commission_rate": item.get("commission_rate", "35%"),
+                    "commission_badge": item.get("commission_badge", "AI Pick"),
+                    "price_thb": item.get("price_thb", 299),
+                    "shop_type": "Shopee Mall",
+                    "highlight": item.get("highlight", item.get("viral_reason", "")),
+                    "images": item.get("images", []),
+                    "affiliate_link": item.get("affiliate_link", f"https://shopee.co.th/search?keyword={item.get('name', '')}"),
+                    "rating": float(item.get("rating", 4.9)),
+                    "sold_count": int(item.get("sold_count", 10000)),
+                })
+                imported.append(saved)
+                processed_ids.add(i_id)
 
     logger.info(f"🎉 นำเข้าสินค้ากระแสเข้าคลัง 'สินค้าของฉัน' สำเร็จ {len(imported)} รายการ")
     return imported

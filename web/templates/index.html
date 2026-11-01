@@ -3203,8 +3203,16 @@
         function getVisibleTrends() {
             if (!window._allTrends) return [];
             return window._allTrends.filter(item => {
-                const matchCat = (window._currentTrendCategory === 'all') || (item.category === window._currentTrendCategory);
-                const matchTag = (window._currentTrendTag === 'all') || (item.viral_tag === window._currentTrendTag);
+                const matchCat = (!window._currentTrendCategory || window._currentTrendCategory === 'all') || (item.category === window._currentTrendCategory);
+                let matchTag = true;
+                if (window._currentTrendTag === 'viral_today') {
+                    matchTag = (item.viral_tag === 'viral_today');
+                } else if (window._currentTrendTag === 'high_comm') {
+                    const rateNum = parseInt((item.commission_rate || '').toString().replace('%', '')) || 0;
+                    matchTag = rateNum >= 35;
+                } else if (window._currentTrendTag && window._currentTrendTag !== 'all') {
+                    matchTag = (item.viral_tag === window._currentTrendTag);
+                }
                 return matchCat && matchTag;
             });
         }
@@ -3213,89 +3221,117 @@
             const container = document.getElementById('trends-grid-container');
             if (!container) return;
 
-            const visible = getVisibleTrends();
-            const countEl = document.getElementById('trend-visible-count');
-            if (countEl) countEl.textContent = visible.length;
+            try {
+                const visible = getVisibleTrends();
+                const countEl = document.getElementById('trend-visible-count');
+                if (countEl) countEl.textContent = visible.length;
 
-            if (visible.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full py-10 text-center text-slate-400 space-y-2">
-                        <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300"></i>
-                        <p class="text-xs">ไม่พบสินค้าในหมวดหมู่นี้ ลองเลือกฟิลเตอร์อื่นหรือกด "Gemini ค้นหาสินค้ากระแสใหม่"</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                updateSelectedTrendCount();
-                return;
-            }
-
-            container.innerHTML = visible.map(item => {
-                const isSelected = window._selectedTrendIds.has(item.id);
-                const firstImg = (item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/400x400/fff7ed/ea580c?text=Shopee';
-                const profit = Math.round(item.estimated_profit_baht || (item.price * (item.commission_rate || 25) / 100));
-                const soldStr = item.sold_count >= 1000 ? `${(item.sold_count / 1000).toFixed(0)}k+` : `${item.sold_count}`;
-
-                return `
-                    <div onclick="toggleTrendSelect('${item.id}', event)" 
-                         id="trend-card-${item.id}"
-                         class="group relative border ${isSelected ? 'border-orange-500 bg-orange-50/40 ring-1 ring-orange-400' : 'border-slate-200 bg-white hover:border-orange-300'} rounded-xl p-2.5 transition flex gap-3 cursor-pointer shadow-2xs">
-                        
-                        <!-- Checkbox & Thumbnail -->
-                        <div class="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
-                            <img src="${firstImg}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x400/fff7ed/ea580c?text=Packshot'">
-                            <div class="absolute top-1 left-1">
-                                <input type="checkbox" 
-                                       id="trend-chk-${item.id}" 
-                                       ${isSelected ? 'checked' : ''} 
-                                       onclick="event.stopPropagation(); toggleTrendSelect('${item.id}', event)" 
-                                       class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 shadow-sm cursor-pointer">
-                            </div>
-                            <span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/70 text-white text-[9px] font-bold">
-                                ${(item.images || []).length} รูป
-                            </span>
+                if (visible.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full py-10 text-center text-slate-400 space-y-2">
+                            <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300"></i>
+                            <p class="text-xs">ไม่พบสินค้าในหมวดหมู่นี้ ลองเลือกฟิลเตอร์อื่นหรือกด "Gemini ค้นหาสินค้ากระแสใหม่"</p>
                         </div>
+                    `;
+                    lucide.createIcons();
+                    updateSelectedTrendCount();
+                    return;
+                }
 
-                        <!-- Product Info -->
-                        <div class="flex-1 min-w-0 flex flex-col justify-between">
-                            <div>
-                                <!-- Badges -->
-                                <div class="flex items-center gap-1.5 flex-wrap mb-1">
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-2xs">
-                                        ค่าคอม ${item.commission_rate}%
-                                    </span>
-                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                                        ${item.viral_tag_label || '🔥 กำลังฮิต'}
-                                    </span>
+                container.innerHTML = visible.map(item => {
+                    const isSelected = window._selectedTrendIds.has(item.id);
+                    let firstImg = (item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/400x400/fff7ed/ea580c?text=Shopee';
+                    if (firstImg && !firstImg.startsWith('http')) {
+                        firstImg = '/' + firstImg.replace(/^[/\\]+/, '');
+                    }
+
+                    const priceNum = Number(item.price_thb || item.price || 0);
+                    const priceStr = priceNum > 0 ? priceNum.toLocaleString() : '299';
+                    
+                    const commRateRaw = (item.commission_rate || '35%').toString();
+                    const commRateClean = commRateRaw.replace('%', '');
+
+                    const profitStr = item.commission_baht 
+                        ? item.commission_baht.replace(' / ', '/') 
+                        : `~฿${Math.round(priceNum * (parseFloat(commRateClean) || 25) / 100)}/ชิ้น`;
+
+                    const soldCount = Number(item.sold_count || 1000);
+                    const soldStr = soldCount >= 1000 ? `${(soldCount / 1000).toFixed(0)}k+` : `${soldCount}`;
+
+                    const badgeLabel = item.viral_tag === 'viral_today' ? '🔥 ไวรัลวันนี้' : (item.viral_tag_label || '🔥 กำลังฮิต');
+                    const hookRaw = item.target_hook || item.viral_reason || item.highlight || 'คลิปสั้นไวรัล';
+                    const hookDisplay = hookRaw.length > 18 ? hookRaw.slice(0, 18) + '...' : hookRaw;
+
+                    return `
+                        <div onclick="toggleTrendSelect('${item.id}', event)" 
+                             id="trend-card-${item.id}"
+                             class="group relative border ${isSelected ? 'border-orange-500 bg-orange-50/40 ring-1 ring-orange-400' : 'border-slate-200 bg-white hover:border-orange-300'} rounded-xl p-2.5 transition flex gap-3 cursor-pointer shadow-2xs">
+                            
+                            <!-- Checkbox & Thumbnail -->
+                            <div class="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                                <img src="${firstImg}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x400/fff7ed/ea580c?text=Packshot'">
+                                <div class="absolute top-1 left-1">
+                                    <input type="checkbox" 
+                                           id="trend-chk-${item.id}" 
+                                           ${isSelected ? 'checked' : ''} 
+                                           onclick="event.stopPropagation(); toggleTrendSelect('${item.id}', event)" 
+                                           class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 shadow-sm cursor-pointer">
                                 </div>
-
-                                <!-- Title -->
-                                <h4 class="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-orange-600 transition" title="${item.name}">
-                                    ${item.name}
-                                </h4>
-
-                                <!-- Price & Profit -->
-                                <div class="flex items-baseline gap-2 mt-0.5 text-xs">
-                                    <span class="text-slate-900 font-extrabold text-sm">฿${item.price.toLocaleString()}</span>
-                                    <span class="text-emerald-600 font-bold text-[11px] bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200">
-                                        กำไร ~฿${profit}/ออเดอร์
-                                    </span>
-                                </div>
-                            </div>
-
-                            <!-- Metrics & Hook Hint -->
-                            <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 mt-1">
-                                <span>⭐ ${item.rating || '4.9'} • ขายแล้ว ${soldStr}</span>
-                                <span class="text-orange-600 font-semibold truncate max-w-[110px]" title="${item.target_hook || ''}">
-                                    🎯 ${item.target_hook ? item.target_hook.slice(0, 16) + '...' : 'คลิปสั้นไวรัล'}
+                                <span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/70 text-white text-[9px] font-bold">
+                                    ${(item.images || []).length} รูป
                                 </span>
                             </div>
+
+                            <!-- Product Info -->
+                            <div class="flex-1 min-w-0 flex flex-col justify-between">
+                                <div>
+                                    <!-- Badges -->
+                                    <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-2xs">
+                                            ค่าคอม ${commRateClean}%
+                                        </span>
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                                            ${badgeLabel}
+                                        </span>
+                                    </div>
+
+                                    <!-- Title -->
+                                    <h4 class="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-orange-600 transition" title="${item.name}">
+                                        ${item.name}
+                                    </h4>
+
+                                    <!-- Price & Profit -->
+                                    <div class="flex items-baseline gap-2 mt-0.5 text-xs">
+                                        <span class="text-slate-900 font-extrabold text-sm">฿${priceStr}</span>
+                                        <span class="text-emerald-600 font-bold text-[11px] bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200">
+                                            กำไร ${profitStr}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Metrics & Hook Hint -->
+                                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 mt-1">
+                                    <span>⭐ ${item.rating || '4.9'} • ขายแล้ว ${soldStr}</span>
+                                    <span class="text-orange-600 font-semibold truncate max-w-[120px]" title="${hookRaw}">
+                                        🎯 ${hookDisplay}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                    `;
+                }).join('');
+
+                lucide.createIcons();
+                updateSelectedTrendCount();
+            } catch (err) {
+                console.error("renderTrendingGrid error:", err);
+                container.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-red-500 text-xs space-y-1">
+                        <p class="font-bold">เกิดข้อผิดพลาดในการโหลดรายการสินค้า:</p>
+                        <p class="text-slate-500">${err.message}</p>
                     </div>
                 `;
-            }).join('');
-
-            lucide.createIcons();
-            updateSelectedTrendCount();
+            }
         }
 
         function toggleTrendSelect(id, event) {
@@ -3370,10 +3406,14 @@
             }
 
             try {
+                const selectedItems = (window._allTrends || []).filter(t => window._selectedTrendIds.has(t.id));
                 const res = await fetch('/api/trends/bulk-import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ product_ids: ids })
+                    body: JSON.stringify({ 
+                        product_ids: ids,
+                        items: selectedItems
+                    })
                 });
                 const data = await res.json();
                 if (data.success) {

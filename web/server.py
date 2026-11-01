@@ -378,10 +378,11 @@ async def bulk_import_trends_api(data: dict):
     """
     from src.trend_researcher import bulk_import_trends_to_my_products
     product_ids = data.get("product_ids", [])
+    items = data.get("items", [])
     if not product_ids:
         raise HTTPException(status_code=400, detail="กรุณาเลือกสินค้าอย่างน้อย 1 รายการเพื่อนำเข้า")
 
-    imported = bulk_import_trends_to_my_products(product_ids)
+    imported = bulk_import_trends_to_my_products(product_ids, fallback_items=items)
     stats = catalog_mgr.get_video_stats()
 
     return {
