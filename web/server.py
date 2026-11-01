@@ -1307,6 +1307,104 @@ def _process_video_generation(
         raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาดในการสร้างวิดีโอ: {str(e)}")
 
 
+@app.post("/api/upload-external-video")
+async def upload_external_video(
+    video_file: UploadFile = File(...),
+    product_id: Optional[str] = Form(None),
+    product_name: Optional[str] = Form(""),
+    affiliate_url: Optional[str] = Form(""),
+    custom_caption: Optional[str] = Form(""),
+):
+    """
+    นำเข้าคลิปวิดีโอที่สร้างจาก Google Flow (flow.google.com) หรือ AI ตัวอื่นเข้ามาเซฟเก็บไว้ในคลังวิดีโอบนเว็บ
+    """
+    import subprocess
+    if not video_file.filename:
+        raise HTTPException(status_code=400, detail="กรุณาเลือกไฟล์วิดีโอ .mp4")
+
+    vid_id = uuid.uuid4().hex[:8]
+    ext = Path(video_file.filename).suffix or ".mp4"
+    safe_name = f"flow_{vid_id}{ext}"
+    dest_path = OUTPUT_DIR / safe_name
+    
+    content = await video_file.read()
+    with open(dest_path, "wb") as f:
+        f.write(content)
+
+    file_size_mb = round(len(content) / (1024 * 1024), 2)
+
+    thumb_name = f"flow_{vid_id}_thumb.jpg"
+    thumb_path = OUTPUT_DIR / thumb_name
+    cmd = [
+        "ffmpeg", "-y", "-ss", "00:00:01",
+        "-i", str(dest_path),
+        "-vframes", "1",
+        "-q:v", "2",
+        str(thumb_path)
+    ]
+    try:
+        subprocess.run(cmd, capture_output=True, timeout=10)
+    except Exception as e:
+        logger.warning(f"Failed to generate thumbnail for uploaded video: {e}")
+
+    p_name = (product_name or "").strip()
+    p_link = (affiliate_url or "").strip()
+    category = "general"
+    
+    if product_id:
+        item = catalog_mgr.get_product_by_id(product_id)
+        if not item:
+            from src.trend_researcher import HIGH_COMMISSION_TRENDS
+            item = next((p for p in HIGH_COMMISSION_TRENDS if p.get("id") == product_id), None)
+        if item:
+            if not p_name:
+                p_name = item.get("name", "สินค้า Shopee")
+            if not p_link:
+                p_link = item.get("affiliate_link", "")
+            category = item.get("category", "general")
+
+    if not p_name:
+        p_name = "วิดีโอรีวิวสร้างด้วย Google Flow"
+
+    caption = custom_caption.strip() if custom_caption else f"พิกัดของดี Shopee Mall! {p_name[:40]}\nคลิปรีวิว AI สไตล์ UGC สวยเนียนตรงปก ✨\n\n🛒 พิกัด: {p_link}"
+    hashtags = ["ShopeeTH", "ShopeeVideo", "GoogleFlow", "TikTokป้ายยา", "รีวิวของดี"]
+
+    meta_filename = f"flow_{vid_id}_meta.json"
+    meta_path = OUTPUT_DIR / meta_filename
+    metadata = {
+        "product_id": product_id or f"flow_{vid_id}",
+        "product_name": p_name,
+        "category": category,
+        "video_filename": safe_name,
+        "thumbnail_filename": thumb_name if thumb_path.exists() else "",
+        "video_url": f"/output/{safe_name}",
+        "thumbnail_url": f"/output/{thumb_name}" if thumb_path.exists() else f"/output/{safe_name}",
+        "hook": "คลิปรีวิวจาก Google Flow",
+        "body": "สร้างด้วย Google Flow AI Studio",
+        "cta": "พิกัดอยู่ที่ตะกร้าส้ม",
+        "caption": caption,
+        "hashtags": hashtags,
+        "affiliate_url": p_link,
+        "template": "google_flow",
+        "has_voice": True,
+        "voice_type": "google_flow",
+        "duration": 10.0,
+        "file_size_mb": file_size_mb,
+        "render_time_seconds": 0.0,
+        "source": "google_flow",
+        "created_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+    }
+
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, ensure_ascii=False, indent=2)
+
+    return {
+        "success": True,
+        "message": "นำเข้าคลิปจาก Google Flow เซฟเก็บไว้ในคลังเว็บเรียบร้อยแล้ว!",
+        **metadata
+    }
+
+
 @app.post("/api/forward")
 async def forward_video(data: dict):
     """
