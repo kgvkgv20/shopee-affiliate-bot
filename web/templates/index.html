@@ -68,10 +68,6 @@
                     <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-900"></i>
                     <span>🔄 ดึงสินค้าล่าสุด</span>
                 </button>
-                <button onclick="openTelegramModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
-                    <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                    <span>ตั้งค่า Telegram Bot</span>
-                </button>
                 <button onclick="openImportModal()" class="px-3 py-1.5 bg-white/15 hover:bg-white/25 rounded-lg border border-white/20 flex items-center gap-1.5 transition">
                     <i data-lucide="file-up" class="w-3.5 h-3.5"></i>
                     <span>นำเข้า CSV / Excel</span>
@@ -426,34 +422,15 @@
                 </div>
 
                 <!-- Notification Delivery Options -->
-                <div class="p-4 rounded-xl border border-slate-200 bg-white space-y-3">
-                    <label class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                        <i data-lucide="bell" class="w-4 h-4 text-amber-500"></i>
-                        ช่องทางการส่งคลิปเมื่อสร้างเสร็จ
-                    </label>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100">
-                            <input type="checkbox" id="scheduler-send-telegram" class="rounded text-shopee-600 focus:ring-shopee-500">
-                            <div class="flex-1">
-                                <span class="font-semibold text-slate-800 flex items-center gap-1.5">
-                                    <i data-lucide="send" class="w-3.5 h-3.5 text-sky-500"></i>
-                                    ส่งตรงเข้า Telegram ของฉัน
-                                </span>
-                                <span id="telegram-status-note" class="text-[11px] text-slate-400 block">ยังไม่ได้ตั้งค่า Bot Token</span>
-                            </div>
-                            <button type="button" onclick="openTelegramModal()" class="text-[11px] text-shopee-600 underline">ตั้งค่า</button>
-                        </label>
-                        <label class="flex items-center gap-2 p-2.5 rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:bg-slate-100">
-                            <input type="checkbox" id="scheduler-send-discord" class="rounded text-shopee-600 focus:ring-shopee-500">
-                            <div class="flex-1">
-                                <span class="font-semibold text-slate-800 flex items-center gap-1.5">
-                                    <i data-lucide="message-square" class="w-3.5 h-3.5 text-indigo-500"></i>
-                                    แจ้งเตือนผ่าน Discord Webhook
-                                </span>
-                                <span class="text-[11px] text-slate-400 block">ใช้ Webhook เดียวกับด้านล่าง</span>
-                            </div>
-                        </label>
+                <div class="p-3.5 rounded-xl border border-slate-200 bg-emerald-50/50 flex items-center justify-between text-xs">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                        <div>
+                            <span class="font-bold text-slate-800">บันทึกคลิปวิดีโอ 1080x1920 ลงโฟลเดอร์ output/ อัตโนมัติ</span>
+                            <span class="text-[11px] text-slate-500 block">พร้อมติดป้าย 🟢 ทำคลิปแล้ว ให้ในระบบทันที</span>
+                        </div>
                     </div>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">Auto-Save</span>
                 </div>
 
                 <!-- Action Buttons -->
@@ -712,12 +689,12 @@
                             <span>สแกน QR มือถือ</span>
                         </button>
                         <button 
-                            onclick="forwardToTelegramCurrent()" 
-                            id="telegram-forward-btn"
-                            class="py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
+                            onclick="copyCurrentResultCaption()" 
+                            id="copy-caption-btn"
+                            class="py-2.5 px-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl text-center text-xs shadow-sm transition flex items-center justify-center gap-1.5"
                         >
-                            <i data-lucide="send" class="w-3.5 h-3.5"></i>
-                            <span>ส่ง Telegram</span>
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>📋 คัดลอกแคปชัน</span>
                         </button>
                         <a 
                             id="shopee-link-btn" 
@@ -730,18 +707,19 @@
                         </a>
                     </div>
 
-                    <!-- Instant Forward to Discord -->
-                    <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-3.5 space-y-2">
-                        <label class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                            <i data-lucide="send" class="w-3.5 h-3.5 text-indigo-600"></i>
-                            ส่งเข้า Discord ทันที (เด้งเข้ามือถือ)
-                        </label>
-                        <div class="flex gap-2">
-                            <input type="url" id="discord-webhook-input" placeholder="วาง Discord Webhook URL ของคุณ" class="flex-1 text-xs border border-indigo-200 rounded-lg px-2.5 py-1.5 bg-white">
-                            <button onclick="forwardToDiscord()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg transition shrink-0 flex items-center gap-1">
-                                <i data-lucide="send" class="w-3 h-3"></i>
-                                <span>ส่งเลย</span>
+                    <!-- 1-Click Social Media Caption Box -->
+                    <div class="bg-gradient-to-r from-amber-50/80 to-orange-50/60 border border-amber-200 rounded-xl p-3.5 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-amber-950 flex items-center gap-1.5">
+                                <i data-lucide="clipboard-copy" class="w-4 h-4 text-amber-600"></i>
+                                แคปชันพร้อมโพสต์ TikTok / Shopee Video / Reels (1-Click Copy)
+                            </label>
+                            <button onclick="copyCurrentResultCaption()" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-bold rounded-lg transition shadow-2xs flex items-center gap-1">
+                                <i data-lucide="copy" class="w-3 h-3"></i>
+                                <span>คัดลอกทั้งหมด</span>
                             </button>
+                        </div>
+                        <div id="result-social-caption-preview" class="text-[11px] font-mono text-slate-700 bg-white p-2.5 rounded-lg border border-amber-100 max-h-24 overflow-y-auto whitespace-pre-wrap leading-relaxed select-all">
                         </div>
                     </div>
 
@@ -1165,14 +1143,18 @@
                 </video>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-xs pt-1">
-                <a id="preview-modal-download-btn" href="#" download class="py-2 px-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center gap-1.5 transition">
+            <div class="grid grid-cols-3 gap-1.5 text-xs pt-1">
+                <a id="preview-modal-download-btn" href="#" download class="py-2 px-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-semibold flex items-center justify-center gap-1 transition">
                     <i data-lucide="download" class="w-3.5 h-3.5"></i>
                     <span>ดาวน์โหลด</span>
                 </a>
-                <button onclick="openQrModalForPreview()" class="py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold flex items-center justify-center gap-1.5 transition">
+                <button onclick="openQrModalForPreview()" class="py-2 px-2 bg-sky-600 hover:bg-sky-700 text-white rounded-xl font-semibold flex items-center justify-center gap-1 transition">
                     <i data-lucide="qr-code" class="w-3.5 h-3.5"></i>
-                    <span>QR เข้ามือถือ</span>
+                    <span>QR มือถือ</span>
+                </button>
+                <button onclick="copyCurrentPreviewCaption()" class="py-2 px-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-semibold flex items-center justify-center gap-1 transition shadow-xs">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>คัดลอกแคปชัน</span>
                 </button>
             </div>
         </div>
@@ -1472,15 +1454,24 @@
                                     <i data-lucide="play" class="w-3 h-3 text-emerald-600"></i>
                                     <span>ดูคลิป (${vStatus.video_count})</span>
                                 </button>
+                                <button onclick="event.stopPropagation(); copyProductCaption('${item.id}')" class="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-2xs" title="คัดลอกแคปชันพร้อมโพสต์ TikTok / Shopee">
+                                    <i data-lucide="copy" class="w-3 h-3 text-amber-600"></i>
+                                    <span>แคปชัน</span>
+                                </button>
                                 <button onclick="event.stopPropagation(); selectCatalogItem('${item.id}')" class="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition" title="สร้างคลิปซ้ำ">
                                     <i data-lucide="repeat" class="w-3 h-3"></i>
                                 </button>
                             </div>
                             ` : `
-                            <button onclick="event.stopPropagation(); selectCatalogItem('${item.id}')" class="w-full py-1.5 px-2 bg-gradient-to-r from-shopee-500 to-orange-500 hover:from-shopee-600 hover:to-orange-600 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-2xs">
-                                <i data-lucide="sparkles" class="w-3 h-3"></i>
-                                <span>⚡ สร้างคลิปทันที</span>
-                            </button>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="event.stopPropagation(); selectCatalogItem('${item.id}')" class="flex-1 py-1.5 px-2 bg-gradient-to-r from-shopee-500 to-orange-500 hover:from-shopee-600 hover:to-orange-600 text-white rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 transition shadow-2xs">
+                                    <i data-lucide="sparkles" class="w-3 h-3"></i>
+                                    <span>⚡ สร้างคลิปทันที</span>
+                                </button>
+                                <button onclick="event.stopPropagation(); copyProductCaption('${item.id}')" class="py-1.5 px-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition" title="คัดลอกแคปชันพร้อมโพสต์">
+                                    <i data-lucide="copy" class="w-3 h-3 text-slate-600"></i>
+                                </button>
+                            </div>
                             `}
                         </div>
                     `;
@@ -2283,7 +2274,12 @@
             renderTimeEl.textContent = `เรนเดอร์เสร็จใน ${data.render_time_seconds} วินาที • ${data.file_size_mb.toFixed(1)} MB${voiceLabel}${bgmLabel}`;
 
             const tags = data.hashtags ? data.hashtags.map(t => t.startsWith('#') ? t : `#${t}`).join(' ') : '';
-            captionEl.value = `${data.caption}\n\n${tags}`;
+            const fullCaption = `${data.caption}\n\n${tags}`;
+            captionEl.value = fullCaption;
+            const previewEl = document.getElementById('result-social-caption-preview');
+            if (previewEl) {
+                previewEl.textContent = fullCaption;
+            }
 
             videoEl.src = data.video_url;
             videoEl.poster = data.thumbnail_url;
@@ -3120,7 +3116,8 @@
                 filename: latest,
                 url: videoUrl,
                 title: prod.name,
-                affiliate_link: prod.affiliate_link
+                affiliate_link: prod.affiliate_link,
+                social_caption: prod.social_caption || (prod.video_status ? prod.video_status.social_caption : '')
             };
 
             document.getElementById('preview-modal-title').textContent = prod.name;
@@ -3151,6 +3148,62 @@
             if (previewVideoData && previewVideoData.filename) {
                 openQrModal(previewVideoData.filename);
             }
+        }
+
+        // --- 1-Click Social Media Caption Copy Helpers ---
+        async function copyProductCaption(productId) {
+            const prod = allCatalogProducts.find(p => String(p.id) === String(productId));
+            let caption = prod ? (prod.social_caption || (prod.video_status && prod.video_status.social_caption)) : '';
+
+            if (!caption) {
+                try {
+                    const res = await fetch(`/api/product/${productId}/caption`);
+                    const data = await res.json();
+                    if (data.success && data.caption) {
+                        caption = data.caption;
+                    }
+                } catch (e) {
+                    console.error("Fetch caption error:", e);
+                }
+            }
+
+            if (!caption && prod) {
+                caption = `🔥 ${prod.name}\n\n📌 ${prod.highlight || 'สินค้าคุณภาพดี แนะนำเลย'}\n\nบอกเลยว่าคุ้มค่าน่าลองมาก! ✨\n🛒 พิกัดสั่งซื้อในตะกร้าส้ม Shopee:\n👉 ${prod.affiliate_link || ''}\n\n#Shopeeป้ายยา #ของดีบอกต่อ #รีวิวShopee #ShopeeVideo #พิกัดในคอมเมนต์`;
+            }
+
+            if (caption) {
+                await navigator.clipboard.writeText(caption);
+                showToast("🎉 คัดลอกแคปชัน + ลิงก์ตะกร้าส้มเรียบร้อยแล้ว! พร้อมโพสต์ TikTok / Shopee ทันที");
+            } else {
+                alert("ไม่สามารถคัดลอกแคปชันได้");
+            }
+        }
+
+        async function copyCurrentPreviewCaption() {
+            if (!previewVideoData) return;
+            let caption = previewVideoData.social_caption;
+            if (!caption && previewVideoData.title) {
+                caption = `🔥 ${previewVideoData.title}\n\nบอกเลยว่าตัวนี้ต้องมี คุ้มค่าเกินราคาแน่นอน! ✨\n🛒 พิกัดสั่งซื้อในตะกร้าส้ม Shopee:\n👉 ${previewVideoData.affiliate_link || ''}\n\n#Shopeeป้ายยา #ของดีบอกต่อ #รีวิวShopee #ShopeeVideo #พิกัดในคอมเมนต์`;
+            }
+            if (caption) {
+                await navigator.clipboard.writeText(caption);
+                showToast("🎉 คัดลอกแคปชัน + ลิงก์ตะกร้าส้มเรียบร้อยแล้ว! พร้อมโพสต์ TikTok / Shopee ทันที");
+            }
+        }
+
+        async function copyCurrentResultCaption() {
+            const captionBox = document.getElementById('result-caption');
+            const affBtn = document.getElementById('shopee-link-btn');
+            const affUrl = affBtn ? affBtn.href : '';
+            const titleEl = document.getElementById('result-title');
+            const title = titleEl ? titleEl.textContent : '';
+
+            let text = captionBox ? captionBox.value.trim() : '';
+            if (!text) {
+                text = `🔥 ${title}\n\nบอกเลยว่าคุ้มค่าน่าลองมาก พิกัดในตะกร้าส้ม Shopee เลย!\n👉 ${affUrl}\n\n#Shopeeป้ายยา #ของดีบอกต่อ #รีวิวShopee #ShopeeVideo`;
+            }
+            await navigator.clipboard.writeText(text);
+            showToast("🎉 คัดลอกแคปชัน + ลิงก์ตะกร้าส้มเรียบร้อยแล้ว! พร้อมโพสต์ทันที");
         }
 
         // --- Batch Render Modal & Engine (Phase 3 Upgrade) ---

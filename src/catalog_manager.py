@@ -403,6 +403,49 @@ class CatalogManager:
             "total_meta_files": len(meta_files),
         }
 
+    @staticmethod
+    def generate_social_caption(product: dict, meta: dict = None) -> str:
+        """
+        สร้างแคปชันสำหรับโพสต์คลิปบน TikTok, Shopee Video, Facebook Reels หรือ YouTube Shorts
+        มี Hook, จุดเด่น, Call-to-Action ชวนกดตะกร้าส้ม, ลิงก์ Affiliate ย่อ, และแฮชแท็กติดเทรนด์
+        """
+        meta = meta or {}
+        name = meta.get("product_name") or product.get("name", "สินค้าคุณภาพแนะนำ")
+        aff_link = meta.get("affiliate_url") or product.get("affiliate_link", "")
+        hook = meta.get("hook") or ""
+        body = meta.get("body") or product.get("highlight", "")
+        cat = product.get("category", "general")
+
+        cat_tags = {
+            "beauty": ["สกินแคร์", "บิวตี้", "ดูแลผิว", "หน้าใส"],
+            "home": ["ของใช้ในบ้าน", "แก้วเก็บความเย็น", "แต่งบ้าน", "ของแต่งห้อง"],
+            "electronics": ["ไอที", "แกดเจ็ต", "หูฟังบลูทูธ", "ของมันต้องมี"],
+            "fashion": ["แฟชั่น", "กระเป๋า", "แต่งตัว", "ootd"],
+            "general": ["ของดีบอกต่อ", "รีวิวช้อปปี้", "ของถูกและดี"]
+        }.get(cat, ["ของดีบอกต่อ"])
+
+        base_tags = ["Shopeeป้ายยา", "ช้อปปี้ถูกชัวร์", "ของดีบอกต่อ", "รีวิวShopee", "ShopeeVideo", "พิกัดในคอมเมนต์"]
+        all_tags = base_tags + [t for t in cat_tags if t not in base_tags]
+        tag_str = " ".join(f"#{t.replace('#', '')}" for t in all_tags)
+
+        lines = [
+            f"🔥 {name}",
+            "",
+        ]
+        if hook:
+            lines.append(f"✨ {hook}")
+        if body:
+            lines.append(f"📌 {body}")
+
+        lines.append("")
+        lines.append("บอกเลยว่าตัวนี้ต้องมี คุ้มค่าเกินราคาแน่นอน! 💯")
+        lines.append("🛒 พิกัดสั่งซื้อในตะกร้าส้ม Shopee (หรือคลิกลิงก์ด้านล่างได้เลย):")
+        lines.append(f"👉 {aff_link}")
+        lines.append("")
+        lines.append(tag_str)
+
+        return "\n".join(lines)
+
     def get_all_products(
         self,
         category: Optional[str] = None,
@@ -488,6 +531,8 @@ class CatalogManager:
 
             has_video = len(unique_videos) > 0
             latest = unique_videos[0] if has_video else None
+            social_caption = self.generate_social_caption(p, latest)
+            p["social_caption"] = social_caption
 
             p["video_status"] = {
                 "has_video": has_video,
@@ -496,6 +541,7 @@ class CatalogManager:
                 "latest_video_url": latest.get("video_url") if latest else None,
                 "latest_thumbnail_url": latest.get("thumbnail_url") if latest else None,
                 "latest_created_at": latest.get("created_at") if latest else None,
+                "social_caption": social_caption,
                 "videos": [
                     {
                         "filename": v.get("video_filename"),

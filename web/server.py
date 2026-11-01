@@ -145,6 +145,22 @@ async def get_my_products(video_status: str = "all"):
     return {"success": True, "count": len(items), "products": items, "stats": stats}
 
 
+@app.get("/api/product/{product_id}/caption")
+async def get_product_caption(product_id: str):
+    """ดึงหรือสร้างแคปชันพร้อมโพสต์ TikTok / Shopee Video สำหรับสินค้า"""
+    all_products = catalog_mgr.get_all_products(source="all")
+    target = next((p for p in all_products if str(p.get("id")) == str(product_id)), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
+    caption = target.get("social_caption") or catalog_mgr.generate_social_caption(target)
+    return {
+        "success": True,
+        "product_id": product_id,
+        "product_name": target.get("name"),
+        "caption": caption
+    }
+
+
 @app.get("/api/sync/status")
 async def get_sync_status():
     """ดึงสถานะและรายการลิงก์ใน my_links.txt และสถิติภาพรวม"""

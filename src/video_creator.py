@@ -296,21 +296,39 @@ class FFmpegVideoCreator:
             paths = paths + paths
         return paths[:target]
 
+    @staticmethod
+    def _wrap_thai_text(text: str, max_len: int = 25) -> list[str]:
+        """แบ่งข้อความภาษาไทยยาวๆ ให้เป็น 1 หรือ 2 บรรทัดพอดีคำ ไม่ให้ตกขอบจอ"""
+        if not text:
+            return [""]
+        text = text.strip()
+        if len(text) <= max_len:
+            return [text]
+
+        mid = len(text) // 2
+        delimiters = [' ', '!', '?', ',', 'และ', 'ที่', 'มี', 'ให้', 'ช่วย', 'ได้', 'มาก', 'เลย', 'นะ', 'พิกัด']
+        best_idx = -1
+        best_dist = 999
+        for d in delimiters:
+            pos = text.find(d, max(0, mid - 10))
+            if pos != -1 and abs(pos - mid) < best_dist and pos < max_len + 8:
+                best_dist = abs(pos - mid)
+                best_idx = pos + (1 if d == ' ' else 0)
+
+        if best_idx != -1 and best_idx > 5:
+            return [text[:best_idx].strip(), text[best_idx:].strip()]
+        return [text[:max_len].strip(), text[max_len:].strip()]
+
     def _build_text_overlay_filter(self, content: VideoContent, template: str = "clean") -> str:
-        """สร้าง FFmpeg drawtext filter chain รองรับหลากหลาย Template สไตล์ พร้อมป้าย Shopee Video Badges"""
+        """
+        สร้าง FFmpeg drawtext filter chain แบบ TikTok-style Animated Dynamic Subtitles
+        - Slide 1 (0.0s – 3.33s): Hook Headline เด้ง Pop-in + ซับไตเติลคาราโอเกะ
+        - Slide 2 (3.33s – 6.66s): Body Feature เด้ง Pop-in + ซับไตเติลจุดเด่น
+        - Slide 3 (6.66s – 10.0s): CTA เด้ง Pop-in + ป้ายตะกร้าส้ม Shopee ดิ้นกระตุ้นการสั่งซื้อ
+        """
         font = self.font_path.replace("\\", "/").replace(":", "\\:")
 
-        hook = self._esc(content.hook[:36])
-        body = self._esc(content.body[:52])
-        cta = self._esc(content.cta[:40])
-
-        # Shopee CTA helper เพื่อกระตุ้นการจิ้มตะกร้าส้มซ้ายล่าง
-        cta_display = cta
-        if "ตะกร้า" not in cta_display:
-            cta_display = f"🛒 {cta} (จิ้มตะกร้าส้มซ้ายล่าง)"
-        cta_display = self._esc(cta_display[:46])
-
-        # Header Badge ป้ายการันตี
+        # ป้ายการันตี Shopee Video Exclusive บนสุดตลอดทั้งคลิป (0-10s)
         badge_text = self._esc("🏷️ Shopee Video Exclusive | การันตีของแท้")
 
         filters = []
@@ -318,79 +336,128 @@ class FFmpegVideoCreator:
         # 1. ป้าย Shopee Video Header Badge บนสุด
         filters.append(
             f"drawtext=fontfile='{font}':text='{badge_text}'"
-            f":fontcolor=white:fontsize=32"
-            f":x=(w-text_w)/2:y=30"
-            f":box=1:boxborderw=8:boxcolor=0x000000@0.55"
+            f":fontcolor=white:fontsize=30"
+            f":x=(w-text_w)/2:y=35"
+            f":box=1:boxborderw=8:boxcolor=0x000000@0.60"
         )
 
+        # ตัดบรรทัดข้อความให้พอดีจอ
+        hook_lines = self._wrap_thai_text(content.hook[:50], max_len=24)
+        body_lines = self._wrap_thai_text(content.body[:52], max_len=24)
+        cta_lines = self._wrap_thai_text(content.cta[:44], max_len=24)
+
+        # กำหนดชุดสีตามสไตล์ Template
         if template == "neon":
-            # Template: Neon Flash Sale / Pop
-            # Hook: ดำบนเหลืองนีออนสด
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{hook}'"
-                f":fontcolor=0x0F172A:fontsize={FONTSIZE_HOOK}"
-                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
-                f":box=1:boxborderw=16:boxcolor=0xFFE600@0.96"
-            )
-            # Body: ขาวบนชมพูนีออนเข้ม
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{body}'"
-                f":fontcolor=white:fontsize={FONTSIZE_BODY}"
-                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
-                f":box=1:boxborderw=14:boxcolor=0xFF0055@0.88"
-            )
-            # CTA: ดำบนฟ้าสว่างสดใส ชี้ตะกร้าส้ม
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{cta_display}'"
-                f":fontcolor=0x0F172A:fontsize={FONTSIZE_CTA}"
-                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
-                f":box=1:boxborderw=16:boxcolor=0x00E5FF@0.95"
-            )
+            # Neon Pop / Flash Sale
+            hook_bg = "0xFFE600@0.96"  # เหลืองนีออน
+            hook_color = "0x0F172A"     # ดำเข้ม
+            hook_border = "borderw=6:bordercolor=0x0F172A"
+
+            body_bg = "0xFF0055@0.90"  # ชมพูมาเจนต้า
+            body_color = "white"
+            body_border = "borderw=6:bordercolor=0x0F172A"
+
+            cta_bg = "0x00E5FF@0.95"   # ฟ้านีออน
+            cta_color = "0x0F172A"
+            cta_border = "borderw=6:bordercolor=0x0F172A"
         elif template == "minimal":
-            # Template: Minimal Aesthetic Pastel
-            # Hook: กรมท่าบนขาวครีม
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{hook}'"
-                f":fontcolor=0x1E293B:fontsize={FONTSIZE_HOOK-4}"
-                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
-                f":box=1:boxborderw=16:boxcolor=0xF8FAFC@0.95"
-            )
-            # Body: ขาวบนเทาเข้มหรูหรา
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{body}'"
-                f":fontcolor=white:fontsize={FONTSIZE_BODY-2}"
-                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
-                f":box=1:boxborderw=12:boxcolor=0x334155@0.85"
-            )
-            # CTA: ขาวบน Slate ดำ ชี้ตะกร้าส้ม
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{cta_display}'"
-                f":fontcolor=white:fontsize={FONTSIZE_CTA}"
-                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
-                f":box=1:boxborderw=16:boxcolor=0x0F172A@0.92"
-            )
+            # Korean Minimal Aesthetic
+            hook_bg = "0xF8FAFC@0.95"  # ครีมขาวนวล
+            hook_color = "0x1E293B"    # สเลทชาร์โคล
+            hook_border = "borderw=2:bordercolor=0xCBD5E1"
+
+            body_bg = "0x334155@0.88"  # เทาหรู
+            body_color = "white"
+            body_border = "borderw=2:bordercolor=0x475569"
+
+            cta_bg = "0x0F172A@0.92"   # ดำมินิมอล
+            cta_color = "white"
+            cta_border = "borderw=2:bordercolor=0x334155"
         else:
-            # Template: Shopee Clean (Default)
+            # Shopee Clean (Default)
+            hook_bg = "0xEE4D2D@0.95"  # ส้ม Shopee สด
+            hook_color = "white"
+            hook_border = "borderw=5:bordercolor=black"
+
+            body_bg = "0x0F172A@0.88"  # มิดไนท์แบล็ค คมชัด
+            body_color = "white"
+            body_border = "borderw=5:bordercolor=black"
+
+            cta_bg = "0xEE4D2D@0.98"   # ส้ม Shopee เน้นย้ำ
+            cta_color = "white"
+            cta_border = "borderw=5:bordercolor=black"
+
+        # ========================================================
+        # SLIDE 1: HOOK (0.0s – 3.33s)
+        # ========================================================
+        for line_idx, line in enumerate(hook_lines):
+            line_esc = self._esc(line)
+            y_base = 150 if len(hook_lines) == 1 else (120 + line_idx * 72)
             filters.append(
-                f"drawtext=fontfile='{font}':text='{hook}'"
-                f":fontcolor=white:fontsize={FONTSIZE_HOOK}"
-                f":x=(w-text_w)/2:y={TEXT_HOOK_Y}"
-                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.94"
-            )
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{body}'"
-                f":fontcolor=white:fontsize={FONTSIZE_BODY}"
-                f":x=(w-text_w)/2:y={TEXT_BODY_Y}"
-                f":box=1:boxborderw=14:boxcolor=0x000000@0.65"
-            )
-            filters.append(
-                f"drawtext=fontfile='{font}':text='{cta_display}'"
-                f":fontcolor=white:fontsize={FONTSIZE_CTA}"
-                f":x=(w-text_w)/2:y={TEXT_CTA_Y}"
-                f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.95"
+                f"drawtext=fontfile='{font}':text='{line_esc}'"
+                f":fontcolor={hook_color}:fontsize={FONTSIZE_HOOK}:box=1:boxborderw=15:boxcolor={hook_bg}"
+                f":{hook_border}"
+                f":x=(w-text_w)/2:y='{y_base}+22*max(0,1-t/0.18)'"
+                f":alpha='min(1,t/0.15)':enable='between(t,0,3.33)'"
             )
 
-        return ",".join(filters)
+        # TikTok Dynamic Subtitle (Lower safe zone y=1340) for Slide 1
+        sub1_esc = self._esc(content.hook[:44])
+        filters.append(
+            f"drawtext=fontfile='{font}':text='{sub1_esc}'"
+            f":fontcolor=white:fontsize=44:borderw=5:bordercolor=black"
+            f":box=1:boxborderw=12:boxcolor=0x000000@0.75"
+            f":x=(w-text_w)/2:y=1340"
+            f":alpha='min(1,t/0.15)':enable='between(t,0,3.33)'"
+        )
+
+        # ========================================================
+        # SLIDE 2: BODY / FEATURES (3.33s – 6.66s)
+        # ========================================================
+        for line_idx, line in enumerate(body_lines):
+            line_esc = self._esc(line)
+            y_base = 150 if len(body_lines) == 1 else (120 + line_idx * 70)
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{line_esc}'"
+                f":fontcolor={body_color}:fontsize={FONTSIZE_BODY}:box=1:boxborderw=14:boxcolor={body_bg}"
+                f":{body_border}"
+                f":x=(w-text_w)/2:y='{y_base}+22*max(0,1-(t-3.33)/0.18)'"
+                f":alpha='min(1,(t-3.33)/0.15)':enable='between(t,3.33,6.66)'"
+            )
+
+        # TikTok Dynamic Subtitle (Lower safe zone y=1340) for Slide 2
+        sub2_esc = self._esc(content.body[:46])
+        filters.append(
+            f"drawtext=fontfile='{font}':text='{sub2_esc}'"
+            f":fontcolor=white:fontsize=44:borderw=5:bordercolor=black"
+            f":box=1:boxborderw=12:boxcolor=0x000000@0.75"
+            f":x=(w-text_w)/2:y=1340"
+            f":alpha='min(1,(t-3.33)/0.15)':enable='between(t,3.33,6.66)'"
+        )
+
+        # ========================================================
+        # SLIDE 3: CTA & BASKET (6.66s – 10.0s)
+        # ========================================================
+        for line_idx, line in enumerate(cta_lines):
+            line_esc = self._esc(line)
+            y_base = 150 if len(cta_lines) == 1 else (120 + line_idx * 70)
+            filters.append(
+                f"drawtext=fontfile='{font}':text='{line_esc}'"
+                f":fontcolor={cta_color}:fontsize={FONTSIZE_CTA}:box=1:boxborderw=15:boxcolor={cta_bg}"
+                f":{cta_border}"
+                f":x=(w-text_w)/2:y='{y_base}+22*max(0,1-(t-6.66)/0.18)'"
+                f":alpha='min(1,(t-6.66)/0.15)':enable='between(t,6.66,10)'"
+            )
+
+        # Animated Bouncing Orange Basket CTA Button Sticker (y=1290) for Slide 3
+        cart_badge = self._esc("🟠 จิ้มตะกร้าส้มซ้ายล่าง ด่วนก่อนหมด! 🛒")
+        filters.append(
+            f"drawtext=fontfile='{font}':text='{cart_badge}'"
+            f":fontcolor=white:fontsize=46:borderw=6:bordercolor=black"
+            f":box=1:boxborderw=16:boxcolor=0xEE4D2D@0.98"
+            f":x=(w-text_w)/2:y='1290-10*abs(sin((t-6.66)*6))'"
+            f":alpha='min(1,(t-6.66)/0.15)':enable='between(t,6.66,10)'"
+        )
 
         return ",".join(filters)
 
