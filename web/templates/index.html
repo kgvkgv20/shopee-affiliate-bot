@@ -1047,6 +1047,38 @@
                     </a>
                 </div>
 
+                <!-- 1-Click Bot Video Generator (Automatic In-Bot Video Creation) -->
+                <div class="p-3.5 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-2 border-orange-400 rounded-xl shadow-xs space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-2.5 w-2.5 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500"></span>
+                            </span>
+                            <h4 class="font-bold text-slate-900 text-xs">⚡ สั่งบอทเจนวิดีโอ .mp4 ทันที (เซฟลงเครื่องอัตโนมัติ)</h4>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500 text-white shadow-2xs">
+                            10-15 วิเสร็จ
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 leading-relaxed">
+                        บอทจะเขียนสคริปต์เซลล์ + พากย์เสียงไทย + ใส่ซับเด้ง TikTok + เรนเดอร์ไฟล์ <strong>.mp4</strong> เก็บลงโฟลเดอร์ <code class="font-mono bg-white px-1 py-0.2 rounded border border-orange-200 text-orange-700">output/</code> ให้พร้อมเปิดดูและสั่งโพสต์ได้ทันที!
+                    </p>
+                    <button type="button" 
+                            id="flow-instant-generate-btn" 
+                            onclick="generateVideoFromFlowModal()" 
+                            class="w-full py-2.5 px-4 bg-gradient-to-r from-orange-600 via-shopee-500 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-black rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md hover:shadow-lg transform active:scale-98 cursor-pointer">
+                        <i data-lucide="play-circle" class="w-4 h-4 fill-white/20"></i>
+                        <span>🎬 สั่งบอทสร้างวิดีโอ .mp4 สำหรับสินค้านี้ทันที</span>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2 pt-1 text-[11px] font-semibold text-slate-400">
+                    <span class="h-px bg-slate-200 flex-1"></span>
+                    <span>หรือ คัดลอก Prompt ด้านล่างไปใช้ใน Google Flow (labs.google) เพื่อให้นางแบบ AI ขยับตัว</span>
+                    <span class="h-px bg-slate-200 flex-1"></span>
+                </div>
+
                 <!-- Prompt 1: First Frame -->
                 <div class="space-y-1">
                     <div class="flex items-center justify-between">
@@ -1241,10 +1273,16 @@
                         <span>เลือกทั้งหมด (<span id="trend-visible-count">0</span> รายการ)</span>
                     </label>
 
-                    <button type="button" onclick="bulkImportSelectedTrends()" id="trend-bulk-import-btn" class="py-1.5 px-3 bg-gradient-to-r from-shopee-600 to-orange-500 hover:from-shopee-700 hover:to-orange-600 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
-                        <span>⚡ นำเข้าสินค้าที่เลือก (<span id="trend-selected-count">0</span>) เข้าคลังทันที</span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="bulkImportSelectedTrends()" id="trend-bulk-import-btn" class="py-1.5 px-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                            <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+                            <span>นำเข้าคลัง (<span id="trend-selected-count">0</span>)</span>
+                        </button>
+                        <button type="button" onclick="bulkGenerateSelectedTrends()" id="trend-bulk-generate-btn" class="py-1.5 px-3 bg-gradient-to-r from-orange-600 via-rose-500 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-extrabold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer" disabled>
+                            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-yellow-200"></i>
+                            <span>🎬 สั่งเจนคลิปทั้งหมด (<span id="trend-selected-gen-count">0</span> คลิป)</span>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Product Grid (Scrollable Container) -->
@@ -1480,6 +1518,43 @@
             <div id="sync-progress-box" class="hidden p-3 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs flex items-center gap-2">
                 <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                 <span id="sync-progress-text">กำลังดึงข้อมูลและรูปภาพจริงจาก Shopee กรุณารอสักครู่...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Quick Video Generation Overlay -->
+    <div id="quick-gen-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 text-center relative border border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full border-4 border-orange-200 animate-ping opacity-30"></div>
+                <div class="w-16 h-16 rounded-full border-4 border-orange-500 border-t-transparent animate-spin"></div>
+                <i data-lucide="video" class="w-7 h-7 text-orange-600 absolute"></i>
+            </div>
+            <div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-orange-100 text-orange-800 uppercase tracking-wider">
+                    ⚡ Auto Video Generator (1-Click)
+                </span>
+                <h4 id="quick-gen-title" class="text-xs font-bold text-slate-900 mt-2 line-clamp-2 px-2">กำลังสร้างวิดีโอ...</h4>
+                <p class="text-[11px] text-slate-500 mt-0.5">ใช้เวลาประมาณ 10-15 วินาที เซฟลงโฟลเดอร์ output/ อัตโนมัติ</p>
+            </div>
+            <!-- Progress Steps Animation -->
+            <div class="space-y-2 text-left bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs text-slate-600">
+                <div class="flex items-center gap-2 text-emerald-600 font-semibold">
+                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>เตรียมรูปภาพสินค้าตรงปก 100%</span>
+                </div>
+                <div class="flex items-center gap-2 text-orange-600 font-semibold animate-pulse">
+                    <i data-lucide="loader-2" class="w-3.5 h-3.5 shrink-0 animate-spin"></i>
+                    <span>Gemini AI เขียนสคริปต์ + Voice AI พากย์เสียง</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-400">
+                    <i data-lucide="clock" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>FFmpeg ขยับภาพ 9:16 + ซับเด้ง TikTok</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-400">
+                    <i data-lucide="hard-drive" class="w-3.5 h-3.5 shrink-0"></i>
+                    <span>บันทึกไฟล์ .mp4 ลงโฟลเดอร์ output/</span>
+                </div>
             </div>
         </div>
     </div>
@@ -3377,10 +3452,17 @@
                                     <span>⭐ ${item.rating || '4.9'} • ${soldStr}</span>
                                     <div class="flex items-center gap-1.5">
                                         <button type="button" 
+                                                onclick="event.stopPropagation(); quickGenerateVideo('${item.id}', '${item.name.replace(/'/g, "\\'")}')" 
+                                                class="px-2 py-0.5 rounded-md bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold flex items-center gap-1 transition shadow-2xs hover:shadow cursor-pointer" 
+                                                title="สั่งบอทเจนคลิป 9:16 เซฟลงเครื่องทันที (10 วิ)">
+                                            <i data-lucide="play" class="w-2.5 h-2.5 fill-current"></i>
+                                            <span>เจนคลิป</span>
+                                        </button>
+                                        <button type="button" 
                                                 onclick="event.stopPropagation(); openGoogleFlowModal('${item.id}')" 
-                                                class="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 flex items-center gap-1 transition shadow-2xs" 
+                                                class="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 flex items-center gap-1 transition shadow-2xs cursor-pointer" 
                                                 title="เปิดชุดข้อมูลส่งต่อ Google Flow / Veo">
-                                            <i data-lucide="sparkles" class="w-3 h-3 text-purple-600"></i>
+                                            <i data-lucide="sparkles" class="w-2.5 h-2.5 text-purple-600"></i>
                                             <span>Flow</span>
                                         </button>
                                         <span class="text-orange-600 font-semibold truncate max-w-[85px]" title="${hookRaw}">
@@ -3445,9 +3527,17 @@
             const countEl = document.getElementById('trend-selected-count');
             if (countEl) countEl.textContent = count;
 
+            const genCountEl = document.getElementById('trend-selected-gen-count');
+            if (genCountEl) genCountEl.textContent = count;
+
             const btn = document.getElementById('trend-bulk-import-btn');
             if (btn) {
                 btn.disabled = (count === 0);
+            }
+
+            const genBtn = document.getElementById('trend-bulk-generate-btn');
+            if (genBtn) {
+                genBtn.disabled = (count === 0);
             }
 
             // Sync master select all checkbox
@@ -3508,6 +3598,62 @@
                 if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = oldHtml;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function bulkGenerateSelectedTrends() {
+            const ids = Array.from(window._selectedTrendIds);
+            if (ids.length === 0) {
+                alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการเพื่อสั่งเจนวิดีโอ');
+                return;
+            }
+
+            const genBtn = document.getElementById('trend-bulk-generate-btn');
+            const oldHtml = genBtn ? genBtn.innerHTML : '';
+            if (genBtn) {
+                genBtn.disabled = true;
+                genBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>เตรียมคิวเจน ${ids.length} คลิป...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                // 1. นำเข้าเข้า my_products ทันที
+                const selectedItems = (window._allTrends || []).filter(t => window._selectedTrendIds.has(t.id));
+                await fetch('/api/trends/bulk-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_ids: ids, items: selectedItems })
+                });
+
+                // 2. ปิด Sync Modal
+                closeSyncModal();
+
+                // 3. เริ่มรัน Batch Render สำหรับรายการที่เลือก
+                const res = await fetch('/api/batch-render/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        target: 'selected',
+                        product_ids: ids,
+                        template: 'clean',
+                        enable_voice: true,
+                        voice_type: 'female',
+                        bgm_track: 'cheerful'
+                    })
+                });
+                const data = await res.json();
+                window._selectedTrendIds.clear();
+                openBatchRenderModal();
+                showToast(`🚀 เริ่มต้นเจนวิดีโออัตโนมัติ ${ids.length} รายการแล้ว!`);
+
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการสั่ง Batch Render: ' + err.message);
+            } finally {
+                if (genBtn) {
+                    genBtn.disabled = false;
+                    genBtn.innerHTML = oldHtml;
                     lucide.createIcons();
                 }
             }
@@ -4493,6 +4639,108 @@
             }
             if (text) {
                 await navigator.clipboard.writeText(text);
+            }
+        }
+
+        // --- 1-Click Quick Video Generator & Flow Modal Generator ---
+        function showQuickGenLoading(productName) {
+            const titleEl = document.getElementById('quick-gen-title');
+            if (titleEl) titleEl.textContent = `กำลังสร้างวิดีโอ: ${productName}`;
+            const modal = document.getElementById('quick-gen-modal');
+            if (modal) modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function hideQuickGenLoading() {
+            const modal = document.getElementById('quick-gen-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function openVideoPreviewDirect(data) {
+            previewVideoData = {
+                filename: data.video_filename,
+                url: data.video_url,
+                title: data.product_name,
+                productId: data.product_id,
+                affiliate_link: data.affiliate_url,
+                social_caption: (data.caption || '') + '\n\n' + ((data.hashtags || []).map(t => t.startsWith('#') ? t : '#' + t).join(' '))
+            };
+
+            const titleEl = document.getElementById('preview-modal-title');
+            if (titleEl) titleEl.textContent = data.product_name;
+
+            const dateEl = document.getElementById('preview-modal-date');
+            if (dateEl) dateEl.textContent = `สร้างเสร็จ: ${data.created_at || 'เมื่อสักครู่'} (ใช้เวลา ${data.render_time_seconds || 10}s)`;
+
+            const badgeEl = document.getElementById('preview-modal-badge');
+            if (badgeEl) badgeEl.textContent = `🟢 วิดีโอพร้อมโพสต์ (${data.duration || 10}s • ${(data.file_size_mb || 0).toFixed(1)} MB)`;
+
+            const player = document.getElementById('preview-modal-player');
+            const source = document.getElementById('preview-modal-source');
+            if (source) source.src = data.video_url;
+            if (player) {
+                player.load();
+                player.play().catch(() => {});
+            }
+
+            const dlBtn = document.getElementById('preview-modal-download-btn');
+            if (dlBtn) {
+                dlBtn.href = data.video_url;
+                dlBtn.download = data.video_filename;
+            }
+
+            const modal = document.getElementById('video-preview-modal');
+            if (modal) modal.classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        async function generateVideoFromFlowModal() {
+            if (!currentFlowKit) return;
+            const pid = currentFlowKit.product_id;
+            const pname = currentFlowKit.product_name;
+            closeGoogleFlowModal();
+            await quickGenerateVideo(pid, pname);
+        }
+
+        async function quickGenerateVideo(productId, productName) {
+            showQuickGenLoading(productName || 'สินค้า Shopee');
+
+            try {
+                const res = await fetch('/api/generate-catalog', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        template: 'clean',
+                        enable_voice: true,
+                        voice_type: 'female',
+                        bgm_track: 'cheerful'
+                    })
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'การสร้างวิดีโอล้มเหลว');
+                }
+
+                const data = await res.json();
+                hideQuickGenLoading();
+
+                // ปิด Modal ที่อาจเปิดค้างอยู่
+                if (typeof closeSyncModal === 'function') closeSyncModal();
+                if (typeof closeGoogleFlowModal === 'function') closeGoogleFlowModal();
+
+                // เปิดเครื่องเล่นคลิปตัวอย่างและให้พร้อมโพสต์ทันที
+                openVideoPreviewDirect(data);
+                showToast(`🎉 บอทสร้างวิดีโอ .mp4 เซฟลง output/ เรียบร้อย!`);
+
+                // โหลดสถิติและประวัติล่าสุด
+                if (typeof loadCatalog === 'function') loadCatalog();
+                if (typeof loadHistory === 'function') loadHistory();
+
+            } catch (err) {
+                hideQuickGenLoading();
+                alert(`เกิดข้อผิดพลาดในการสร้างวิดีโอ: ${err.message}`);
             }
         }
 

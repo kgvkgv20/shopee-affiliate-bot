@@ -819,7 +819,15 @@ async def generate_catalog(data: dict):
 
     item = catalog_mgr.get_product_by_id(product_id)
     if not item:
-        raise HTTPException(status_code=404, detail="ไม่พบสินค้าในระบบ")
+        # ตรวจสอบว่าสินค้าอยู่ในคลังกระแส HIGH_COMMISSION_TRENDS หรือไม่
+        from src.trend_researcher import HIGH_COMMISSION_TRENDS
+        trend_match = next((p for p in HIGH_COMMISSION_TRENDS if p.get("id") == product_id), None)
+        if trend_match:
+            item = dict(trend_match)
+            # นำเข้าคลัง my_products อัตโนมัติเพื่อให้ติดตามสถานะได้
+            catalog_mgr.add_my_product(item)
+        else:
+            raise HTTPException(status_code=404, detail="ไม่พบสินค้าในระบบ")
 
     custom_link = affiliate_url if affiliate_url else item["affiliate_link"]
 
@@ -983,7 +991,15 @@ async def start_batch_render(data: dict):
         items = catalog_mgr.get_all_products(source=source, video_status_filter="pending")
     elif target == "selected" and product_ids:
         all_items = catalog_mgr.get_all_products(source="all")
+        existing_ids = {p.get("id") for p in all_items}
+        from src.trend_researcher import HIGH_COMMISSION_TRENDS
         items = [p for p in all_items if p.get("id") in product_ids]
+        for pid in product_ids:
+            if pid not in existing_ids:
+                trend_match = next((t for t in HIGH_COMMISSION_TRENDS if t.get("id") == pid), None)
+                if trend_match:
+                    catalog_mgr.add_my_product(dict(trend_match))
+                    items.append(trend_match)
     else:
         items = catalog_mgr.get_all_products(source=source)
 
@@ -1059,7 +1075,13 @@ async def batch_generate(data: dict):
     for pid in product_ids:
         item = catalog_mgr.get_product_by_id(pid)
         if not item:
-            continue
+            from src.trend_researcher import HIGH_COMMISSION_TRENDS
+            trend_match = next((t for t in HIGH_COMMISSION_TRENDS if t.get("id") == pid), None)
+            if trend_match:
+                item = dict(trend_match)
+                catalog_mgr.add_my_product(item)
+            else:
+                continue
         custom_link = affiliate_url if affiliate_url else item["affiliate_link"]
         product = Product(
             item_id=f"web_{item['category']}_{item['id']}",
