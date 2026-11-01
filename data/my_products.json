@@ -1,5 +1,25 @@
 [
   {
+    "name": "เซรั่ม Dr.PONG 28D Whitening Drone ผิวใส รอยสิวจางไว",
+    "brand": "Dr.PONG",
+    "category": "beauty",
+    "commission_rate": "35%",
+    "commission_badge": "🔥 Extra 35% (~140.-/ชิ้น)",
+    "price_thb": 399,
+    "shop_type": "Shopee Mall",
+    "highlight": "เซรั่มเทคโนโลยีโดรนส่งสารบำรุงลึกถึงเซลล์ผิว ช่วยลดรอยดำ รอยแดงจากสิว ผิวแลดูกระจ่างใสขึ้น",
+    "images": [
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Dr.PONG+28D",
+    "rating": 4.9,
+    "sold_count": 58000,
+    "id": "my_1793539429",
+    "is_custom": true
+  },
+  {
     "name": "หม้อทอดไร้น้ำมัน Gaabor Air Fryer ขนาด 4 ลิตร ร้อนเร็วทั่วถึง เมนูสุขภาพ",
     "brand": "Gaabor",
     "category": "home",
