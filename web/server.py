@@ -178,6 +178,9 @@ async def get_product_caption(product_id: str):
     all_products = catalog_mgr.get_all_products(source="all")
     target = next((p for p in all_products if str(p.get("id")) == str(product_id)), None)
     if not target:
+        from src.trend_researcher import HIGH_COMMISSION_TRENDS
+        target = next((p for p in HIGH_COMMISSION_TRENDS if str(p.get("id")) == str(product_id)), None)
+    if not target:
         raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
     caption = target.get("social_caption") or catalog_mgr.generate_social_caption(target)
     return {
@@ -344,6 +347,9 @@ async def get_google_flow_data(product_id: str):
     all_products = catalog_mgr.get_all_products(source="all")
     target = next((p for p in all_products if str(p.get("id")) == str(product_id)), None)
     if not target:
+        from src.trend_researcher import HIGH_COMMISSION_TRENDS
+        target = next((p for p in HIGH_COMMISSION_TRENDS if str(p.get("id")) == str(product_id)), None)
+    if not target:
         raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
     kit = generate_google_flow_kit(target)
     return {
@@ -480,13 +486,13 @@ async def run_sync_links(data: dict):
             # บันทึกเข้า 'สินค้าของฉัน'
             item_data = {
                 "name": product_name,
-                "brand": extracted.get("brand", "ร้านแนะนำ"),
+                "brand": extracted.get("brand", "Shopee Mall"),
                 "category": extracted.get("category", "general"),
                 "commission_rate": "25%",
-                "commission_badge": "My Pick 25%",
-                "price_thb": 0.0,
-                "shop_type": "ร้านแนะนำ",
-                "highlight": "สินค้าขายดีคุณภาพสูง สั่งซื้อผ่านตะกร้าส้ม",
+                "commission_badge": "Extra 25%",
+                "price_thb": float(extracted.get("price_thb") or 299.0),
+                "shop_type": "Shopee Mall",
+                "highlight": "สินค้าขายดีคุณภาพสูง สั่งซื้อผ่านตะกร้าส้ม ตรงปก 100%",
                 "images": images,
                 "affiliate_link": extracted.get("affiliate_url", url),
                 "rating": 4.9,
@@ -693,6 +699,7 @@ async def parse_shopee_url(data: dict):
             "images": extracted.get("local_images", []),
             "cdn_urls": extracted.get("cdn_urls", []),
             "has_real_images": extracted.get("has_real_images", False),
+            "price_thb": float(extracted.get("price_thb") or 299.0),
         }
     except Exception as e:
         logger.warning(f"Parse Shopee URL failed: {e}")

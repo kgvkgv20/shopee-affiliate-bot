@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "name": "หม้อทอดไร้น้ำมัน Gaabor Air Fryer ขนาด 4 ลิตร ร้อนเร็วทั่วถึง เมนูสุขภาพ",
+    "brand": "Gaabor",
+    "category": "home",
+    "commission_rate": "30%",
+    "commission_badge": "🍗 Extra 30% (~240.-/เครื่อง)",
+    "price_thb": 799,
+    "shop_type": "Shopee Mall",
+    "highlight": "หม้อทอดไร้น้ำมันความจุ 4L ลมร้อนหมุนเวียน 360 องศา อาหารกรอบอร่อยไม่ง้อน้ำมัน ตะกร้าเคลือบสารกันติดล้างง่าย",
+    "images": [
+      "assets/products/gaabor_airfryer/img1.jpg",
+      "assets/products/gaabor_airfryer/img2.jpg",
+      "assets/products/gaabor_airfryer/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=หม้อทอดไร้น้ำมัน+Gaabor",
+    "rating": 4.8,
+    "sold_count": 48000,
+    "id": "my_1793535927",
+    "is_custom": true
+  }
+]

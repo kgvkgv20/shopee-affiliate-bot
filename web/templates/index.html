@@ -1032,6 +1032,21 @@
                     <h4 id="flow-product-name" class="font-bold text-slate-900 text-xs mt-1"></h4>
                 </div>
 
+                <!-- Product Real Packshot Preview for First-Frame -->
+                <div class="flex items-center gap-3 p-3 bg-purple-50/70 rounded-xl border border-purple-200">
+                    <div class="w-16 h-16 rounded-lg bg-white border border-purple-200 overflow-hidden shrink-0 shadow-2xs">
+                        <img id="flow-first-frame-img" src="" alt="Packshot" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-purple-950 text-xs">ภาพ Packshot สินค้าจริง (First-Frame Reference)</p>
+                        <p class="text-[10px] text-slate-600 mt-0.5">ใช้เป็นรูปตั้งต้นใน Google Flow / Veo เพื่อให้ AI เจนนางแบบถือสินค้าตัวนี้ตรงปก 100%</p>
+                    </div>
+                    <a id="flow-download-img-btn" href="#" download="first_frame_packshot.jpg" target="_blank" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-xs">
+                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                        <span>โหลดรูป</span>
+                    </a>
+                </div>
+
                 <!-- Prompt 1: First Frame -->
                 <div class="space-y-1">
                     <div class="flex items-center justify-between">
@@ -1075,7 +1090,11 @@
                 </div>
             </div>
 
-            <div class="pt-2 flex justify-end">
+            <div class="pt-2 flex items-center justify-between border-t border-slate-100">
+                <button onclick="copyEntireFlowKit()" class="py-2 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-xs">
+                    <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+                    <span>✨ คัดลอกแพ็กเกจ Google Flow ทั้งหมด (1-Click)</span>
+                </button>
                 <button onclick="closeGoogleFlowModal()" class="py-2 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold">
                     ปิด
                 </button>
@@ -1156,6 +1175,10 @@
                     <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500"></i>
                     <span>🔥 สินค้ากระแสค่าคอมสูง (แนะนำ)</span>
                 </button>
+                <button id="sync-tab-paste-btn" onclick="switchSyncTab('paste')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="link" class="w-3.5 h-3.5 text-sky-600"></i>
+                    <span>🔗 ดูดรูปจากลิงก์ Shopee (s.shopee.co.th)</span>
+                </button>
                 <button id="sync-tab-crawler-btn" onclick="switchSyncTab('crawler')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
                     <i data-lucide="search" class="w-3.5 h-3.5"></i>
                     <span>🔍 ค้นหาด้วยคีย์เวิร์ด</span>
@@ -1163,10 +1186,6 @@
                 <button id="sync-tab-excel-btn" onclick="switchSyncTab('excel')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>📊 นำเข้าไฟล์ Excel</span>
-                </button>
-                <button id="sync-tab-paste-btn" onclick="switchSyncTab('paste')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
-                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
-                    <span>วางหลายลิงก์</span>
                 </button>
                 <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
                     <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
@@ -1309,17 +1328,61 @@
                 </div>
             </div>
 
-            <!-- Subtab 2: Multi-link Paste -->
-            <div id="sync-subtab-paste" class="hidden space-y-3 text-xs">
-                <div>
-                    <label class="block font-semibold text-slate-700 mb-1">วางลิงก์ Shopee หรือ Affiliate Links (บรรทัดละ 1 ลิงก์):</label>
-                    <textarea id="sync-paste-input" rows="5" placeholder="https://s.shopee.co.th/xxxx&#10;https://shopee.co.th/product/352437321/9002752322&#10;https://shope.ee/yyyy" class="w-full font-mono text-[11px] border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-shopee-500"></textarea>
-                    <p class="text-[11px] text-slate-400 mt-1">รองรับทั้งลิงก์ย่อ Affiliate (s.shopee.co.th / shope.ee) และลิงก์หน้าเว็บ Shopee เต็ม</p>
+            <!-- Subtab 2: Shopee Link Image Extractor & Multi-link Ingest -->
+            <div id="sync-subtab-paste" class="hidden space-y-4 text-xs">
+                <!-- Info Header -->
+                <div class="p-3 bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 rounded-xl space-y-1">
+                    <div class="flex items-center gap-1.5 font-bold text-sky-950">
+                        <i data-lucide="link" class="w-4 h-4 text-sky-600"></i>
+                        <span>ดึงรูปภาพแท้จาก Shopee CDN ตรงปก 100% (Instant Link Extractor)</span>
+                    </div>
+                    <p class="text-slate-600 text-[11px] leading-relaxed">
+                        วางลิงก์สินค้า Shopee หรือลิงก์ย่อ Affiliate (<code>s.shopee.co.th/...</code>) บอทจะเปิดหน้าสินค้าและตามไปดึงภาพ Packshot ความละเอียดสูง 1024x1024 ครบทุกมุมจาก CDN ของร้านค้าทางการ พร้อมส่งต่อทำวิดีโอหรือโยนเข้า Google Flow ทันที!
+                    </p>
                 </div>
-                <div class="pt-2">
-                    <button onclick="startSyncFromPasted()" id="sync-paste-btn" class="w-full py-2.5 bg-shopee-500 hover:bg-shopee-600 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition">
-                        <i data-lucide="download-cloud" class="w-4 h-4"></i>
-                        <span id="sync-paste-btn-text">ดึงภาพและชื่อจริงเข้าคลังทั้งหมด</span>
+
+                <!-- Section 1: Single Link Instant Extractor -->
+                <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                    <label class="block font-bold text-slate-800 text-xs">🚀 วาง 1 ลิงก์เพื่อสกัดภาพและดูตัวอย่างทันที:</label>
+                    <div class="flex gap-2">
+                        <div class="relative flex-1">
+                            <i data-lucide="link-2" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                            <input type="url" id="quick-shopee-link-input" placeholder="เช่น https://s.shopee.co.th/xxxx หรือ https://shopee.co.th/product/..." class="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-500 bg-white">
+                        </div>
+                        <button onclick="extractInstantShopeeLink()" id="quick-extract-btn" class="px-4 py-2 bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition shadow-xs shrink-0">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                            <span id="quick-extract-btn-text">สกัดรูปจริงทันที</span>
+                        </button>
+                    </div>
+
+                    <!-- Instant Extracted Preview Box (Hidden by default) -->
+                    <div id="quick-extract-preview" class="hidden p-3 bg-white border border-sky-300 rounded-xl space-y-3 shadow-xs">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-sky-100 text-sky-800">✅ สกัดข้อมูลสำเร็จ ตรงปก 100%</span>
+                                <h4 id="quick-preview-title" class="font-bold text-slate-900 text-xs mt-1"></h4>
+                                <p id="quick-preview-price" class="text-sm font-extrabold text-orange-600 mt-0.5"></p>
+                            </div>
+                            <button onclick="saveQuickExtractedToMyProducts()" id="quick-save-btn" class="px-3 py-1.5 bg-gradient-to-r from-shopee-600 to-orange-500 hover:from-shopee-700 hover:to-orange-600 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs shrink-0">
+                                <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                                <span>⚡ บันทึกเข้าคลังทันที</span>
+                            </button>
+                        </div>
+                        <!-- Images Grid -->
+                        <div>
+                            <span class="text-[11px] font-semibold text-slate-500 mb-1.5 block">ภาพ Packshot ที่ดึงมาจาก Shopee CDN:</span>
+                            <div id="quick-preview-images" class="grid grid-cols-3 gap-2"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Multi-link Batch Paste -->
+                <div class="space-y-1.5 pt-1">
+                    <label class="block font-semibold text-slate-700">หรือวางหลายลิงก์พร้อมกัน (บรรทัดละ 1 ลิงก์เพื่อดูดเข้าคลังแบบชุด):</label>
+                    <textarea id="sync-paste-input" rows="3" placeholder="https://s.shopee.co.th/xxxx&#10;https://shopee.co.th/product/352437321/9002752322&#10;https://shope.ee/yyyy" class="w-full font-mono text-[11px] border border-slate-300 rounded-xl p-2.5 focus:outline-none focus:ring-1 focus:ring-sky-500 bg-white"></textarea>
+                    <button onclick="startSyncFromPasted()" id="sync-paste-btn" class="w-full py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl shadow-xs flex items-center justify-center gap-2 transition text-xs">
+                        <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+                        <span id="sync-paste-btn-text">📥 ดูดรูปและข้อมูลเข้าคลังทั้งหมด (Batch Ingest)</span>
                     </button>
                 </div>
             </div>
@@ -3311,10 +3374,19 @@
 
                                 <!-- Metrics & Hook Hint -->
                                 <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 mt-1">
-                                    <span>⭐ ${item.rating || '4.9'} • ขายแล้ว ${soldStr}</span>
-                                    <span class="text-orange-600 font-semibold truncate max-w-[120px]" title="${hookRaw}">
-                                        🎯 ${hookDisplay}
-                                    </span>
+                                    <span>⭐ ${item.rating || '4.9'} • ${soldStr}</span>
+                                    <div class="flex items-center gap-1.5">
+                                        <button type="button" 
+                                                onclick="event.stopPropagation(); openGoogleFlowModal('${item.id}')" 
+                                                class="px-2 py-0.5 rounded-md bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold border border-purple-200 flex items-center gap-1 transition shadow-2xs" 
+                                                title="เปิดชุดข้อมูลส่งต่อ Google Flow / Veo">
+                                            <i data-lucide="sparkles" class="w-3 h-3 text-purple-600"></i>
+                                            <span>Flow</span>
+                                        </button>
+                                        <span class="text-orange-600 font-semibold truncate max-w-[85px]" title="${hookRaw}">
+                                            🎯 ${hookDisplay}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -3596,6 +3668,127 @@
                 btn.disabled = false;
                 btnText.textContent = "เริ่มดึงสินค้าทั้งหมดทันที (1-Click Auto Sync)";
                 pbox.classList.add('hidden');
+            }
+        }
+
+        // --- Instant Shopee Link Extractor ---
+        window._lastExtractedShopee = null;
+
+        async function extractInstantShopeeLink() {
+            const input = document.getElementById('quick-shopee-link-input');
+            const url = input ? input.value.trim() : '';
+            if (!url) {
+                alert('กรุณากรอกลิงก์ Shopee (รองรับทั้ง s.shopee.co.th และ shopee.co.th)');
+                return;
+            }
+
+            const btn = document.getElementById('quick-extract-btn');
+            const btnText = document.getElementById('quick-extract-btn-text');
+            const previewBox = document.getElementById('quick-extract-preview');
+            const oldBtnText = btnText ? btnText.textContent : 'สกัดรูปจริงทันที';
+            
+            if (btn) btn.disabled = true;
+            if (btnText) btnText.textContent = "กำลังดูดรูปจาก Shopee...";
+            showToast("🔍 กำลังเปิดหน้าสินค้าและดึงภาพ 1024x1024 จาก Shopee CDN (3-5 วินาที)...");
+
+            try {
+                const res = await fetch('/api/parse-shopee-url', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: url })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window._lastExtractedShopee = data;
+                    if (previewBox) previewBox.classList.remove('hidden');
+                    
+                    const titleEl = document.getElementById('quick-preview-title');
+                    const priceEl = document.getElementById('quick-preview-price');
+                    const imgBox = document.getElementById('quick-preview-images');
+
+                    if (titleEl) titleEl.textContent = data.name || 'สินค้า Shopee ตรงปก';
+                    if (priceEl) priceEl.textContent = data.price_thb ? `฿${data.price_thb.toLocaleString()}` : 'ราคาโปรโมชั่น Shopee';
+
+                    const images = data.images || [];
+                    if (imgBox) {
+                        if (images.length === 0) {
+                            imgBox.innerHTML = '<p class="text-slate-400 text-xs col-span-3 py-3 text-center">กำลังจัดเตรียมภาพความละเอียดสูง...</p>';
+                        } else {
+                            imgBox.innerHTML = images.slice(0, 3).map((img, idx) => {
+                                const cleanSrc = img.startsWith('http') ? img : ('/' + img.replace(/^[/\\]+/, ''));
+                                return `
+                                    <div class="relative rounded-lg overflow-hidden border border-slate-200 aspect-square bg-slate-100 group shadow-2xs">
+                                        <img src="${cleanSrc}" class="w-full h-full object-cover group-hover:scale-105 transition" onerror="this.src='https://placehold.co/400x400/fff7ed/ea580c?text=Packshot'">
+                                        <span class="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-bold px-1 rounded">มุมที่ ${idx + 1}</span>
+                                    </div>
+                                `;
+                            }).join('');
+                        }
+                    }
+                    lucide.createIcons();
+                    showToast("✨ สกัดภาพ Packshot สำเร็จครบ 3 มุมแล้ว!");
+                } else {
+                    alert('ไม่สามารถสกัดข้อมูลสินค้าได้: ' + (data.detail || 'ลองใหม่อีกครั้ง'));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + e.message);
+            } finally {
+                if (btn) btn.disabled = false;
+                if (btnText) btnText.textContent = oldBtnText;
+                lucide.createIcons();
+            }
+        }
+
+        async function saveQuickExtractedToMyProducts() {
+            if (!window._lastExtractedShopee) {
+                alert('กรุณาสกัดข้อมูลสินค้าก่อนบันทึก');
+                return;
+            }
+            const item = window._lastExtractedShopee;
+            const btn = document.getElementById('quick-save-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>กำลังบันทึก...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                const res = await fetch('/api/my-products', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: item.name || 'สินค้า Shopee คุณภาพดี',
+                        brand: item.brand || 'Shopee Mall',
+                        category: item.category || 'general',
+                        commission_rate: '25%',
+                        commission_badge: 'My Pick 25%',
+                        price_thb: Number(item.price_thb || 299),
+                        shop_type: 'Shopee Mall',
+                        highlight: 'สินค้าขายดี ดึงรูปจาก Shopee ตรงปก 100%',
+                        images: item.images || [],
+                        affiliate_link: item.affiliate_url || item.clean_url || ''
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('🎉 บันทึกสินค้าตรงปกเข้าคลังแล้ว! พร้อมทำคลิปทันที');
+                    closeSyncModal();
+                    if (typeof setSource === 'function') {
+                        setSource('my_products');
+                    } else if (typeof loadProducts === 'function') {
+                        loadProducts();
+                    }
+                } else {
+                    alert('บันทึกไม่สำเร็จ: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<i data-lucide="check-circle" class="w-3.5 h-3.5"></i> <span>⚡ บันทึกเข้าคลังทันที</span>`;
+                    lucide.createIcons();
+                }
             }
         }
 
@@ -4232,6 +4425,16 @@
                     document.getElementById('flow-first-frame-prompt').value = currentFlowKit.first_frame_image_prompt;
                     document.getElementById('flow-veo-prompt').value = currentFlowKit.google_flow_veo_prompt;
                     
+                    // Set first frame image preview & download link
+                    const firstImg = (currentFlowKit.images && currentFlowKit.images.length > 0) ? currentFlowKit.images[0] : '';
+                    const imgEl = document.getElementById('flow-first-frame-img');
+                    const dlBtn = document.getElementById('flow-download-img-btn');
+                    if (imgEl && firstImg) {
+                        const webImgPath = firstImg.startsWith('http') ? firstImg : ('/' + firstImg.replace(/^[/\\]+/, ''));
+                        imgEl.src = webImgPath;
+                        if (dlBtn) dlBtn.href = webImgPath;
+                    }
+
                     const scriptBox = document.getElementById('flow-script-box');
                     if (scriptBox && currentFlowKit.thai_script) {
                         scriptBox.innerHTML = `
@@ -4246,6 +4449,29 @@
             } catch (e) {
                 alert("ไม่สามารถเปิด Google Flow Studio ได้: " + e.message);
             }
+        }
+
+        async function copyEntireFlowKit() {
+            if (!currentFlowKit) return;
+            const fullScript = currentFlowKit.thai_script ? currentFlowKit.thai_script.full_script : '';
+            const allText = `📦 สินค้า: ${currentFlowKit.product_name}\n` +
+                `🏷️ แบรนด์: ${currentFlowKit.brand || 'Shopee Mall'} | หมวดหมู่: ${currentFlowKit.category}\n\n` +
+                `==============================\n` +
+                `🎨 [1. First-Frame Image Prompt (สำหรับเจนภาพใน Imagen / Midjourney)]\n` +
+                `==============================\n` +
+                `${currentFlowKit.first_frame_image_prompt}\n\n` +
+                `==============================\n` +
+                `🎬 [2. Google Flow Veo Motion Prompt (สำหรับขยับวิดีโอ 9:16 ใน Veo)]\n` +
+                `==============================\n` +
+                `${currentFlowKit.google_flow_veo_prompt}\n\n` +
+                `==============================\n` +
+                `🎙️ [3. สคริปต์พากย์ไทยสไตล์รีวิว UGC 10 วินาที]\n` +
+                `==============================\n` +
+                `${fullScript}\n\n` +
+                `🛒 พิกัดสินค้า Shopee:\n${currentFlowKit.affiliate_link || ''}`;
+
+            await navigator.clipboard.writeText(allText);
+            showToast("✨ คัดลอกแพ็กเกจ Google Flow Kit ทั้งหมดเรียบร้อยแล้ว!");
         }
 
         function closeGoogleFlowModal() {
