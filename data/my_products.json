@@ -1,5 +1,145 @@
 [
   {
+    "name": "เจลล้างหน้า CeraVe Foaming Cleanser สำหรับผิวธรรมดา-ผิวมัน",
+    "brand": "CeraVe",
+    "category": "beauty",
+    "commission_rate": "25%",
+    "commission_badge": "🏆 Shopee Mall 25%",
+    "price_thb": 490,
+    "shop_type": "Shopee Mall",
+    "highlight": "เจลล้างหน้าผสมเซราไมด์ 3 ชนิดและไนอะซินาไมด์ ทำความสะอาดหมดจด ไม่ทำให้ผิวแห้งตึง ปลอบประโลมผิว",
+    "images": [
+      "assets/products/cerave_cleanser/img1.jpg",
+      "assets/products/cerave_cleanser/img2.jpg",
+      "assets/products/cerave_cleanser/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=CeraVe+Foaming+Cleanser",
+    "rating": 4.9,
+    "sold_count": 135000,
+    "id": "my_1793544358",
+    "is_custom": true
+  },
+  {
+    "name": "มอยส์เจอร์ไรเซอร์ SKINTIFIC 5X Ceramide Barrier Repair Gel",
+    "brand": "SKINTIFIC",
+    "category": "beauty",
+    "commission_rate": "40%",
+    "commission_badge": "✨ Extra 40% (~130.-/ชิ้น)",
+    "price_thb": 329,
+    "shop_type": "Shopee Mall",
+    "highlight": "เจลมอยส์เจอร์ไรเซอร์กู้ผิวโทรม เสริมเกราะป้องกันผิว ล็อคความชุ่มชื้น คุมมัน ซึมไว",
+    "images": [
+      "assets/products/skintific_moisturizer/img1.jpg",
+      "assets/products/skintific_moisturizer/img2.jpg",
+      "assets/products/skintific_moisturizer/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=SKINTIFIC+5X+Ceramide",
+    "rating": 4.9,
+    "sold_count": 115000,
+    "id": "my_1793544358",
+    "is_custom": true
+  },
+  {
+    "name": "มาส์กคุณหมอ Banobagi Vita Genic Jelly Mask บำรุงผิวล้ำลึก",
+    "brand": "Banobagi",
+    "category": "beauty",
+    "commission_rate": "40%",
+    "commission_badge": "💎 Extra 40% (ซื้อง่าย จ่ายคล่อง)",
+    "price_thb": 49,
+    "shop_type": "Shopee Mall",
+    "highlight": "มาส์กเจลลี่สูตรคิดค้นโดยทีมแพทย์เกาหลี ฟื้นฟูผิวแบบเร่งด่วน ให้ความชุ่มชื้นเข้มข้น ไม่เหนอะ",
+    "images": [
+      "assets/products/banobagi_mask/img1.jpg",
+      "assets/products/banobagi_mask/img2.jpg",
+      "assets/products/banobagi_mask/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Banobagi+Vita+Genic+Jelly+Mask",
+    "rating": 4.9,
+    "sold_count": 230000,
+    "id": "my_1793544358",
+    "is_custom": true
+  },
+  {
+    "name": "กันแดด MizuMi UV Water Serum SPF50+ PA++++ สูตรน้ำผิวแพ้ง่าย",
+    "brand": "MizuMi",
+    "category": "beauty",
+    "commission_rate": "30%",
+    "commission_badge": "☀️ Extra 30% (~135.-/ชิ้น)",
+    "price_thb": 445,
+    "shop_type": "Shopee Mall",
+    "highlight": "กันแดดเนื้อน้ำ 100% Non-Chemical บางเบา ซึมไว ไม่เหนียวเหนอะหนะ อ่อนโยนต่อผิวเป็นสิว",
+    "images": [
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img2.jpg",
+      "assets/products/mizumi_uv/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=MizuMi+UV+Water+Serum",
+    "rating": 4.9,
+    "sold_count": 92000,
+    "id": "my_1793544358",
+    "is_custom": true
+  },
+  {
+    "name": "เซรั่ม Dr.PONG 28D Whitening Drone ผิวใส รอยสิวจางไว",
+    "brand": "Dr.PONG",
+    "category": "beauty",
+    "commission_rate": "35%",
+    "commission_badge": "🔥 Extra 35% (~140.-/ชิ้น)",
+    "price_thb": 399,
+    "shop_type": "Shopee Mall",
+    "highlight": "เซรั่มเทคโนโลยีโดรนส่งสารบำรุงลึกถึงเซลล์ผิว ช่วยลดรอยดำ รอยแดงจากสิว ผิวแลดูกระจ่างใสขึ้น",
+    "images": [
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Dr.PONG+28D",
+    "rating": 4.9,
+    "sold_count": 58000,
+    "id": "my_1793544358",
+    "is_custom": true
+  },
+  {
+    "name": "กันแดด MizuMi UV Water Serum SPF50+ PA++++ สูตรน้ำผิวแพ้ง่าย",
+    "brand": "MizuMi",
+    "category": "beauty",
+    "commission_rate": "30%",
+    "commission_badge": "☀️ Extra 30% (~135.-/ชิ้น)",
+    "price_thb": 445,
+    "shop_type": "Shopee Mall",
+    "highlight": "กันแดดเนื้อน้ำ 100% Non-Chemical บางเบา ซึมไว ไม่เหนียวเหนอะหนะ อ่อนโยนต่อผิวเป็นสิว",
+    "images": [
+      "assets/products/mizumi_uv/img1.jpg",
+      "assets/products/mizumi_uv/img2.jpg",
+      "assets/products/mizumi_uv/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=MizuMi+UV+Water+Serum",
+    "rating": 4.9,
+    "sold_count": 92000,
+    "id": "my_1793544172",
+    "is_custom": true
+  },
+  {
+    "name": "เซรั่ม Dr.PONG 28D Whitening Drone ผิวใส รอยสิวจางไว",
+    "brand": "Dr.PONG",
+    "category": "beauty",
+    "commission_rate": "35%",
+    "commission_badge": "🔥 Extra 35% (~140.-/ชิ้น)",
+    "price_thb": 399,
+    "shop_type": "Shopee Mall",
+    "highlight": "เซรั่มเทคโนโลยีโดรนส่งสารบำรุงลึกถึงเซลล์ผิว ช่วยลดรอยดำ รอยแดงจากสิว ผิวแลดูกระจ่างใสขึ้น",
+    "images": [
+      "assets/products/drpong_28d/img1.jpg",
+      "assets/products/drpong_28d/img2.jpg",
+      "assets/products/drpong_28d/img3.jpg"
+    ],
+    "affiliate_link": "https://shopee.co.th/search?keyword=Dr.PONG+28D",
+    "rating": 4.9,
+    "sold_count": 58000,
+    "id": "my_1793544172",
+    "is_custom": true
+  },
+  {
     "name": "เซรั่ม Dr.PONG 28D Whitening Drone ผิวใส รอยสิวจางไว",
     "brand": "Dr.PONG",
     "category": "beauty",
