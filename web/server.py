@@ -352,6 +352,61 @@ async def get_google_flow_data(product_id: str):
     }
 
 
+@app.get("/api/trends/suggestions")
+async def get_trends_suggestions_api(category: str = "all", tag: str = "all"):
+    """
+    ดึงรายการสินค้ากระแสค่าคอมมิชชันสูง 25%-50% พร้อมป้ายกำไรและยอดขาย
+    category: all, beauty, home, electronics, fashion
+    tag: all, viral_today, high_comm, problem_solver, bestseller
+    """
+    from src.trend_researcher import get_trend_suggestions
+    items = get_trend_suggestions(category_filter=category, tag_filter=tag)
+    return {
+        "success": True,
+        "count": len(items),
+        "total": len(items),
+        "trends": items,
+        "suggestions": items
+    }
+
+
+@app.post("/api/trends/bulk-import")
+async def bulk_import_trends_api(data: dict):
+    """
+    นำเข้าสินค้ากระแสที่เลือกหลายรายการเข้าสู่ 'สินค้าของฉัน' ทันที
+    Payload: { "product_ids": ["drpong_28d", "banobagi_mask", ...] }
+    """
+    from src.trend_researcher import bulk_import_trends_to_my_products
+    product_ids = data.get("product_ids", [])
+    if not product_ids:
+        raise HTTPException(status_code=400, detail="กรุณาเลือกสินค้าอย่างน้อย 1 รายการเพื่อนำเข้า")
+
+    imported = bulk_import_trends_to_my_products(product_ids)
+    stats = catalog_mgr.get_video_stats()
+
+    return {
+        "success": True,
+        "count": len(imported),
+        "imported_count": len(imported),
+        "message": f"นำเข้าสินค้ากระแสค่าคอมสูงสำเร็จ {len(imported)} รายการ พร้อมทำคลิปได้ทันที!",
+        "products": imported,
+        "stats": stats
+    }
+
+
+@app.post("/api/trends/ai-discover")
+async def ai_discover_trends_api(data: dict = None):
+    """ใช้ Gemini AI ค้นหาเทรนด์สินค้าใหม่ประจำสัปดาห์"""
+    from src.trend_researcher import discover_ai_trends
+    topic = data.get("topic", "สินค้าขายดีค่าคอมสูง") if data else "สินค้าขายดีค่าคอมสูง"
+    trends = discover_ai_trends(topic=topic)
+    return {
+        "success": True,
+        "count": len(trends),
+        "trends": trends
+    }
+
+
 @app.get("/api/sync/status")
 async def get_sync_status():
     """ดึงสถานะและรายการลิงก์ใน my_links.txt และสถิติภาพรวม"""

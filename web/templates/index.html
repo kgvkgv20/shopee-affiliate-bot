@@ -1134,15 +1134,15 @@
 
     <!-- Modal: Auto-Sync Products from Shopee / my_links.txt -->
     <div id="sync-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-        <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl space-y-4 relative">
+        <div class="bg-white rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-4 relative">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center">
-                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shadow-xs">
+                        <i data-lucide="flame" class="w-4 h-4"></i>
                     </div>
                     <div>
-                        <h3 class="text-sm font-bold text-slate-900">ศูนย์ดึงสินค้าสำหรับทำคลิปล่าสุด (Auto-Sync)</h3>
-                        <p class="text-[11px] text-slate-500">ดึงรูปถ่ายจริง 1024x1024 ตรงปก 100% พร้อมชื่อไทยจาก Shopee เข้าระบบอัตโนมัติ</p>
+                        <h3 class="text-sm font-bold text-slate-900">ศูนย์รวมสินค้ากระแส & นำเข้าสินค้าอัตโนมัติ</h3>
+                        <p class="text-[11px] text-slate-500">เลือกสินค้าไวรัลค่าคอม 25%–50% หรือสั่งบอทดึงข้อมูลตรงปก 100% เข้าคลังทำคลิปทันที</p>
                     </div>
                 </div>
                 <button onclick="closeSyncModal()" class="text-slate-400 hover:text-slate-600">
@@ -1151,27 +1151,87 @@
             </div>
 
             <!-- Sync Tabs -->
-            <div class="flex border-b border-slate-200 text-xs gap-1">
-                <button id="sync-tab-crawler-btn" onclick="switchSyncTab('crawler')" class="pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition">
-                    <i data-lucide="bot" class="w-3.5 h-3.5"></i>
-                    <span>🤖 บอทค้นหา Shopee อัตโนมัติ (Crawler)</span>
+            <div class="flex border-b border-slate-200 text-xs gap-1 overflow-x-auto pb-0.5">
+                <button id="sync-tab-trends-btn" onclick="switchSyncTab('trends')" class="pb-2.5 px-3 font-semibold border-b-2 border-shopee-500 text-shopee-600 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="flame" class="w-3.5 h-3.5 text-orange-500"></i>
+                    <span>🔥 สินค้ากระแสค่าคอมสูง (แนะนำ)</span>
                 </button>
-                <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
-                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                    <span>ดึงจาก my_links.txt (<strong id="sync-file-count">0</strong>)</span>
+                <button id="sync-tab-crawler-btn" onclick="switchSyncTab('crawler')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                    <span>🔍 ค้นหาด้วยคีย์เวิร์ด</span>
                 </button>
-                <button id="sync-tab-paste-btn" onclick="switchSyncTab('paste')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
-                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
-                    <span>วางหลายลิงก์ (Batch Paste)</span>
-                </button>
-                <button id="sync-tab-edit-btn" onclick="switchSyncTab('edit')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
-                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                    <span>จัดการไฟล์</span>
-                </button>
-                <button id="sync-tab-excel-btn" onclick="switchSyncTab('excel')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition">
+                <button id="sync-tab-excel-btn" onclick="switchSyncTab('excel')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
                     <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
                     <span>📊 นำเข้าไฟล์ Excel</span>
                 </button>
+                <button id="sync-tab-paste-btn" onclick="switchSyncTab('paste')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i>
+                    <span>วางหลายลิงก์</span>
+                </button>
+                <button id="sync-tab-file-btn" onclick="switchSyncTab('file')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                    <span>my_links.txt (<strong id="sync-file-count">0</strong>)</span>
+                </button>
+                <button id="sync-tab-edit-btn" onclick="switchSyncTab('edit')" class="pb-2.5 px-3 font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 transition shrink-0">
+                    <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                    <span>จัดการไฟล์</span>
+                </button>
+            </div>
+
+            <!-- Subtab 0: High-Commission Trending Explorer (Default) -->
+            <div id="sync-subtab-trends" class="space-y-3 text-xs">
+                <!-- Header Banner -->
+                <div class="p-3 bg-gradient-to-r from-orange-50 via-amber-50 to-rose-50 border border-orange-200 rounded-xl flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-1.5 font-bold text-orange-950">
+                            <i data-lucide="flame" class="w-4 h-4 text-orange-600"></i>
+                            <span>สินค้ากระแสมาแรง & ค่าคอมมิชชันพุ่งสูง 25% – 50%</span>
+                        </div>
+                        <p class="text-slate-600 text-[11px] mt-0.5">
+                            คัดเฉพาะสินค้าที่กำลังติดฟีด TikTok / Shopee ติ๊กเลือกแล้วดึงเข้าคลัง <strong>🟡 รอทำคลิป</strong> ได้ทันทีโดยไม่ต้องพิมพ์ค้นหา!
+                        </p>
+                    </div>
+                    <button type="button" onclick="loadTrendingSuggestions(true)" class="p-2 text-orange-600 hover:text-orange-700 hover:bg-orange-100 rounded-lg transition" title="รีเฟรชรายการ">
+                        <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Filters & Action Bar -->
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                    <!-- Filter Pills -->
+                    <div class="flex flex-wrap items-center gap-1 text-[11px]">
+                        <button type="button" onclick="filterTrends('all', 'all')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-orange-600 text-white font-bold transition">🌟 ทั้งหมด</button>
+                        <button type="button" onclick="filterTrends('all', 'viral_today')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🔥 ไวรัลวันนี้</button>
+                        <button type="button" onclick="filterTrends('all', 'high_comm')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">💰 ค่าคอม 35%+</button>
+                        <button type="button" onclick="filterTrends('beauty', 'all')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">💄 บิวตี้</button>
+                        <button type="button" onclick="filterTrends('home', 'all')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🏠 ของใช้ในบ้าน</button>
+                        <button type="button" onclick="filterTrends('electronics', 'all')" class="trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition">🎧 แกดเจ็ต</button>
+                    </div>
+
+                    <!-- AI Discover Button -->
+                    <button type="button" onclick="aiDiscoverNewTrends()" id="ai-discover-btn" class="text-[11px] text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition shadow-2xs">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-purple-600"></i>
+                        <span>✨ Gemini แนะนำเทรนด์สด</span>
+                    </button>
+                </div>
+
+                <!-- Selection Control Bar -->
+                <div class="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer font-semibold text-slate-800 text-[11px] select-none">
+                        <input type="checkbox" id="trend-select-all-checkbox" onchange="toggleSelectAllTrends(this.checked)" class="rounded text-orange-600 focus:ring-orange-500 w-4 h-4">
+                        <span>เลือกทั้งหมด (<span id="trend-visible-count">0</span> รายการ)</span>
+                    </label>
+
+                    <button type="button" onclick="bulkImportSelectedTrends()" id="trend-bulk-import-btn" class="py-1.5 px-3 bg-gradient-to-r from-shopee-600 to-orange-500 hover:from-shopee-700 hover:to-orange-600 text-white font-bold rounded-lg text-xs flex items-center gap-1.5 transition shadow-xs disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+                        <span>⚡ นำเข้าสินค้าที่เลือก (<span id="trend-selected-count">0</span>) เข้าคลังทันที</span>
+                    </button>
+                </div>
+
+                <!-- Product Grid (Scrollable Container) -->
+                <div id="trends-grid-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-96 overflow-y-auto pr-1">
+                    <p class="text-slate-400 text-center py-6 col-span-2">กำลังโหลดสินค้ากระแสค่าคอมสูง...</p>
+                </div>
             </div>
 
             <!-- Subtab 0: Search Engine Auto-Crawler -->
@@ -3060,8 +3120,9 @@
         // --- Sync Modal & Functions ---
         function openSyncModal() {
             document.getElementById('sync-modal').classList.remove('hidden');
-            switchSyncTab('crawler');
+            switchSyncTab('trends');
             loadSyncLinksStatus();
+            loadTrendingSuggestions();
             lucide.createIcons();
         }
 
@@ -3070,7 +3131,7 @@
         }
 
         function switchSyncTab(tab) {
-            const tabs = ['crawler', 'file', 'paste', 'edit', 'excel'];
+            const tabs = ['trends', 'crawler', 'excel', 'paste', 'file', 'edit'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`sync-tab-${t}-btn`);
                 const subtab = document.getElementById(`sync-subtab-${t}`);
@@ -3082,7 +3143,302 @@
                     if (subtab) subtab.classList.add('hidden');
                 }
             });
+            if (tab === 'trends') {
+                loadTrendingSuggestions();
+            }
             lucide.createIcons();
+        }
+
+        // --- High-Commission Trends Explorer ---
+        window._allTrends = [];
+        window._currentTrendCategory = 'all';
+        window._currentTrendTag = 'all';
+        window._selectedTrendIds = new Set();
+
+        async function loadTrendingSuggestions(forceRefresh = false) {
+            const container = document.getElementById('trends-grid-container');
+            if (!container) return;
+
+            if (forceRefresh || !window._allTrends || window._allTrends.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-8 text-center text-slate-400 space-y-2">
+                        <i data-lucide="loader-2" class="w-6 h-6 animate-spin mx-auto text-orange-500"></i>
+                        <p class="text-xs">กำลังสแกนสินค้ากระแส ค่าคอมสูง 25%–50% จากระบบ...</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                try {
+                    const res = await fetch('/api/trends/suggestions');
+                    const data = await res.json();
+                    if (data.success && (data.suggestions || data.trends)) {
+                        window._allTrends = data.suggestions || data.trends;
+                    } else {
+                        window._allTrends = [];
+                    }
+                } catch (e) {
+                    console.error("Failed to load trending suggestions:", e);
+                }
+            }
+            renderTrendingGrid();
+        }
+
+        function filterTrends(category, tag) {
+            window._currentTrendCategory = category;
+            window._currentTrendTag = tag;
+
+            // Highlight active button
+            const buttons = document.querySelectorAll('.trend-filter-btn');
+            buttons.forEach(btn => {
+                const onclickStr = btn.getAttribute('onclick') || '';
+                if (onclickStr.includes(`'${category}'`) && onclickStr.includes(`'${tag}'`)) {
+                    btn.className = "trend-filter-btn px-2.5 py-1 rounded-lg bg-orange-600 text-white font-bold transition shadow-2xs";
+                } else {
+                    btn.className = "trend-filter-btn px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition";
+                }
+            });
+
+            renderTrendingGrid();
+        }
+
+        function getVisibleTrends() {
+            if (!window._allTrends) return [];
+            return window._allTrends.filter(item => {
+                const matchCat = (window._currentTrendCategory === 'all') || (item.category === window._currentTrendCategory);
+                const matchTag = (window._currentTrendTag === 'all') || (item.viral_tag === window._currentTrendTag);
+                return matchCat && matchTag;
+            });
+        }
+
+        function renderTrendingGrid() {
+            const container = document.getElementById('trends-grid-container');
+            if (!container) return;
+
+            const visible = getVisibleTrends();
+            const countEl = document.getElementById('trend-visible-count');
+            if (countEl) countEl.textContent = visible.length;
+
+            if (visible.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full py-10 text-center text-slate-400 space-y-2">
+                        <i data-lucide="inbox" class="w-8 h-8 mx-auto text-slate-300"></i>
+                        <p class="text-xs">ไม่พบสินค้าในหมวดหมู่นี้ ลองเลือกฟิลเตอร์อื่นหรือกด "Gemini ค้นหาสินค้ากระแสใหม่"</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                updateSelectedTrendCount();
+                return;
+            }
+
+            container.innerHTML = visible.map(item => {
+                const isSelected = window._selectedTrendIds.has(item.id);
+                const firstImg = (item.images && item.images.length > 0) ? item.images[0] : 'https://placehold.co/400x400/fff7ed/ea580c?text=Shopee';
+                const profit = Math.round(item.estimated_profit_baht || (item.price * (item.commission_rate || 25) / 100));
+                const soldStr = item.sold_count >= 1000 ? `${(item.sold_count / 1000).toFixed(0)}k+` : `${item.sold_count}`;
+
+                return `
+                    <div onclick="toggleTrendSelect('${item.id}', event)" 
+                         id="trend-card-${item.id}"
+                         class="group relative border ${isSelected ? 'border-orange-500 bg-orange-50/40 ring-1 ring-orange-400' : 'border-slate-200 bg-white hover:border-orange-300'} rounded-xl p-2.5 transition flex gap-3 cursor-pointer shadow-2xs">
+                        
+                        <!-- Checkbox & Thumbnail -->
+                        <div class="relative shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                            <img src="${firstImg}" alt="${item.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/400x400/fff7ed/ea580c?text=Packshot'">
+                            <div class="absolute top-1 left-1">
+                                <input type="checkbox" 
+                                       id="trend-chk-${item.id}" 
+                                       ${isSelected ? 'checked' : ''} 
+                                       onclick="event.stopPropagation(); toggleTrendSelect('${item.id}', event)" 
+                                       class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 shadow-sm cursor-pointer">
+                            </div>
+                            <span class="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/70 text-white text-[9px] font-bold">
+                                ${(item.images || []).length} รูป
+                            </span>
+                        </div>
+
+                        <!-- Product Info -->
+                        <div class="flex-1 min-w-0 flex flex-col justify-between">
+                            <div>
+                                <!-- Badges -->
+                                <div class="flex items-center gap-1.5 flex-wrap mb-1">
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-2xs">
+                                        ค่าคอม ${item.commission_rate}%
+                                    </span>
+                                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
+                                        ${item.viral_tag_label || '🔥 กำลังฮิต'}
+                                    </span>
+                                </div>
+
+                                <!-- Title -->
+                                <h4 class="font-bold text-slate-800 text-xs line-clamp-1 group-hover:text-orange-600 transition" title="${item.name}">
+                                    ${item.name}
+                                </h4>
+
+                                <!-- Price & Profit -->
+                                <div class="flex items-baseline gap-2 mt-0.5 text-xs">
+                                    <span class="text-slate-900 font-extrabold text-sm">฿${item.price.toLocaleString()}</span>
+                                    <span class="text-emerald-600 font-bold text-[11px] bg-emerald-50 px-1 py-0.2 rounded border border-emerald-200">
+                                        กำไร ~฿${profit}/ออเดอร์
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Metrics & Hook Hint -->
+                            <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-slate-100/80 mt-1">
+                                <span>⭐ ${item.rating || '4.9'} • ขายแล้ว ${soldStr}</span>
+                                <span class="text-orange-600 font-semibold truncate max-w-[110px]" title="${item.target_hook || ''}">
+                                    🎯 ${item.target_hook ? item.target_hook.slice(0, 16) + '...' : 'คลิปสั้นไวรัล'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+            updateSelectedTrendCount();
+        }
+
+        function toggleTrendSelect(id, event) {
+            if (window._selectedTrendIds.has(id)) {
+                window._selectedTrendIds.delete(id);
+            } else {
+                window._selectedTrendIds.add(id);
+            }
+
+            const chk = document.getElementById(`trend-chk-${id}`);
+            if (chk) chk.checked = window._selectedTrendIds.has(id);
+
+            const card = document.getElementById(`trend-card-${id}`);
+            if (card) {
+                if (window._selectedTrendIds.has(id)) {
+                    card.className = "group relative border border-orange-500 bg-orange-50/40 ring-1 ring-orange-400 rounded-xl p-2.5 transition flex gap-3 cursor-pointer shadow-2xs";
+                } else {
+                    card.className = "group relative border border-slate-200 bg-white hover:border-orange-300 rounded-xl p-2.5 transition flex gap-3 cursor-pointer shadow-2xs";
+                }
+            }
+
+            updateSelectedTrendCount();
+        }
+
+        function toggleSelectAllTrends(checked) {
+            const visible = getVisibleTrends();
+            visible.forEach(item => {
+                if (checked) {
+                    window._selectedTrendIds.add(item.id);
+                } else {
+                    window._selectedTrendIds.delete(item.id);
+                }
+            });
+            renderTrendingGrid();
+        }
+
+        function updateSelectedTrendCount() {
+            const count = window._selectedTrendIds.size;
+            const countEl = document.getElementById('trend-selected-count');
+            if (countEl) countEl.textContent = count;
+
+            const btn = document.getElementById('trend-bulk-import-btn');
+            if (btn) {
+                btn.disabled = (count === 0);
+            }
+
+            // Sync master select all checkbox
+            const selectAllChk = document.getElementById('trend-select-all-checkbox');
+            const visible = getVisibleTrends();
+            if (selectAllChk) {
+                if (visible.length > 0 && visible.every(item => window._selectedTrendIds.has(item.id))) {
+                    selectAllChk.checked = true;
+                } else {
+                    selectAllChk.checked = false;
+                }
+            }
+        }
+
+        async function bulkImportSelectedTrends() {
+            const ids = Array.from(window._selectedTrendIds);
+            if (ids.length === 0) {
+                alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการเพื่อนำเข้า');
+                return;
+            }
+
+            const btn = document.getElementById('trend-bulk-import-btn');
+            const oldHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> <span>กำลังบันทึกลงคลัง ${ids.length} รายการ...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                const res = await fetch('/api/trends/bulk-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_ids: ids })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 นำเข้าสินค้าค่าคอมสูงสำเร็จ ${data.imported_count} รายการ! พร้อมทำคลิปทันที`);
+                    window._selectedTrendIds.clear();
+                    closeSyncModal();
+                    
+                    // Switch to My Products tab and reload
+                    if (typeof setSource === 'function') {
+                        setSource('my_products');
+                    } else if (typeof loadProducts === 'function') {
+                        loadProducts();
+                    }
+                } else {
+                    alert('เกิดข้อผิดพลาดในการนำเข้า: ' + (data.detail || ''));
+                }
+            } catch (e) {
+                alert('การเชื่อมต่อขัดข้อง: ' + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = oldHtml;
+                    lucide.createIcons();
+                }
+            }
+        }
+
+        async function aiDiscoverNewTrends() {
+            const topic = prompt("💡 ให้ AI Gemini สแกนค้นหาสินค้ากระแสอะไรเป็นพิเศษ?", "สินค้าขายดี TikTok ค่าคอมสูง 2026");
+            if (!topic) return;
+
+            const btn = document.getElementById('ai-discover-btn');
+            const oldHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin text-purple-600"></i> <span>Gemini กำลังวิเคราะห์เทรนด์...</span>`;
+                lucide.createIcons();
+            }
+
+            try {
+                const res = await fetch('/api/trends/ai-discover', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ topic: topic })
+                });
+                const data = await res.json();
+                if (data.success && data.trends && data.trends.length > 0) {
+                    showToast(`✨ Gemini ค้นพบสินค้าดาวรุ่งใหม่ ${data.trends.length} รายการ!`);
+                    // Prepend to _allTrends
+                    window._allTrends = [...data.trends, ...window._allTrends];
+                    // Also auto-select the newly discovered ones so user can import right away
+                    data.trends.forEach(t => window._selectedTrendIds.add(t.id));
+                    renderTrendingGrid();
+                } else {
+                    alert('ไม่สามารถค้นพบสินค้าใหม่ได้ในขณะนี้: ' + (data.detail || 'ลองใหม่อีกครั้ง'));
+                }
+            } catch (e) {
+                alert('เกิดข้อผิดพลาดในการเรียก Gemini AI: ' + e.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = oldHtml;
+                    lucide.createIcons();
+                }
+            }
         }
 
         function setCrawlerKeyword(kw, category) {
