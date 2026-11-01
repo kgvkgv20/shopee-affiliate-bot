@@ -115,6 +115,25 @@ async def index(request: Request):
     )
 
 
+@app.get("/api/ai-models/status")
+async def get_ai_models_status():
+    """ดึงรายชื่อและสถานะของโมเดล AI สร้างวิดีโอ (Option A & B)"""
+    from src.ai_video_engine import get_available_engines
+    return get_available_engines()
+
+
+@app.post("/api/ai-models/config")
+async def save_ai_keys_config(data: dict):
+    """บันทึก API Keys สำหรับโมเดล AI (MiniMax, Luma, Kling, Veo)"""
+    from src.ai_video_engine import save_ai_models_config, get_ai_models_config
+    current = get_ai_models_config()
+    for k, v in data.items():
+        if v is not None:
+            current[k] = str(v).strip()
+    success = save_ai_models_config(current)
+    return {"success": success, "message": "บันทึกการตั้งค่า API Keys เรียบร้อยแล้ว"}
+
+
 @app.get("/api/catalog")
 async def get_catalog(
     category: Optional[str] = None,
@@ -809,7 +828,8 @@ async def generate_catalog(data: dict):
     product_id = data.get("product_id")
     tone = data.get("tone", "friend")
     affiliate_url = data.get("affiliate_url", "").strip()
-    template = data.get("template", "clean")
+    template = data.get("template", "tiktok_bounce")
+    video_engine = data.get("video_engine", "native_3d")
     enable_voice = data.get("enable_voice", True)
     voice_type = data.get("voice_type", "female")
     bgm_track = data.get("bgm_track", "cheerful")
@@ -852,6 +872,7 @@ async def generate_catalog(data: dict):
         image_paths=item["images"],
         tone=tone,
         template=template,
+        video_engine=video_engine,
         enable_voice=enable_voice,
         voice_type=voice_type,
         bgm_track=bgm_track,
@@ -929,7 +950,8 @@ async def _run_batch_render_task(items: list, config: dict):
                 return _process_video_generation(
                     product=prod,
                     image_paths=item.get("images", []),
-                    template=config.get("template", "clean"),
+                    template=config.get("template", "tiktok_bounce"),
+                    video_engine=config.get("video_engine", "native_3d"),
                     enable_voice=config.get("enable_voice", True),
                     voice_type=config.get("voice_type", "female"),
                     bgm_track=config.get("bgm_track", "cheerful"),
@@ -1015,7 +1037,8 @@ async def start_batch_render(data: dict):
         items = items[:max_items]
 
     config = {
-        "template": data.get("template", "clean"),
+        "template": data.get("template", "tiktok_bounce"),
+        "video_engine": data.get("video_engine", "native_3d"),
         "enable_voice": data.get("enable_voice", True),
         "voice_type": data.get("voice_type", "female"),
         "bgm_track": data.get("bgm_track", "cheerful"),
@@ -1212,7 +1235,8 @@ def _process_video_generation(
     product: Product,
     image_paths: list,
     tone: str = "friend",
-    template: str = "clean",
+    template: str = "tiktok_bounce",
+    video_engine: str = "native_3d",
     enable_voice: bool = True,
     voice_type: str = "female",
     bgm_track: str = "cheerful",
@@ -1220,10 +1244,10 @@ def _process_video_generation(
     custom_body: Optional[str] = None,
     custom_cta: Optional[str] = None,
 ):
-    """ประมวลผลการสร้างบท สังเคราะห์เสียง และตัดต่อวิดีโอ"""
+    """ประมวลผลการสร้างบท สังเคราะห์เสียง และตัดต่อวิดีโอ (รองรับ Native 3D Motion และ External AI Models)"""
     try:
         start_time = time.time()
-        logger.info(f"🚀 เริ่มต้นสร้างวิดีโอสำหรับ: {product.name[:30]}... (Template: {template}, Voice: {enable_voice}, BGM: {bgm_track})")
+        logger.info(f"🚀 เริ่มต้นสร้างวิดีโอสำหรับ: {product.name[:30]}... (Engine: {video_engine}, Template: {template}, Voice: {enable_voice}, BGM: {bgm_track})")
 
         # 1. เขียนสคริปต์ด้วย Gemini Vision (อ่านภาพจริง 100% ตรงปก) หรือใช้ค่าที่ผู้ใช้แก้ไข
         content: VideoContent = script_generator.generate_video_content(product, image_paths=image_paths)
@@ -1251,16 +1275,46 @@ def _process_video_generation(
             if bgm_candidate.exists():
                 bgm_audio_path = str(bgm_candidate)
 
-        # 4. เรนเดอร์วิดีโอด้วย FFmpeg
-        abs_images = [str(Path(p).resolve()) if not os.path.isabs(p) else p for p in image_paths]
-        result = video_creator.create_video(
-            product=product,
-            content=content,
-            image_paths=abs_images,
-            template=template,
-            voice_audio_path=voice_audio_path,
-            bgm_audio_path=bgm_audio_path,
-        )
+        # 4. ตรวจสอบว่าเลือกโมเดล Image-to-Video ภายนอกหรือไม่ (Luma, MiniMax, Kling)
+        ai_generated = False
+        result = None
+        if video_engine in ["luma_ray", "minimax_hailuo"] and image_paths:
+            from src.ai_video_engine import AIVideoBridge
+            import subprocess
+            dest_file = str(OUTPUT_DIR / f"product_{product.item_id}.mp4")
+            prompt_text = f"{content.hook} {content.body}"
+            try:
+                if video_engine == "luma_ray":
+                    ai_generated = AIVideoBridge.generate_with_luma(image_paths[0], prompt_text, dest_file)
+                elif video_engine == "minimax_hailuo":
+                    ai_generated = AIVideoBridge.generate_with_minimax(image_paths[0], prompt_text, dest_file)
+
+                if ai_generated and os.path.exists(dest_file):
+                    thumb_file = str(OUTPUT_DIR / f"product_{product.item_id}_thumb.jpg")
+                    subprocess.run(["ffmpeg", "-y", "-ss", "00:00:01", "-i", dest_file, "-vframes", "1", "-q:v", "2", thumb_file], capture_output=True)
+                    result = VideoResult(
+                        product_name=product.name,
+                        video_path=dest_file,
+                        thumbnail_path=thumb_file,
+                        duration=10.0,
+                        file_size_mb=round(os.path.getsize(dest_file)/(1024*1024), 2),
+                        compliance_ok=True
+                    )
+            except Exception as e:
+                logger.warning(f"External AI video failed ({video_engine}): {e}. Auto falling back to 3D Motion Graphic.")
+                ai_generated = False
+
+        if not ai_generated or not result:
+            # เรนเดอร์วิดีโอด้วย FFmpeg (Native 3D Motion Graphic Engine)
+            abs_images = [str(Path(p).resolve()) if not os.path.isabs(p) else p for p in image_paths]
+            result = video_creator.create_video(
+                product=product,
+                content=content,
+                image_paths=abs_images,
+                template=template,
+                voice_audio_path=voice_audio_path,
+                bgm_audio_path=bgm_audio_path,
+            )
 
         elapsed = round(time.time() - start_time, 2)
         logger.info(f"✅ สร้างวิดีโอสำเร็จใน {elapsed} วินาที: {result.video_path}")
@@ -1285,6 +1339,8 @@ def _process_video_generation(
             "visual_notes": getattr(content, "visual_notes", ""),
             "affiliate_url": product.affiliate_link,
             "template": template,
+            "video_engine": video_engine,
+            "is_ai_generated": ai_generated,
             "has_voice": bool(voice_audio_path),
             "voice_type": voice_type if voice_audio_path else "none",
             "bgm_track": bgm_track,

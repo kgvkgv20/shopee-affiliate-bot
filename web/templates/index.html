@@ -96,7 +96,11 @@
                 </p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <button onclick="toggleBatchMode()" id="batch-toggle-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:border-shopee-500 hover:text-shopee-600 transition flex items-center gap-1.5 bg-slate-50">
+                <button onclick="openAIKeysModal()" class="px-3 py-2 text-xs font-semibold rounded-xl border border-indigo-200 bg-indigo-50/80 text-indigo-700 hover:bg-indigo-100 transition flex items-center gap-1.5 shadow-xs cursor-pointer">
+                    <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+                    <span>🤖 โมเดล AI & สไตล์คลิป</span>
+                </button>
+                <button onclick="toggleBatchMode()" id="batch-toggle-btn" class="px-3.5 py-2 text-xs font-semibold rounded-xl border border-slate-300 hover:border-shopee-500 hover:text-shopee-600 transition flex items-center gap-1.5 bg-slate-50 cursor-pointer">
                     <i data-lucide="layers" class="w-4 h-4 text-shopee-500"></i>
                     <span id="batch-toggle-text">เปิดโหมดเลือกหลายคลิป (Batch)</span>
                 </button>
@@ -1767,40 +1771,69 @@
                     </div>
                 </div>
 
-                <!-- Render Settings -->
-                <div class="grid grid-cols-2 gap-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">สไตล์ Template วิดีโอ:</label>
-                        <select id="batch-template-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="clean" selected>Shopee Clean (แนะนำ ยอดขายดี)</option>
-                            <option value="neon">Neon Flash Pop (สีสันสะดุดตา)</option>
-                            <option value="minimal">Minimal Clean (มินิมอลสบายตา)</option>
-                        </select>
+                <!-- Render Settings & Model Selector -->
+                <div class="space-y-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+                        <span class="font-bold text-slate-800 flex items-center gap-1.5 text-xs">
+                            <i data-lucide="cpu" class="w-4 h-4 text-indigo-600"></i>
+                            ระบบสร้างวิดีโอ & โมเดล AI (Video Engine)
+                        </span>
+                        <button type="button" onclick="openAIKeysModal()" class="text-[11px] text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 hover:underline">
+                            <i data-lucide="settings" class="w-3 h-3"></i>
+                            <span>ตั้งค่า API Keys โมเดล</span>
+                        </button>
                     </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">เสียงพากย์ AI ภาษาไทย:</label>
-                        <select id="batch-voice-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="female" selected>เสียงหญิง (เปรมวดี พากย์สดใส)</option>
-                            <option value="male">เสียงชาย (นิวัฒน์ พากย์นุ่มนวล)</option>
-                            <option value="none">ไม่ใส่เสียงพากย์ (ภาพ+เพลงเท่านั้น)</option>
-                        </select>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-700 block mb-1">เลือกโมเดล AI / Engine:</label>
+                            <select id="batch-engine-select" onchange="onBatchEngineChanged()" class="w-full text-xs border border-indigo-200 rounded-lg p-2 bg-white font-medium text-slate-800 focus:ring-shopee-500">
+                                <option value="native_3d" selected>⚡ 3D Motion Graphic (ในเครื่อง - ฟรี & ทันที)</option>
+                                <option value="minimax_hailuo">🤖 MiniMax Hailuo (Image2Video สินค้าขยับเนียน)</option>
+                                <option value="luma_ray">🎬 Luma Dream Machine (Ray - กล้อง 3D หมุน)</option>
+                                <option value="kling_ai">🎥 Kling AI (Image2Video ขยับธรรมชาติ)</option>
+                                <option value="google_veo">🌐 Google Veo 2 (Creative Studio)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-700 block mb-1">สไตล์โมชัน & แอนิเมชันสินค้า:</label>
+                            <select id="batch-template-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium text-slate-800">
+                                <option value="tiktok_bounce" selected>🔥 TikTok ป้ายยาด่วน (สินค้าเด้งดึ๋ง 3D + สติกเกอร์กระพริบ)</option>
+                                <option value="retro_tv">📺 ทีวีช็อปปิ้ง ย้อนยุค (สไตล์ Triple Bot ไวรัล)</option>
+                                <option value="luxury_glow">✨ Luxury Glow (หรูหรา แสงสะท้อน สโลว์โมชัน)</option>
+                                <option value="clean_unboxing">📦 แกะกล่อง Unboxing (คมชัด สไตล์โมเดิร์น)</option>
+                                <option value="neon_pop">⚡ Flash Sale Neon (สีนีออนสด ดึงดูดสายตา)</option>
+                                <option value="clean">🛍️ Shopee Clean (เรียบหรูทางการ)</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">เพลงประกอบ (BGM):</label>
-                        <select id="batch-bgm-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="cheerful" selected>Cheerful (สนุกสนาน สดใส)</option>
-                            <option value="upbeat">Upbeat (กระฉับกระเฉง จังหวะเร็ว)</option>
-                            <option value="none">ไม่ใส่เพลง BGM</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-600 block mb-1">ขีดจำกัดจำนวนคลิป:</label>
-                        <select id="batch-max-items-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="0" selected>ทำทั้งหมดจนหมดคลัง</option>
-                            <option value="3">สูงสุด 3 คลิป</option>
-                            <option value="5">สูงสุด 5 คลิป</option>
-                            <option value="10">สูงสุด 10 คลิป</option>
-                        </select>
+
+                    <div class="grid grid-cols-3 gap-2.5 pt-1">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 block mb-1">เสียงพากย์ AI ภาษาไทย:</label>
+                            <select id="batch-voice-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                <option value="female" selected>เสียงหญิง (เปรมวดี พากย์สดใส)</option>
+                                <option value="male">เสียงชาย (นิวัฒน์ พากย์นุ่มนวล)</option>
+                                <option value="none">ไม่ใส่เสียงพากย์</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 block mb-1">เพลงประกอบ (BGM):</label>
+                            <select id="batch-bgm-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                <option value="cheerful" selected>Cheerful (สนุกสนาน)</option>
+                                <option value="upbeat">Upbeat (กระฉับกระเฉง)</option>
+                                <option value="none">ไม่ใส่เพลง BGM</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 block mb-1">จำกัดจำนวนคลิป:</label>
+                            <select id="batch-max-items-select" class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white">
+                                <option value="0" selected>ทำทั้งหมดจนหมดคลัง</option>
+                                <option value="3">สูงสุด 3 คลิป</option>
+                                <option value="5">สูงสุด 5 คลิป</option>
+                                <option value="10">สูงสุด 10 คลิป</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -1859,6 +1892,100 @@
                         <span>ทำงานต่อในเบื้องหลัง / ปิดหน้าต่าง</span>
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: AI Models & Engines Configuration (Option A & B) -->
+    <div id="ai-keys-modal" class="hidden fixed inset-0 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 relative max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-xs">
+                        <i data-lucide="cpu" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">โมเดล AI & ระบบสร้างวิดีโอสินค้าขยับได้</h3>
+                        <p class="text-[11px] text-slate-500">เลือกระหว่าง 3D Motion (ฟรีในเครื่อง) หรือเชื่อมต่อ AI Image-to-Video</p>
+                    </div>
+                </div>
+                <button onclick="closeAIKeysModal()" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-xs">
+                <!-- Section 1: Option A (Native 3D Motion - Free) -->
+                <div class="p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-emerald-950 flex items-center gap-1.5">
+                            <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
+                            ⚡ 3D Motion Graphic Engine (ในเครื่อง)
+                        </span>
+                        <span class="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">🟢 พร้อมใช้ ฟรี 100%</span>
+                    </div>
+                    <p class="text-[11px] text-emerald-800 leading-relaxed">
+                        ระบบเรนเดอร์ในเครื่องทันที (5-10 วินาที) ทำให้สินค้าเด้งดึ๋ง 3D Tilt, มีแสงสะท้อนเงาวิบวับ, สติกเกอร์กระพริบ และพื้นหลังโมชันขยับได้ ไม่ต้องเสียเงินซื้อ API
+                    </p>
+                    <div class="flex flex-wrap gap-1.5 pt-1">
+                        <span class="text-[10px] bg-white border border-emerald-300 text-emerald-900 px-2 py-0.5 rounded-md font-medium">🔥 TikTok ป้ายยาด่วน</span>
+                        <span class="text-[10px] bg-white border border-emerald-300 text-emerald-900 px-2 py-0.5 rounded-md font-medium">📺 ทีวีช็อปปิ้ง ย้อนยุค (สไตล์ Triple Bot)</span>
+                        <span class="text-[10px] bg-white border border-emerald-300 text-emerald-900 px-2 py-0.5 rounded-md font-medium">✨ Luxury Glow</span>
+                        <span class="text-[10px] bg-white border border-emerald-300 text-emerald-900 px-2 py-0.5 rounded-md font-medium">📦 แกะกล่อง Unboxing</span>
+                    </div>
+                </div>
+
+                <!-- Section 2: Option B (External Image-to-Video AI Models) -->
+                <div class="space-y-3 p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="flex items-center justify-between pb-1 border-b border-slate-200">
+                        <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                            <i data-lucide="key" class="w-4 h-4 text-indigo-600"></i>
+                            🤖 โมเดล AI Image-to-Video (BYOK)
+                        </span>
+                        <span class="text-[10px] text-slate-500">ใส่ API Key สำหรับเจนสินค้าขยับเสมือนจริง</span>
+                    </div>
+
+                    <!-- MiniMax Key -->
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-semibold text-slate-700">MiniMax (Hailuo AI video-01) API Key:</label>
+                            <a href="https://api.minimax.chat/" target="_blank" class="text-[10px] text-indigo-600 hover:underline">รับ API Key ฟรี &rarr;</a>
+                        </div>
+                        <input type="password" id="key-minimax" placeholder="วาง MINIMAX_API_KEY ที่นี่..." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono">
+                    </div>
+
+                    <!-- Luma Key -->
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-semibold text-slate-700">Luma Dream Machine (Ray) API Key:</label>
+                            <a href="https://lumalabs.ai/dream-machine/api" target="_blank" class="text-[10px] text-indigo-600 hover:underline">รับ API Key ฟรี &rarr;</a>
+                        </div>
+                        <input type="password" id="key-luma" placeholder="วาง LUMAAI_API_KEY ที่นี่..." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono">
+                    </div>
+
+                    <!-- Kling Key -->
+                    <div class="space-y-1">
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-semibold text-slate-700">Kling AI API Key:</label>
+                            <a href="https://klingai.com/" target="_blank" class="text-[10px] text-indigo-600 hover:underline">รับ API Key &rarr;</a>
+                        </div>
+                        <input type="password" id="key-kling" placeholder="วาง KLING_API_KEY ที่นี่..." class="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-mono">
+                    </div>
+
+                    <!-- Google Veo Info -->
+                    <div class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-lg text-[11px] text-blue-900 flex items-start gap-2">
+                        <i data-lucide="info" class="w-4 h-4 text-blue-600 shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="font-bold">Google Veo 2:</span> สำหรับใช้งานฟรีผ่านเว็บ แนะนำใช้ปุ่ม <strong>"🎬 สร้างด้วย Google Flow"</strong> เพื่อนำรูปและ Prompt ไปเจนที่ <a href="https://flow.google.com/u/1/?pli=1" target="_blank" class="underline font-bold">flow.google.com</a> แล้วกดปุ่ม <strong>"📤 นำเข้าคลิป"</strong> กลับมาเซฟในคลังเว็บได้ทันที!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button onclick="saveAIKeys()" id="save-ai-keys-btn" class="w-full py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer">
+                    <i data-lucide="save" class="w-4 h-4"></i>
+                    <span>💾 บันทึกการตั้งค่า API Keys</span>
+                </button>
             </div>
         </div>
     </div>
@@ -5165,10 +5292,90 @@
             updateBatchProgressUI(state);
         }
 
+        // --- AI Models & Video Engines Management ---
+        async function openAIKeysModal() {
+            document.getElementById('ai-keys-modal').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            await loadAIKeys();
+        }
+
+        function closeAIKeysModal() {
+            document.getElementById('ai-keys-modal').classList.add('hidden');
+        }
+
+        async function loadAIKeys() {
+            try {
+                const res = await fetch('/api/ai-models/status');
+                const engines = await res.json();
+                if (engines.minimax_hailuo && engines.minimax_hailuo.has_key) {
+                    document.getElementById('key-minimax').placeholder = '•••••••••••••••• (ตั้งค่าแล้ว)';
+                }
+                if (engines.luma_ray && engines.luma_ray.has_key) {
+                    document.getElementById('key-luma').placeholder = '•••••••••••••••• (ตั้งค่าแล้ว)';
+                }
+                if (engines.kling_ai && engines.kling_ai.has_key) {
+                    document.getElementById('key-kling').placeholder = '•••••••••••••••• (ตั้งค่าแล้ว)';
+                }
+            } catch (e) {
+                console.error('Error loading AI keys:', e);
+            }
+        }
+
+        async function saveAIKeys() {
+            const btn = document.getElementById('save-ai-keys-btn');
+            const oldHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> <span>กำลังบันทึก...</span>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+
+            const payload = {};
+            const minimaxVal = document.getElementById('key-minimax').value.trim();
+            if (minimaxVal) payload.minimax_api_key = minimaxVal;
+
+            const lumaVal = document.getElementById('key-luma').value.trim();
+            if (lumaVal) payload.luma_api_key = lumaVal;
+
+            const klingVal = document.getElementById('key-kling').value.trim();
+            if (klingVal) payload.kling_api_key = klingVal;
+
+            try {
+                const res = await fetch('/api/ai-models/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('🎉 บันทึกการตั้งค่า API Keys เรียบร้อยแล้ว!');
+                    closeAIKeysModal();
+                } else {
+                    alert('ไม่สามารถบันทึกได้: ' + (data.message || 'เกิดข้อผิดพลาด'));
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = oldHtml;
+                    if (typeof lucide !== 'undefined') lucide.createIcons();
+                }
+            }
+        }
+
+        function onBatchEngineChanged() {
+            const engine = document.getElementById('batch-engine-select').value;
+            if (engine !== 'native_3d') {
+                showToast(`เลือกโมเดล AI: ${engine} (เชื่อมต่อ Image-to-Video อัตโนมัติ)`);
+            }
+        }
+
         async function startBatchRender() {
             const scopeRadio = document.querySelector('input[name="batch-target-scope"]:checked');
             const target = scopeRadio ? scopeRadio.value : 'pending';
             const template = document.getElementById('batch-template-select').value;
+            const engine = document.getElementById('batch-engine-select') ? document.getElementById('batch-engine-select').value : 'native_3d';
             const voice = document.getElementById('batch-voice-select').value;
             const bgm = document.getElementById('batch-bgm-select').value;
             const maxItems = parseInt(document.getElementById('batch-max-items-select').value) || 0;
@@ -5184,6 +5391,7 @@
                     body: JSON.stringify({
                         target: target,
                         template: template,
+                        video_engine: engine,
                         enable_voice: voice !== 'none',
                         voice_type: voice === 'male' ? 'male' : 'female',
                         bgm_track: bgm,

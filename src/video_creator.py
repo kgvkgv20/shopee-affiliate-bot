@@ -347,7 +347,59 @@ class FFmpegVideoCreator:
         cta_lines = self._wrap_thai_text(content.cta[:44], max_len=24)
 
         # กำหนดชุดสีตามสไตล์ Template
-        if template == "neon":
+        if template in ["tiktok_bounce", "3d_motion"]:
+            # TikTok Viral Pop / Dynamic Bounce
+            hook_bg = "0xFF0055@0.96"  # แดงชมพู TikTok สด
+            hook_color = "white"
+            hook_border = "borderw=6:bordercolor=0x000000"
+
+            body_bg = "0x00E5FF@0.95"  # ฟ้านีออน TikTok
+            body_color = "0x0F172A"
+            body_border = "borderw=6:bordercolor=0x000000"
+
+            cta_bg = "0xFFE600@0.98"   # เหลืองนีออน ปักตะกร้า
+            cta_color = "0x0F172A"
+            cta_border = "borderw=6:bordercolor=0x000000"
+        elif template == "retro_tv":
+            # Retro TV Shopping (สไตล์ Triple Bot ไวรัล)
+            hook_bg = "0xD32F2F@0.96"  # แดงเลือดหมูคลาสสิก
+            hook_color = "0xFFEB3B"    # เหลืองสดแนวทีวีแชมป์เปี้ยน
+            hook_border = "borderw=6:bordercolor=white"
+
+            body_bg = "0x1976D2@0.92"  # น้ำเงินคลาสสิกทีวี
+            body_color = "white"
+            body_border = "borderw=6:bordercolor=white"
+
+            cta_bg = "0xE65100@0.98"   # ส้มเข้มวินเทจ
+            cta_color = "0xFFEB3B"
+            cta_border = "borderw=6:bordercolor=white"
+        elif template == "luxury_glow":
+            # Luxury Glow / เครื่องสำอาง น้ำหอม สินค้าหรู
+            hook_bg = "0x1A1A1A@0.94"  # ดำชาร์โคล
+            hook_color = "0xF5E6C8"    # ทองแชมเปญ
+            hook_border = "borderw=4:bordercolor=0xD4AF37"
+
+            body_bg = "0x2A2421@0.92"  # น้ำตาลอบอุ่นหรูหรา
+            body_color = "white"
+            body_border = "borderw=4:bordercolor=0xD4AF37"
+
+            cta_bg = "0xD4AF37@0.96"   # ทองแท้
+            cta_color = "0x1A1A1A"
+            cta_border = "borderw=4:bordercolor=white"
+        elif template == "clean_unboxing":
+            # Clean Unboxing / สไตล์แกะกล่อง โมเดิร์น
+            hook_bg = "0x2563EB@0.95"  # น้ำเงินโมเดิร์น
+            hook_color = "white"
+            hook_border = "borderw=4:bordercolor=0x1E40AF"
+
+            body_bg = "0x0F172A@0.90"  # ดำคลีน
+            body_color = "white"
+            body_border = "borderw=4:bordercolor=0x334155"
+
+            cta_bg = "0x10B981@0.96"   # เขียวสด ปักตะกร้าชัวร์
+            cta_color = "white"
+            cta_border = "borderw=4:bordercolor=0x065F46"
+        elif template == "neon":
             # Neon Pop / Flash Sale
             hook_bg = "0xFFE600@0.96"  # เหลืองนีออน
             hook_color = "0x0F172A"     # ดำเข้ม
@@ -485,43 +537,129 @@ class FFmpegVideoCreator:
             inputs += ["-loop", "1", "-t", f"{slide_in_dur:.4f}", "-i", p]
 
         filter_parts = []
+        is_dynamic_motion = template in ["tiktok_bounce", "3d_motion", "retro_tv", "luxury_glow", "clean_unboxing", "neon_pop", "clean"]
 
-        # Dynamic Ken Burns Motion: ซูมสลับเข้า/ออก เพื่อให้ภาพนิ่งดูมีมิติ มีชีวิตชีวา
-        for i in range(n):
-            if i % 2 == 0:
-                # สไลด์คู่: ค่อยๆ ซูมเข้าเบาๆ (1.0x -> 1.05x)
-                zoom_filter = (
-                    f"scale=w='{VIDEO_WIDTH}*(1+0.05*t/{slide_in_dur:.2f})':"
-                    f"h='{VIDEO_HEIGHT}*(1+0.05*t/{slide_in_dur:.2f})':eval=frame,"
-                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+        if is_dynamic_motion:
+            # ========================================================
+            # 3D Motion Graphic Engine: Ambient Blur BG + Floating 3D Product
+            # ========================================================
+            for i in range(n):
+                filter_parts.append(f"[{i}:v]split=2[bg_raw_{i}][fg_raw_{i}]")
+
+                # Background: Ambient Blur + Contrast Dim (ป้องกันภาพยืดหรือครอบตัด)
+                filter_parts.append(
+                    f"[bg_raw_{i}]scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:force_original_aspect_ratio=increase,"
+                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
+                    f"boxblur=24:10,colorchannelmixer=0.62:0:0:0:0:0.62:0:0:0:0:0.62,"
+                    f"fps={VIDEO_FPS},format=yuv420p[bg_{i}]"
                 )
+
+                # Foreground: Dynamic Product Motion ตาม Template
+                if template in ["tiktok_bounce", "3d_motion"]:
+                    # เด้งดึ๋ง 3D Bounce + Dynamic Tilt (หมุนเอียงมีมิติ)
+                    filter_parts.append(
+                        f"[fg_raw_{i}]scale=850:850:force_original_aspect_ratio=decrease,"
+                        f"format=rgba,rotate='0.038*sin(2*PI*t*1.2)':ow='hypot(iw,ih)':oh='ow':c=none[fg_{i}]"
+                    )
+                    filter_parts.append(
+                        f"[bg_{i}][fg_{i}]overlay=(W-w)/2:'(H-h)/2 - 50 + 26*sin(2*PI*t*1.4)':eval=frame,"
+                        f"fps={VIDEO_FPS},format=yuv420p[v{i}]"
+                    )
+                elif template == "retro_tv":
+                    # ทีวีช็อปปิ้ง ย้อนยุค (Triple Bot): กล้องโยกไหวแบบวินเทจ
+                    filter_parts.append(
+                        f"[fg_raw_{i}]scale=830:830:force_original_aspect_ratio=decrease,format=rgba[fg_{i}]"
+                    )
+                    filter_parts.append(
+                        f"[bg_{i}][fg_{i}]overlay='(W-w)/2 + 6*sin(2*PI*t*2.2)':'(H-h)/2 - 50 + 7*cos(2*PI*t*1.8)':eval=frame,"
+                        f"fps={VIDEO_FPS},format=yuv420p[v{i}]"
+                    )
+                elif template == "luxury_glow":
+                    # Luxury Glow: ลอยละมุนสโลว์โมชัน นุ่มนวล
+                    filter_parts.append(
+                        f"[fg_raw_{i}]scale=840:840:force_original_aspect_ratio=decrease,format=rgba[fg_{i}]"
+                    )
+                    filter_parts.append(
+                        f"[bg_{i}][fg_{i}]overlay=(W-w)/2:'(H-h)/2 - 45 + 15*sin(2*PI*t*0.9)':eval=frame,"
+                        f"fps={VIDEO_FPS},format=yuv420p[v{i}]"
+                    )
+                elif template == "clean_unboxing":
+                    # แกะกล่อง Unboxing: ค่อยๆ ซูมเน้นรายละเอียดสินค้า
+                    filter_parts.append(
+                        f"[fg_raw_{i}]scale=840:840:force_original_aspect_ratio=decrease,"
+                        f"scale=w='iw*(1+0.05*t/{slide_in_dur:.2f})':h='ih*(1+0.05*t/{slide_in_dur:.2f})':eval=frame,format=rgba[fg_{i}]"
+                    )
+                    filter_parts.append(
+                        f"[bg_{i}][fg_{i}]overlay=(W-w)/2:'(H-h)/2 - 50':eval=frame,"
+                        f"fps={VIDEO_FPS},format=yuv420p[v{i}]"
+                    )
+                else:
+                    # Shopee Clean / Neon
+                    filter_parts.append(
+                        f"[fg_raw_{i}]scale=850:850:force_original_aspect_ratio=decrease,"
+                        f"format=rgba,rotate='0.025*sin(2*PI*t*1.0)':ow='hypot(iw,ih)':oh='ow':c=none[fg_{i}]"
+                    )
+                    filter_parts.append(
+                        f"[bg_{i}][fg_{i}]overlay=(W-w)/2:'(H-h)/2 - 50 + 20*sin(2*PI*t*1.2)':eval=frame,"
+                        f"fps={VIDEO_FPS},format=yuv420p[v{i}]"
+                    )
+
+            # กำหนดประเภท Transition ให้เข้ากับแต่ละสไตล์
+            if template in ["tiktok_bounce", "3d_motion"]:
+                trans_type = "slideleft"
+            elif template == "retro_tv":
+                trans_type = "wipeleft"
+            elif template == "luxury_glow":
+                trans_type = "smoothleft"
             else:
-                # สไลด์คี่: ค่อยๆ ซูมออกเบาๆ (1.05x -> 1.0x)
-                zoom_filter = (
-                    f"scale=w='{VIDEO_WIDTH}*(1.05-0.05*t/{slide_in_dur:.2f})':"
-                    f"h='{VIDEO_HEIGHT}*(1.05-0.05*t/{slide_in_dur:.2f})':eval=frame,"
-                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+                trans_type = "fade"
+
+            # xfade chain
+            prev = "v0"
+            for i in range(1, n):
+                offset = SLIDE_DURATION * i
+                nxt = f"xf{i}" if i < n - 1 else "xfall"
+                filter_parts.append(
+                    f"[{prev}][v{i}]xfade=transition={trans_type}"
+                    f":duration={xfade_dur}:offset={offset:.4f}[{nxt}]"
+                )
+                prev = nxt
+
+        else:
+            # Fallback Ken Burns Slideshow สำหรับ Classic
+            for i in range(n):
+                if i % 2 == 0:
+                    zoom_filter = (
+                        f"scale=w='{VIDEO_WIDTH}*(1+0.05*t/{slide_in_dur:.2f})':"
+                        f"h='{VIDEO_HEIGHT}*(1+0.05*t/{slide_in_dur:.2f})':eval=frame,"
+                        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+                    )
+                else:
+                    zoom_filter = (
+                        f"scale=w='{VIDEO_WIDTH}*(1.05-0.05*t/{slide_in_dur:.2f})':"
+                        f"h='{VIDEO_HEIGHT}*(1.05-0.05*t/{slide_in_dur:.2f})':eval=frame,"
+                        f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT}:(in_w-{VIDEO_WIDTH})/2:(in_h-{VIDEO_HEIGHT})/2"
+                    )
+
+                filter_parts.append(
+                    f"[{i}:v]scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:"
+                    f"force_original_aspect_ratio=increase,"
+                    f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
+                    f"{zoom_filter},"
+                    f"fps={VIDEO_FPS},"
+                    f"format=yuv420p[v{i}]"
                 )
 
-            filter_parts.append(
-                f"[{i}:v]scale={VIDEO_WIDTH}:{VIDEO_HEIGHT}:"
-                f"force_original_aspect_ratio=increase,"
-                f"crop={VIDEO_WIDTH}:{VIDEO_HEIGHT},"
-                f"{zoom_filter},"
-                f"fps={VIDEO_FPS},"
-                f"format=yuv420p[v{i}]"
-            )
-
-        # xfade chain
-        prev = "v0"
-        for i in range(1, n):
-            offset = SLIDE_DURATION * i
-            nxt = f"xf{i}" if i < n - 1 else "xfall"
-            filter_parts.append(
-                f"[{prev}][v{i}]xfade=transition=fade"
-                f":duration={xfade_dur}:offset={offset:.4f}[{nxt}]"
-            )
-            prev = nxt
+            # xfade chain
+            prev = "v0"
+            for i in range(1, n):
+                offset = SLIDE_DURATION * i
+                nxt = f"xf{i}" if i < n - 1 else "xfall"
+                filter_parts.append(
+                    f"[{prev}][v{i}]xfade=transition=fade"
+                    f":duration={xfade_dur}:offset={offset:.4f}[{nxt}]"
+                )
+                prev = nxt
 
         # text overlay บน xfall
         text_filter = self._build_text_overlay_filter(content, template=template)
