@@ -49,6 +49,7 @@ from src.image_handler import extract_shopee_product_data, download_image_to_fil
 from src.shopee_extractor import extract_shopee_product_direct
 from src.telegram_sender import TelegramSender
 from src.phone_sync import phone_sync_mgr
+from src.shopee_auto_poster import shopee_auto_poster
 from src.google_flow_exporter import generate_google_flow_kit
 from src.scheduler_service import (
     get_local_ip,
@@ -209,6 +210,76 @@ async def push_video_to_phone_api(data: dict):
 async def test_shopee_phone():
     """สั่งเปิดแอป Shopee บนมือถือเพื่อทดสอบการเชื่อมต่อ"""
     return phone_sync_mgr.trigger_shopee_app()
+
+
+@app.get("/api/phone/auto-poster/status")
+async def get_auto_poster_status():
+    """ตรวจสอบสถานะความพร้อมของ Shopee Auto-Poster (uiautomator2 + ADB + Device)"""
+    return {
+        "success": True,
+        "status": shopee_auto_poster.is_ready()
+    }
+
+
+@app.post("/api/phone/auto-post")
+async def auto_post_shopee_api(data: dict):
+    """
+    บอท Shopee Video Hands-Free Auto-Poster ผ่าน UIAutomator2:
+    ผลักวิดีโอเข้ามือถือ -> สแกนแกลเลอรี -> เปิด Shopee -> เลือกคลิปแรก -> วางแคปชัน & แฮชแท็ก -> เตรียมผูกตะกร้าส้ม
+    Payload: {
+        "video_filename": "product_mizumi_uv.mp4",
+        "product_id": "my_123",
+        "caption": "...",
+        "product_name": "...",
+        "auto_confirm": false,
+        "device_id": null
+    }
+    """
+    product_id = data.get("product_id")
+    video_filename = data.get("video_filename", "").strip()
+    caption = data.get("caption", "").strip()
+    product_name = data.get("product_name", "").strip()
+    auto_confirm = bool(data.get("auto_confirm", False))
+    device_id = data.get("device_id")
+
+    # ดึงข้อมูลสินค้าเพิ่มเติมถ้ามี product_id
+    if product_id:
+        all_products = catalog_mgr.get_all_products(source="all")
+        prod = next((p for p in all_products if str(p.get("id")) == str(product_id)), None)
+        if prod:
+            if not product_name:
+                product_name = prod.get("name", "")
+            if not caption:
+                caption = catalog_mgr.get_social_caption(product_id)
+
+    # หากไม่มีชื่อไฟล์วิดีโอ ลองค้นหาวิดีโอล่าสุดจาก history
+    if not video_filename and product_id:
+        history = catalog_mgr.get_all_history()
+        match_hist = next((h for h in history if str(h.get("product_id")) == str(product_id)), None)
+        if match_hist and match_hist.get("video_filename"):
+            video_filename = match_hist["video_filename"]
+
+    # หรือหาวิดีโอแรกใน output folder
+    if not video_filename:
+        mp4_files = sorted(OUTPUT_DIR.glob("*.mp4"), key=os.path.getmtime, reverse=True)
+        if mp4_files:
+            video_filename = mp4_files[0].name
+
+    if not video_filename:
+        raise HTTPException(status_code=400, detail="ไม่พบไฟล์วิดีโอที่จะโพสต์ กรุณาสร้างวิดีโอก่อน หรือระบุ video_filename")
+
+    video_path = OUTPUT_DIR / video_filename
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail=f"ไม่พบไฟล์ {video_filename} ในโฟลเดอร์ output")
+
+    result = shopee_auto_poster.auto_post(
+        video_path=str(video_path),
+        caption=caption,
+        product_name=product_name,
+        auto_confirm=auto_confirm,
+        device_id=device_id
+    )
+    return result
 
 
 @app.get("/api/google-flow/{product_id}")
