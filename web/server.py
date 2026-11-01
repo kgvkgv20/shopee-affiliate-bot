@@ -48,6 +48,8 @@ from src.catalog_manager import CatalogManager
 from src.image_handler import extract_shopee_product_data, download_image_to_file
 from src.shopee_extractor import extract_shopee_product_direct
 from src.telegram_sender import TelegramSender
+from src.phone_sync import phone_sync_mgr
+from src.google_flow_exporter import generate_google_flow_kit
 from src.scheduler_service import (
     get_local_ip,
     load_scheduler_config,
@@ -158,6 +160,68 @@ async def get_product_caption(product_id: str):
         "product_id": product_id,
         "product_name": target.get("name"),
         "caption": caption
+    }
+
+
+@app.get("/api/phone/status")
+async def get_phone_status():
+    """ตรวจสอบสถานะการเชื่อมต่อมือถือ Android ผ่าน ADB"""
+    available = phone_sync_mgr.is_adb_available()
+    devices = phone_sync_mgr.get_connected_devices() if available else []
+    ready_count = sum(1 for d in devices if d.get("is_ready"))
+    return {
+        "success": True,
+        "adb_available": available,
+        "adb_path": phone_sync_mgr.adb_path,
+        "devices": devices,
+        "total_devices": len(devices),
+        "ready_count": ready_count,
+        "is_connected": ready_count > 0
+    }
+
+
+@app.post("/api/phone/push")
+async def push_video_to_phone_api(data: dict):
+    """
+    ผลักไฟล์วิดีโอเข้ามือถือ Android:
+    Payload: { "video_filename": "...", "caption": "...", "open_shopee": true }
+    """
+    video_filename = data.get("video_filename", "").strip()
+    caption = data.get("caption", "").strip()
+    open_shopee = data.get("open_shopee", True)
+
+    if not video_filename:
+        raise HTTPException(status_code=400, detail="กรุณาระบุชื่อไฟล์วิดีโอ")
+
+    video_path = OUTPUT_DIR / video_filename
+    if not video_path.exists():
+        raise HTTPException(status_code=404, detail=f"ไม่พบไฟล์วิดีโอ {video_filename} ในโฟลเดอร์ output")
+
+    result = phone_sync_mgr.push_video_to_phone(
+        local_video_path=str(video_path),
+        caption=caption,
+        open_shopee=open_shopee
+    )
+    return result
+
+
+@app.post("/api/phone/test-shopee")
+async def test_shopee_phone():
+    """สั่งเปิดแอป Shopee บนมือถือเพื่อทดสอบการเชื่อมต่อ"""
+    return phone_sync_mgr.trigger_shopee_app()
+
+
+@app.get("/api/google-flow/{product_id}")
+async def get_google_flow_data(product_id: str):
+    """สร้าง Prompt และชุดข้อมูลพร้อมโยนเข้า Google Flow / Veo สำหรับสินค้า"""
+    all_products = catalog_mgr.get_all_products(source="all")
+    target = next((p for p in all_products if str(p.get("id")) == str(product_id)), None)
+    if not target:
+        raise HTTPException(status_code=404, detail="ไม่พบสินค้า")
+    kit = generate_google_flow_kit(target)
+    return {
+        "success": True,
+        "kit": kit
     }
 
 
