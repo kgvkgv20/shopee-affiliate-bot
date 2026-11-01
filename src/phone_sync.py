@@ -104,18 +104,145 @@ class PhoneSyncManager:
                         elif p.startswith("device:") and model == "Android Phone":
                             model = p.replace("device:", "")
 
+                    is_wireless = ":" in dev_id
                     devices.append({
                         "id": dev_id,
                         "state": state,
                         "model": model,
+                        "is_wireless": is_wireless,
                         "is_ready": (state == "device"),
-                        "status_label": "พร้อมเชื่อมต่อ" if state == "device" else ("รออนุญาต USB Debugging บนมือถือ" if state == "unauthorized" else state)
+                        "status_label": "พร้อมเชื่อมต่อ (ไร้สาย Wi-Fi)" if is_wireless and state == "device" else ("พร้อมเชื่อมต่อ (USB)" if state == "device" else ("รออนุญาต USB Debugging บนมือถือ" if state == "unauthorized" else state))
                     })
 
             return devices
         except Exception as e:
             logger.error(f"Error checking adb devices: {e}")
             return []
+
+    def get_device_wifi_ip(self, device_id: Optional[str] = None) -> Optional[str]:
+        """ดึง IP Address วง Wi-Fi ของมือถืออัตโนมัติจากคำสั่ง ADB"""
+        if not self.is_adb_available():
+            return None
+
+        dev_args = ["-s", device_id] if device_id else []
+        try:
+            # วิธี 1: ip -f inet addr show wlan0
+            res = self._run_adb(dev_args + ["shell", "ip", "-f", "inet", "addr", "show", "wlan0"], timeout=5)
+            if res.returncode == 0 and "inet " in res.stdout:
+                m = re.search(r'inet\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', res.stdout)
+                if m:
+                    return m.group(1)
+
+            # วิธี 2: ip route
+            res2 = self._run_adb(dev_args + ["shell", "ip", "route"], timeout=5)
+            if res2.returncode == 0:
+                m = re.search(r'src\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', res2.stdout)
+                if m:
+                    return m.group(1)
+
+            # วิธี 3: ifconfig wlan0
+            res3 = self._run_adb(dev_args + ["shell", "ifconfig", "wlan0"], timeout=5)
+            if res3.returncode == 0:
+                m = re.search(r'inet addr:([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)', res3.stdout)
+                if m:
+                    return m.group(1)
+
+        except Exception as e:
+            logger.debug(f"Failed to query device IP: {e}")
+
+        return None
+
+    def enable_wireless_adb(self, device_id: Optional[str] = None, port: int = 5555) -> Dict[str, Any]:
+        """
+        เปิดโหมด Wireless ADB (TCP/IP) บนมือถือที่เสียบสาย USB:
+        1. ดึง IP Address ของมือถือ
+        2. สั่ง adb tcpip 5555
+        3. ผู้ใช้สามารถถอดสาย USB ออกได้ทันที!
+        """
+        if not self.is_adb_available():
+            return {"success": False, "message": "ไม่พบ ADB บนระบบ"}
+
+        devices = self.get_connected_devices()
+        ready = [d for d in devices if d["is_ready"]]
+        if not ready:
+            return {
+                "success": False,
+                "message": "ไม่พบมือถือ Android ที่เสียบสาย USB กรุณาเสียบสาย USB เพื่อตั้งค่าโหมดไร้สายครั้งแรกก่อน"
+            }
+
+        target = next((d for d in ready if d["id"] == device_id), ready[0])
+        dev_args = ["-s", target["id"]]
+
+        # ตรวจหา IP ปัจจุบันของมือถือ
+        device_ip = self.get_device_wifi_ip(target["id"])
+
+        try:
+            # สั่ง adb tcpip 5555
+            res = self._run_adb(dev_args + ["tcpip", str(port)], timeout=10)
+            if res.returncode != 0:
+                return {
+                    "success": False,
+                    "message": f"ไม่สามารถเปิด TCP/IP พอร์ต {port} ได้: {res.stderr.strip()}"
+                }
+
+            # ลองเชื่อมต่อไร้สายทันทีถ้าหา IP เจอ
+            auto_connected = False
+            if device_ip:
+                conn_res = self._run_adb(["connect", f"{device_ip}:{port}"], timeout=10)
+                if conn_res.returncode == 0 and "connected" in conn_res.stdout.lower():
+                    auto_connected = True
+
+            return {
+                "success": True,
+                "message": f"เปิดโหมดไร้สายสำเร็จ! สามารถถอดสาย USB ออกได้เลย (IP มือถือ: {device_ip or 'กรุณาดูที่ตั้งค่า Wi-Fi ในมือถือ'})",
+                "device_ip": device_ip,
+                "port": port,
+                "auto_connected": auto_connected,
+                "target_device": target
+            }
+        except Exception as e:
+            return {"success": False, "message": f"เกิดข้อผิดพลาด: {str(e)}"}
+
+    def connect_wireless_device(self, ip: str, port: int = 5555) -> Dict[str, Any]:
+        """เชื่อมต่อกับมือถือ Android แบบไร้สายผ่าน IP:Port"""
+        clean_ip = ip.strip()
+        if not clean_ip:
+            return {"success": False, "message": "กรุณาระบุ IP Address ของมือถือ"}
+
+        target_addr = f"{clean_ip}:{port}" if ":" not in clean_ip else clean_ip
+
+        try:
+            res = self._run_adb(["connect", target_addr], timeout=12)
+            out = res.stdout.strip()
+            if "connected to" in out.lower():
+                return {
+                    "success": True,
+                    "message": f"เชื่อมต่อไร้สายสำเร็จกับ {target_addr}!",
+                    "target": target_addr
+                }
+            elif "already connected" in out.lower():
+                return {
+                    "success": True,
+                    "message": f"เชื่อมต่อกับ {target_addr} อยู่แล้ว",
+                    "target": target_addr
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": f"เชื่อมต่อไม่สำเร็จ: {out or res.stderr.strip()} (ตรวจสอบว่ามือถือและคอมพิวเตอร์อยู่ใน Wi-Fi วงเดียวกันหรือไม่)"
+                }
+        except Exception as e:
+            return {"success": False, "message": f"เกิดข้อผิดพลาด: {str(e)}"}
+
+    def disconnect_wireless_device(self, ip: str, port: int = 5555) -> Dict[str, Any]:
+        """ตัดการเชื่อมต่อไร้สาย"""
+        clean_ip = ip.strip()
+        target_addr = f"{clean_ip}:{port}" if ":" not in clean_ip else clean_ip
+        try:
+            res = self._run_adb(["disconnect", target_addr], timeout=6)
+            return {"success": True, "message": f"ตัดการเชื่อมต่อ {target_addr} เรียบร้อย"}
+        except Exception as e:
+            return {"success": False, "message": str(e)}
 
     def push_video_to_phone(
         self,

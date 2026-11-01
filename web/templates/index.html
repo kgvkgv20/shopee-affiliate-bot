@@ -898,6 +898,20 @@
                 <div id="phone-device-list" class="space-y-1.5 text-xs">
                     <p class="text-slate-400 text-center py-2">กำลังตรวจสอบอุปกรณ์...</p>
                 </div>
+
+                <!-- Wireless ADB Controls (Wi-Fi Connect) -->
+                <div class="pt-2 border-t border-slate-200/80 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <button onclick="enableWirelessAdb()" id="enable-wireless-btn" class="py-1 px-2.5 bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold rounded-lg flex items-center gap-1 transition" title="เสียบสายครั้งแรก กดปุ่มนี้แล้วถอดสาย USB ออกได้ทันที">
+                        <i data-lucide="wifi" class="w-3.5 h-3.5 text-sky-600"></i>
+                        <span>📶 เปิดโหมดไร้สาย (ถอดสาย USB ได้เลย)</span>
+                    </button>
+                    <div class="flex items-center gap-1">
+                        <input type="text" id="wireless-ip-input" placeholder="IP มือถือ เช่น 192.168.1.50" class="px-2 py-1 text-[11px] border border-slate-200 rounded-lg w-36 focus:ring-1 focus:ring-sky-500">
+                        <button onclick="connectWirelessAdb()" class="py-1 px-2 bg-slate-800 hover:bg-black text-white font-semibold rounded-lg text-[10px]">
+                            เชื่อมต่อ Wi-Fi
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <!-- Instructions -->
@@ -914,16 +928,41 @@
                 </ol>
             </div>
 
-            <!-- Auto-Post Shopee Action Box (UIAutomator2 Hands-Free) -->
+            <!-- Auto-Post Social Action Box (UIAutomator2 + Anti-Ban Humanizer) -->
             <div class="p-4 bg-gradient-to-br from-orange-50 via-amber-50 to-purple-50 border border-orange-200 rounded-xl space-y-3">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-bold text-orange-950 flex items-center gap-1.5">
                         <i data-lucide="bot" class="w-4 h-4 text-orange-600"></i>
-                        <span>🤖 ระบบบอท Shopee Video Auto-Post (Hands-Free):</span>
+                        <span>🤖 ระบบบอท Social Video Auto-Post (Hands-Free):</span>
                     </span>
-                    <span class="text-[10px] bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">UIAutomator2</span>
+                    <span class="text-[10px] bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full font-bold">UIAutomator2 + Humanizer</span>
                 </div>
-                <p class="text-[11px] text-orange-900 leading-relaxed">
+
+                <!-- Platform Selector (Shopee Video vs TikTok Shop) -->
+                <div class="flex items-center gap-2 pt-0.5">
+                    <span class="text-[11px] font-bold text-slate-700">เลือกแพลตฟอร์ม:</span>
+                    <div class="flex items-center gap-1.5 flex-1">
+                        <button type="button" onclick="selectAutoPostPlatform('shopee')" id="platform-shopee-btn" class="flex-1 py-1.5 px-2 bg-gradient-to-r from-shopee-500 to-orange-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition shadow-xs">
+                            <i data-lucide="shopping-bag" class="w-3.5 h-3.5"></i>
+                            <span>🛒 Shopee Video</span>
+                        </button>
+                        <button type="button" onclick="selectAutoPostPlatform('tiktok')" id="platform-tiktok-btn" class="flex-1 py-1.5 px-2 bg-white text-slate-700 border border-slate-200 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-50">
+                            <i data-lucide="video" class="w-3.5 h-3.5"></i>
+                            <span>🎵 TikTok Shop</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Anti-Ban Humanizer Badge -->
+                <div class="flex items-center justify-between text-[10px] text-emerald-800 bg-emerald-50/90 border border-emerald-200 px-2.5 py-1 rounded-md">
+                    <span class="flex items-center gap-1 font-semibold">
+                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        Anti-Ban Humanizer: เปิดใช้งาน (สุ่มดีเลย์ 1.5–3.2s + พิกัดนิ้ว ±5px)
+                    </span>
+                    <span class="font-bold text-emerald-700">ปลอดภัย 100%</span>
+                </div>
+
+                <p id="platform-desc-text" class="text-[11px] text-orange-900 leading-relaxed">
                     บอทจะควบคุมหน้าจอมือถืออัตโนมัติ: ดันคลิปเข้าเครื่อง ➔ สั่งเปิด Shopee ➔ เลือกคลิปแรก ➔ วางแคปชัน & แฮชแท็ก ➔ พร้อมผูกตะกร้าส้มในคลิกเดียว!
                 </p>
 
@@ -952,7 +991,7 @@
                 <!-- Auto Post Execute Button -->
                 <button onclick="runShopeeAutoPost()" id="run-auto-post-btn" class="w-full py-3 bg-gradient-to-r from-orange-600 via-shopee-500 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition shadow-md hover:shadow-lg">
                     <i data-lucide="play-circle" class="w-4 h-4"></i>
-                    <span>🤖 สั่งบอท Auto-Post Shopee บนมือถือสดๆ ทันที</span>
+                    <span id="run-auto-post-btn-text">🤖 สั่งบอท Auto-Post Shopee บนมือถือสดๆ ทันที</span>
                 </button>
             </div>
 
@@ -3579,13 +3618,107 @@
             }
         }
 
-        // --- Shopee Auto-Post (UIAutomator2) Helpers ---
+        // --- Shopee & TikTok Auto-Post (UIAutomator2) Helpers ---
+        let currentAutoPostPlatform = 'shopee';
         let currentAutoPostTarget = {
             filename: '',
             productId: null,
             productName: '',
             caption: ''
         };
+
+        function selectAutoPostPlatform(plat) {
+            currentAutoPostPlatform = plat;
+            const shopeeBtn = document.getElementById('platform-shopee-btn');
+            const tiktokBtn = document.getElementById('platform-tiktok-btn');
+            const descText = document.getElementById('platform-desc-text');
+            const runText = document.getElementById('run-auto-post-btn-text');
+
+            if (plat === 'tiktok') {
+                if (tiktokBtn) {
+                    tiktokBtn.className = "flex-1 py-1.5 px-2 bg-gradient-to-r from-slate-900 to-black text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition shadow-xs";
+                }
+                if (shopeeBtn) {
+                    shopeeBtn.className = "flex-1 py-1.5 px-2 bg-white text-slate-700 border border-slate-200 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-50";
+                }
+                if (descText) {
+                    descText.textContent = "บอทจะควบคุมหน้าจอมือถืออัตโนมัติ: ดันคลิปเข้าเครื่อง ➔ สั่งเปิด TikTok ➔ กดปุ่มสร้าง (+) ➔ เลือกคลิปแรก ➔ วางแคปชัน & แฮชแท็ก ➔ พร้อมผูกตะกร้า TikTok Shop!";
+                }
+                if (runText) {
+                    runText.textContent = "🤖 สั่งบอท Auto-Post TikTok บนมือถือสดๆ ทันที";
+                }
+            } else {
+                if (shopeeBtn) {
+                    shopeeBtn.className = "flex-1 py-1.5 px-2 bg-gradient-to-r from-shopee-500 to-orange-500 text-white font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition shadow-xs";
+                }
+                if (tiktokBtn) {
+                    tiktokBtn.className = "flex-1 py-1.5 px-2 bg-white text-slate-700 border border-slate-200 font-bold rounded-lg text-xs flex items-center justify-center gap-1 transition hover:bg-slate-50";
+                }
+                if (descText) {
+                    descText.textContent = "บอทจะควบคุมหน้าจอมือถืออัตโนมัติ: ดันคลิปเข้าเครื่อง ➔ สั่งเปิด Shopee ➔ เลือกคลิปแรก ➔ วางแคปชัน & แฮชแท็ก ➔ พร้อมผูกตะกร้าส้มในคลิกเดียว!";
+                }
+                if (runText) {
+                    runText.textContent = "🤖 สั่งบอท Auto-Post Shopee บนมือถือสดๆ ทันที";
+                }
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        async function enableWirelessAdb() {
+            const btn = document.getElementById('enable-wireless-btn');
+            btn.disabled = true;
+            btn.innerHTML = `<div class="w-3.5 h-3.5 border-2 border-sky-800 border-t-transparent rounded-full animate-spin"></div> <span>กำลังเปิดพอร์ตไร้สาย...</span>`;
+            try {
+                const res = await fetch('/api/phone/wireless/enable', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ port: 5555 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`📶 ${data.message}`);
+                    if (data.device_ip) {
+                        const ipInput = document.getElementById('wireless-ip-input');
+                        if (ipInput) ipInput.value = data.device_ip;
+                    }
+                    checkPhoneStatus(false);
+                } else {
+                    alert(`เปิดโหมดไร้สายไม่สำเร็จ: ${data.message}`);
+                }
+            } catch (e) {
+                alert(`เกิดข้อผิดพลาด: ${e.message}`);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="wifi" class="w-3.5 h-3.5 text-sky-600"></i> <span>📶 เปิดโหมดไร้สาย (ถอดสาย USB ได้เลย)</span>`;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+
+        async function connectWirelessAdb() {
+            const ipInput = document.getElementById('wireless-ip-input');
+            const ip = ipInput ? ipInput.value.trim() : '';
+            if (!ip) {
+                alert('กรุณากรอก IP Address ของมือถือ (เช่น 192.168.1.120 ดูได้จากเมนูการตั้งค่า Wi-Fi ในมือถือ)');
+                return;
+            }
+            showToast(`🔄 กำลังเชื่อมต่อไร้สายกับ ${ip}:5555 ...`);
+            try {
+                const res = await fetch('/api/phone/wireless/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: ip, port: 5555 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 ${data.message}`);
+                    checkPhoneStatus(false);
+                } else {
+                    alert(`เชื่อมต่อไร้สายไม่สำเร็จ: ${data.message}`);
+                }
+            } catch (e) {
+                alert(`เกิดข้อผิดพลาด: ${e.message}`);
+            }
+        }
 
         function openAutoPostModal(filename = null, productId = null) {
             currentAutoPostTarget.filename = filename || lastCreatedVideoFilename || (previewVideoData && previewVideoData.filename) || '';
@@ -3636,6 +3769,7 @@
                         product_id: currentAutoPostTarget.productId,
                         product_name: currentAutoPostTarget.productName,
                         caption: currentAutoPostTarget.caption,
+                        platform: currentAutoPostPlatform,
                         auto_confirm: autoConfirm
                     })
                 });
@@ -3647,7 +3781,8 @@
                         if (s.startsWith('❌')) colorClass = 'text-red-400 font-bold';
                         else if (s.startsWith('🎉') || s.startsWith('✅')) colorClass = 'text-emerald-300 font-bold';
                         else if (s.startsWith('💡') || s.startsWith('🚀') || s.startsWith('🎬')) colorClass = 'text-sky-300';
-                        else if (s.startsWith('✍️') || s.startsWith('📋') || s.startsWith('🛒')) colorClass = 'text-amber-200';
+                        else if (s.startsWith('✍️') || s.startsWith('📋') || s.startsWith('🛒') || s.startsWith('🎯')) colorClass = 'text-amber-200';
+                        else if (s.startsWith('⚠️')) colorClass = 'text-yellow-300 font-semibold';
                         return `<div class="${colorClass}">${s}</div>`;
                     }).join('');
                 }
@@ -3665,9 +3800,10 @@
                 alert(`เกิดข้อผิดพลาดในการรันบอท: ${e.message}`);
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = `<i data-lucide="play-circle" class="w-4 h-4"></i> <span>🤖 สั่งบอท Auto-Post Shopee บนมือถือสดๆ ทันที</span>`;
+                const runText = currentAutoPostPlatform === 'tiktok' ? "🤖 สั่งบอท Auto-Post TikTok บนมือถือสดๆ ทันที" : "🤖 สั่งบอท Auto-Post Shopee บนมือถือสดๆ ทันที";
+                btn.innerHTML = `<i data-lucide="play-circle" class="w-4 h-4"></i> <span id="run-auto-post-btn-text">${runText}</span>`;
                 if (spinner) spinner.classList.remove('animate-ping');
-                lucide.createIcons();
+                if (typeof lucide !== 'undefined') lucide.createIcons();
             }
         }
 

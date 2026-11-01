@@ -148,6 +148,30 @@ async def get_my_products(video_status: str = "all"):
     return {"success": True, "count": len(items), "products": items, "stats": stats}
 
 
+@app.get("/api/auth/status")
+async def get_auth_status():
+    """ตรวจสอบว่าระบบมีการตั้งรหัสผ่าน PIN ป้องกันหรือไม่"""
+    app_pin = os.getenv("APP_PIN", "").strip()
+    return {
+        "success": True,
+        "is_pin_required": bool(app_pin),
+    }
+
+
+@app.post("/api/auth/verify")
+async def verify_auth_pin(data: dict):
+    """ตรวจสอบความถูกต้องของรหัส PIN"""
+    app_pin = os.getenv("APP_PIN", "").strip()
+    if not app_pin:
+        return {"success": True, "message": "ไม่ต้องใช้รหัส PIN"}
+
+    input_pin = str(data.get("pin", "")).strip()
+    if input_pin == app_pin:
+        return {"success": True, "message": "ปลดล็อกสำเร็จ"}
+    else:
+        raise HTTPException(status_code=401, detail="รหัส PIN ไม่ถูกต้อง")
+
+
 @app.get("/api/product/{product_id}/caption")
 async def get_product_caption(product_id: str):
     """ดึงหรือสร้างแคปชันพร้อมโพสต์ TikTok / Shopee Video สำหรับสินค้า"""
@@ -212,9 +236,38 @@ async def test_shopee_phone():
     return phone_sync_mgr.trigger_shopee_app()
 
 
+@app.post("/api/phone/wireless/enable")
+async def enable_wireless_adb_api(data: dict = None):
+    """
+    เปิดโหมด Wireless ADB (TCP/IP 5555) บนมือถือที่เสียบสาย USB
+    เพื่อให้สามารถถอดสาย USB และสั่งงานแบบไร้สายผ่าน Wi-Fi ได้ทันที
+    """
+    port = int(data.get("port", 5555)) if data else 5555
+    device_id = data.get("device_id") if data else None
+    return phone_sync_mgr.enable_wireless_adb(device_id=device_id, port=port)
+
+
+@app.post("/api/phone/wireless/connect")
+async def connect_wireless_adb_api(data: dict):
+    """เชื่อมต่อกับมือถือ Android แบบไร้สายผ่าน IP:Port"""
+    ip = data.get("ip", "").strip()
+    port = int(data.get("port", 5555))
+    if not ip:
+        raise HTTPException(status_code=400, detail="กรุณาระบุ IP Address ของมือถือ (เช่น 192.168.1.120)")
+    return phone_sync_mgr.connect_wireless_device(ip=ip, port=port)
+
+
+@app.post("/api/phone/wireless/disconnect")
+async def disconnect_wireless_adb_api(data: dict):
+    """ตัดการเชื่อมต่อไร้สาย"""
+    ip = data.get("ip", "").strip()
+    port = int(data.get("port", 5555))
+    return phone_sync_mgr.disconnect_wireless_device(ip=ip, port=port)
+
+
 @app.get("/api/phone/auto-poster/status")
 async def get_auto_poster_status():
-    """ตรวจสอบสถานะความพร้อมของ Shopee Auto-Poster (uiautomator2 + ADB + Device)"""
+    """ตรวจสอบสถานะความพร้อมของ Social Auto-Poster (uiautomator2 + ADB + Device)"""
     return {
         "success": True,
         "status": shopee_auto_poster.is_ready()
@@ -224,13 +277,14 @@ async def get_auto_poster_status():
 @app.post("/api/phone/auto-post")
 async def auto_post_shopee_api(data: dict):
     """
-    บอท Shopee Video Hands-Free Auto-Poster ผ่าน UIAutomator2:
-    ผลักวิดีโอเข้ามือถือ -> สแกนแกลเลอรี -> เปิด Shopee -> เลือกคลิปแรก -> วางแคปชัน & แฮชแท็ก -> เตรียมผูกตะกร้าส้ม
+    บอท Social Video Hands-Free Auto-Poster (Shopee Video + TikTok Shop):
+    พร้อมระบบ Anti-Ban Humanizer (สุ่มเวลาหน่วงและพิกัดนิ้วมนุษย์)
     Payload: {
         "video_filename": "product_mizumi_uv.mp4",
         "product_id": "my_123",
         "caption": "...",
         "product_name": "...",
+        "platform": "shopee" | "tiktok",
         "auto_confirm": false,
         "device_id": null
     }
@@ -239,6 +293,7 @@ async def auto_post_shopee_api(data: dict):
     video_filename = data.get("video_filename", "").strip()
     caption = data.get("caption", "").strip()
     product_name = data.get("product_name", "").strip()
+    platform = data.get("platform", "shopee").lower().strip()
     auto_confirm = bool(data.get("auto_confirm", False))
     device_id = data.get("device_id")
 
@@ -276,6 +331,7 @@ async def auto_post_shopee_api(data: dict):
         video_path=str(video_path),
         caption=caption,
         product_name=product_name,
+        platform=platform,
         auto_confirm=auto_confirm,
         device_id=device_id
     )
